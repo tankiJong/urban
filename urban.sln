@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "engine", "engine\engine.vcxproj", "{922BF2A2-0D2A-428B-B451-FB20F895E84D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model-viewer", "projects\model-viewer\model-viewer.vcxproj", "{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D} = {922BF2A2-0D2A-428B-B451-FB20F895E84D}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "projects", "projects", "{6AAD1D63-EC11-407F-9D9E-EB0618B48814}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Debug|x64.ActiveCfg = Debug|x64
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Debug|x64.Build.0 = Debug|x64
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Release|x64.ActiveCfg = Release|x64
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Release|x64.Build.0 = Release|x64
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Debug|x64.ActiveCfg = Debug|x64
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Debug|x64.Build.0 = Debug|x64
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Release|x64.ActiveCfg = Release|x64
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1766A87C-42F1-4988-BF0B-85FB4CB3E022}
+	EndGlobalSection
+EndGlobal

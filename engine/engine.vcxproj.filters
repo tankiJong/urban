@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="core">
+      <UniqueIdentifier>{38282079-c719-4d46-b598-49eb8376db1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{0825fa5e-9fa2-4b20-b672-6cf2bd07ac95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{a8a5d215-e4ef-4195-ab96-43711cc73117}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application">
+      <UniqueIdentifier>{043bf8ef-b007-482b-baab-3477fd353b65}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="engine\core\util.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\pch.h" />
+    <ClInclude Include="external\Header.h" />
+    <ClInclude Include="engine\application\Window.hpp">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\platform\win.hpp">
+      <Filter>platform</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="engine\pch.cpp" />
+    <ClCompile Include="engine\core\util.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\application\Window.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

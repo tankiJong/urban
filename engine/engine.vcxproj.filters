@@ -13,19 +13,74 @@
     <Filter Include="application">
       <UniqueIdentifier>{043bf8ef-b007-482b-baab-3477fd353b65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{0701d6e8-79e7-43aa-a41e-6b5653282629}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="debug">
+      <UniqueIdentifier>{27618a98-1c00-4d54-ad5f-7ac4e29450ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="async">
+      <UniqueIdentifier>{8c19c708-86b6-4fef-9b58-450d7575db16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="async\event">
+      <UniqueIdentifier>{2c261b3b-01a8-4b36-8e8b-205985ae5006}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\core\util.hpp">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="engine\pch.h" />
-    <ClInclude Include="external\Header.h" />
     <ClInclude Include="engine\application\Window.hpp">
       <Filter>application</Filter>
     </ClInclude>
     <ClInclude Include="engine\platform\win.hpp">
       <Filter>platform</Filter>
     </ClInclude>
+    <ClInclude Include="engine\math\primitives.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\math\util.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\application\Input.hpp">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\any_func.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\closure.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\vary.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\debug\assert.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\string.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\core\traits.hpp">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\async\event\EventEmitter.hpp">
+      <Filter>async\event</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\async\event\EventListener.hpp">
+      <Filter>async\event</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\async\event\EventTarget.hpp">
+      <Filter>async\event</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\async\event\Observable.hpp">
+      <Filter>async\event</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Graphics\Device.hpp" />
+    <ClInclude Include="engine\Graphics\CommandList.hpp" />
+    <ClInclude Include="engine\Graphics\CommandQueue.hpp" />
+    <ClInclude Include="engine\Graphics\utils.hpp" />
+    <ClInclude Include="engine\application\Application.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -35,5 +90,42 @@
     <ClCompile Include="engine\application\Window.cpp">
       <Filter>application</Filter>
     </ClCompile>
+    <ClCompile Include="engine\math\util.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\application\Input.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\any_func.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\closure.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\vary.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\debug\assert.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\core\string.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\async\event\EventEmitter.cpp">
+      <Filter>async\event</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\async\event\EventListener.cpp">
+      <Filter>async\event</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\async\event\EventTarget.cpp">
+      <Filter>async\event</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\async\event\Observable.cpp">
+      <Filter>async\event</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Graphics\Device.cpp" />
+    <ClCompile Include="engine\Graphics\CommandList.cpp" />
+    <ClCompile Include="engine\Graphics\CommandQueue.cpp" />
+    <ClCompile Include="engine\application\Application.cpp" />
   </ItemGroup>
 </Project>

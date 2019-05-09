@@ -7,5 +7,11 @@
 #ifndef PCH_H
 #define PCH_H
 
+#include <string_view>
+#include <vector>
+#include "engine/core/traits.hpp"
+#include "engine/core/util.hpp"
+#include "engine/debug/assert.hpp"
+
 // add headers that you want to pre-compile here
 #endif //PCH_H

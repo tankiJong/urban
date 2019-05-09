@@ -19,7 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="engine\application\Application.cpp" />
+    <ClCompile Include="engine\application\Input.cpp" />
+    <ClCompile Include="engine\async\event\EventEmitter.cpp" />
+    <ClCompile Include="engine\async\event\EventListener.cpp" />
+    <ClCompile Include="engine\async\event\EventTarget.cpp" />
+    <ClCompile Include="engine\async\event\Observable.cpp" />
+    <ClCompile Include="engine\core\any_func.cpp" />
+    <ClCompile Include="engine\core\closure.cpp" />
+    <ClCompile Include="engine\core\string.cpp" />
     <ClCompile Include="engine\core\util.cpp" />
+    <ClCompile Include="engine\core\vary.cpp" />
+    <ClCompile Include="engine\debug\assert.cpp" />
+    <ClCompile Include="engine\Graphics\CommandList.cpp" />
+    <ClCompile Include="engine\Graphics\CommandQueue.cpp" />
+    <ClCompile Include="engine\Graphics\Device.cpp" />
+    <ClCompile Include="engine\math\util.cpp" />
     <ClCompile Include="engine\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -29,11 +44,28 @@
     <ClCompile Include="engine\application\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\application\Application.hpp" />
+    <ClInclude Include="engine\application\Input.hpp" />
+    <ClInclude Include="engine\async\event\EventEmitter.hpp" />
+    <ClInclude Include="engine\async\event\EventListener.hpp" />
+    <ClInclude Include="engine\async\event\EventTarget.hpp" />
+    <ClInclude Include="engine\async\event\Observable.hpp" />
+    <ClInclude Include="engine\core\any_func.hpp" />
+    <ClInclude Include="engine\core\closure.hpp" />
+    <ClInclude Include="engine\core\string.hpp" />
+    <ClInclude Include="engine\core\traits.hpp" />
     <ClInclude Include="engine\core\util.hpp" />
+    <ClInclude Include="engine\core\vary.hpp" />
+    <ClInclude Include="engine\debug\assert.hpp" />
+    <ClInclude Include="engine\Graphics\CommandList.hpp" />
+    <ClInclude Include="engine\Graphics\CommandQueue.hpp" />
+    <ClInclude Include="engine\Graphics\Device.hpp" />
+    <ClInclude Include="engine\Graphics\utils.hpp" />
+    <ClInclude Include="engine\math\primitives.hpp" />
+    <ClInclude Include="engine\math\util.hpp" />
     <ClInclude Include="engine\pch.h" />
     <ClInclude Include="engine\application\Window.hpp" />
     <ClInclude Include="engine\platform\win.hpp" />
-    <ClInclude Include="external\Header.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -89,25 +121,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
   </PropertyGroup>
@@ -119,11 +151,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,11 +172,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -159,11 +195,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -182,11 +220,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

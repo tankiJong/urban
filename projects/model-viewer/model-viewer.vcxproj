@@ -72,18 +72,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -91,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -106,7 +110,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -123,7 +127,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -142,7 +146,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -155,6 +159,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\engine\engine.vcxproj">
+      <Project>{922bf2a2-0d2a-428b-b451-fb20f895e84d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

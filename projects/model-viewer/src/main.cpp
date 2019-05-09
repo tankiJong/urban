@@ -4,6 +4,8 @@
 #include <io.h>
 #include <fcntl.h>
 #include <iostream>
+#include "engine/application/Window.hpp"
+#include "engine/application/Application.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -90,14 +92,21 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
+class GameApplication: public Application {
+};
+
 int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
 {
+
    auto id = GetCurrentProcessId();
    AllocConsole();
+   Window::Get().Init( {1000, 1000}, "hello" );
+   GameApplication app;
    // BindCrtHandlesToStdHandles(true, true, true);
    freopen_s( (FILE**)stdout, "CONOUT$", "w", stdout ); //just works
-   while(true) { std::cout << "hello" << std::endl; }
+   while(app.runFrame());
 
    FreeConsole();
    return 0;
 }
+

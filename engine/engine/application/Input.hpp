@@ -5,16 +5,27 @@
 
 using keycode_t = unsigned char;
 
+
 class Input {
 public:
-   bool isKeyDown() const;
-   bool isKeyUp() const;
-   bool isKeyJustDown() const;
-   bool isKeyJustUp() const;
+   static constexpr uint kNumKey = 256;
+   bool IsKeyDown(keycode_t key) const;
+   bool IsKeyUp(keycode_t key) const;
+   bool IsKeyJustDown(keycode_t key) const;
+   bool IsKeyJustUp(keycode_t key) const;
 
-   void beforeFrame();
-   void afterFrame();
+   void BeforeFrame();
+   void AfterFrame();
    static Input& Get();
+
+protected:
+   struct KeyState {
+      bool is_down = false;
+	   bool just_pressed = false;
+	   bool just_released = false;
+   };
+   KeyState mKeyStates[kNumKey];
+   float2   mMousePosition;
 };
 
 

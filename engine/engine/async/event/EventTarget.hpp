@@ -28,17 +28,17 @@ public:
    using EventType = Event<D>;
 
    template< typename Callback >
-   void bind( std::string name, Callback&& cb )
+   void Bind( std::string name, Callback&& cb )
    {
-      checkValidCallback<Callback>();
-      mEventEmitter.on( name, cb );
+      CheckValidCallback<Callback>();
+      mEventEmitter.On( name, cb );
    }
 
    template< typename Callback >
    void unbind( std::string name, Callback&& cb )
    {
-      checkValidCallback<Callback>();
-      mEventEmitter.off( cb );
+      CheckValidCallback<Callback>();
+      mEventEmitter.Off( cb );
    }
 
    void dispatch( std::string_view name, Event<D>& e ) const
@@ -46,16 +46,16 @@ public:
       Type* next = this;
 
       while(next != nullptr) {
-         next->mEventEmitter.emit( name, e );
+         next->mEventEmitter.Emit( name, e );
          if(e.cancelBubble)
             break;
          next = next->mParent;
       }
    };
 
-   Type* parent() const { return mParent; }
+   Type* Parent() const { return mParent; }
 
-   Type& parent( Type* newParent )
+   Type& Parent( Type* newParent )
    {
       mParent = newParent;
       return *this;
@@ -63,7 +63,7 @@ public:
 
 protected:
    template< typename Callback >
-   constexpr void checkValidCallback() const
+   constexpr void CheckValidCallback() const
    {
       static_assert(std::is_invocable_v<Callback, Event<D>>,
          "function should pass `Event` as Argument");

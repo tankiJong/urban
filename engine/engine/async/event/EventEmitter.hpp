@@ -16,52 +16,52 @@ public:
    ~EventEmitter();
 
    // ------------------------ on --------------------------
-   EventEmitter& on( const std::string& name, any_func func )
+   EventEmitter& On( const std::string& name, any_func func )
    {
-      EventListener* listener = findOrCreateListener( name );
-      listener->subscribe( std::move( func ) );
+      EventListener* listener = FindOrCreateListener( name );
+      listener->Subscribe( std::move( func ) );
       return *this;
    };
 
    template< typename Func >
-   EventEmitter& on( std::string name, Func&& func ) { return on( name, any_func{ func } ); };
+   EventEmitter& On( std::string name, Func&& func ) { return On( name, any_func{ func } ); };
 
    template< typename Func >
-   EventEmitter& on( std::string name, void* object, Func&& func )
+   EventEmitter& On( std::string name, void* object, Func&& func )
    {
       using func_t = function_t<Func>;
-      return on( name, any_func{ object, func } );
+      return On( name, any_func{ object, func } );
    }
 
    // ------------------------ off --------------------------
-   EventEmitter& off( const std::string& name, any_func func )
+   EventEmitter& Off( const std::string& name, any_func func )
    {
-      EventListener* listener = findListener( name );
-      if(listener != nullptr) { listener->unsubscribe( std::move( func ) ); }
+      EventListener* listener = FindListener( name );
+      if(listener != nullptr) { listener->Unsubscribe( std::move( func ) ); }
       return *this;
    }
 
    template< typename Func >
-   EventEmitter& off( std::string name, Func&& func ) { return off( name, any_func{ func } ); }
+   EventEmitter& Off( std::string name, Func&& func ) { return Off( name, any_func{ func } ); }
 
    template< typename Func >
-   EventEmitter& off( std::string name, void* object, Func&& func ) { return off( name, any_func{ object, func } ); }
+   EventEmitter& Off( std::string name, void* object, Func&& func ) { return Off( name, any_func{ object, func } ); }
 
    // ------------------------ emit --------------------------
    template< typename ...Args >
-   bool emit( std::string_view name, Args&& ...args )
+   bool Emit( std::string_view name, Args&& ...args )
    {
-      EventListener* listener = findListener( name );
+      EventListener* listener = FindListener( name );
       if(listener == nullptr)
          return false;
-      return listener->invoke( std::forward<Args>( args )... );
+      return listener->Invoke( std::forward<Args>( args )... );
    };
 
 protected:
-   EventListener* findListener( std::string_view name ) const;
-   EventListener* findOrCreateListener( std::string_view name );
-   EventListener* allocListener();
-   void           freeListener( EventListener* listener );
+   EventListener* FindListener( std::string_view name ) const;
+   EventListener* FindOrCreateListener( std::string_view name );
+   EventListener* AllocListener();
+   void           FreeListener( EventListener* listener );
 
    std::map<std::string, EventListener*, std::less<>> mEventListeners;
 };

@@ -107,16 +107,16 @@ private:
       static_assert(sizeof(C) <= sizeof(mFunction));
       mObject = const_cast<void*>(object);
 
-      mFunction.set<T, C>(std::forward<T>(func));
+      mFunction.Set<T, C>(std::forward<T>(func));
 
       if constexpr(F::function_type == FUNCTION_PTR) { 
          mCallback = &invokeStatic<C, std::decay_t<Args>...>;
       }
       if constexpr(F::function_type == MEMBER_PTR) { 
-         mCallback = &invokeMember<F::target_t, C, std::decay_t<Args>...>;
+         mCallback = &InvokeMember<F::target_t, C, std::decay_t<Args>...>;
       }
       if constexpr(F::function_type == MEMBER_CONST_PTR) { 
-         mCallback = &invokeMember<F::target_t, C, std::decay_t<Args>...>;
+         mCallback = &InvokeMember<F::target_t, C, std::decay_t<Args>...>;
       }
       if constexpr(F::function_type == FUNCTOR) {  
          mCallback = &invokeStatic<C, std::decay_t<Args>...>;
@@ -165,7 +165,7 @@ public:
       if constexpr(!std::is_same_v<std::decay_t<T>, any_func>) {
          using F = typename function_t<std::decay_t<T>>::type;
          if(&tid<F>::value != mFunctionInfo) return false;
-         const F& storedFunc = mFunction.get<F>();
+         const F& storedFunc = mFunction.Get<F>();
          return func == storedFunc;
       } else {
          return 
@@ -199,22 +199,22 @@ protected:
    vary mFunction;
 
    template<typename Object, typename MemberFunc, typename ...Args, size_t ...Indices>
-   static void tupleExecuteMember(Object& obj, MemberFunc& func, std::tuple<Args...>& args, std::index_sequence<Indices...>) {
+   static void TupleExecuteMember(Object& obj, MemberFunc& func, std::tuple<Args...>& args, std::index_sequence<Indices...>) {
       std::invoke(func, obj, std::get<Indices>(args)...);
    }
 
    template<typename C, typename ...Args, size_t ...Indices>
-   static void tupleExecuteStatic(C&& func, std::tuple<Args...>& args, std::index_sequence<Indices...>) {
+   static void TupleExecuteStatic(C&& func, std::tuple<Args...>& args, std::index_sequence<Indices...>) {
       std::invoke(func, std::get<Indices>(args)...);
    }
 
    template<typename Object, typename MemberFunc, typename ...Args>
-   static void invokeMember(const any_func& decl, void* args) {
-      const MemberFunc& func = decl.mFunction.get<MemberFunc>();
+   static void InvokeMember(const any_func& decl, void* args) {
+      const MemberFunc& func = decl.mFunction.Get<MemberFunc>();
       if constexpr((... && !std::is_same_v<Args, void>)) {
          std::tuple<Args&&...>* arguments = (std::tuple<Args&&...>*)args;
 
-         tupleExecuteMember(*(Object*)decl.mObject, func,*arguments, 
+         TupleExecuteMember(*(Object*)decl.mObject, func,*arguments, 
 			            std::make_index_sequence<std::tuple_size_v<std::tuple<Args&...>>>());
       } else {
          UNUSED(args);
@@ -224,11 +224,11 @@ protected:
 
    template<typename C, typename ...Args>
    static void invokeStatic(const any_func& decl, void* args) {
-      const C& func = decl.mFunction.get<C>();
+      const C& func = decl.mFunction.Get<C>();
       if constexpr((... && !std::is_same_v<Args, void>)) {
          std::tuple<Args&&...>* arguments = (std::tuple<Args&&...>*)args;
 
-         tupleExecuteStatic(func, *arguments, 
+         TupleExecuteStatic(func, *arguments, 
 			         std::make_index_sequence<std::tuple_size_v<std::tuple<Args&...>>>());
       } else {
          UNUSED(args);

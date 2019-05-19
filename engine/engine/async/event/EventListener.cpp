@@ -5,9 +5,9 @@
 
 EventListener::~EventListener() {}
 
-void EventListener::subscribe( any_func&& func ) { mHandles.emplace_back( func ); }
+void EventListener::Subscribe( any_func&& func ) { mHandles.emplace_back( func ); }
 
-void EventListener::unsubscribe( any_func&& func )
+void EventListener::Unsubscribe( any_func&& func )
 {
    for(size_t i = mHandles.size() - 1; i < mHandles.size(); --i) {
       if(mHandles[i] == func) {

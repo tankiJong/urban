@@ -9,7 +9,7 @@ public:
    using callback_t = std::function<void( Args ... )>;
 
    template< typename T >
-   void subscribe( T&& cb )
+   void Subscribe( T&& cb )
    {
       static_assert(std::is_same_v<decltype(std::invoke( cb, Args()... )), void>,
          "register function signature does not match");
@@ -17,7 +17,7 @@ public:
    }
 
    template< typename T >
-   bool unsubscribe( T&& cb )
+   bool Unsubscribe( T&& cb )
    {
       callback_t func( cb );
       for(uint i = 0; i < mCallbacks.size(); i++) {
@@ -30,7 +30,7 @@ public:
       return false;
    }
 
-   void invoke( const Args& ...args ) const
+   void Invoke( const Args& ...args ) const
    {
       for(callback_t cb: mCallbacks) { cb( args... ); }
    }

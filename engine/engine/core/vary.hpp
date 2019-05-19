@@ -8,15 +8,15 @@ struct vary {
   vary() {};
   
   template<typename T>
-  const T& get() const;
+  const T& Get() const;
   template<typename T>
-  T& get();
+  T& Get();
 
-  const void* get() const;
-  void* get();
+  const void* Get() const;
+  void* Get();
 
   template<typename T, typename V = std::decay_t<T>>
-  void set(T&& value);
+  void Set(T&& value);
 
   vary(vary&& from) noexcept;
   vary(const vary& from);
@@ -37,18 +37,18 @@ struct vary {
   ~vary();
 protected:
   template<typename T>
-  static void copyConstruct(const void* from, void* to);
+  static void CopyConstruct(const void* from, void* to);
   template<typename T, bool UseHeap>
-  static void destructor(vary& v);
+  static void Destructor(vary& v);
 
-  static void defaultDelete(vary&) {}
-  static void defaultCopy(const void*, void*) {}
+  static void DefaultDelete(vary&) {}
+  static void DefaultCopy(const void*, void*) {}
 
   using deleter_t = void(*)(vary&);
   using copy_construct_t = void(*)(const void*, void*);
   struct meta_data_t {
-    deleter_t         deleter  = &vary::defaultDelete;
-    copy_construct_t  copyConstructor = &vary::defaultCopy;
+    deleter_t         deleter  = &vary::DefaultDelete;
+    copy_construct_t  copyConstructor = &vary::DefaultCopy;
     const unique*     typeInfo = nullptr;
     bool              useHeap  = false;
 
@@ -89,21 +89,21 @@ protected:
 };
 
 template< typename T >
-inline const T& vary::get() const {
+inline const T& vary::Get() const {
   EXPECTS(&tid<T>::value == mMetaData.typeInfo);
-  T* valptr = (T*)get();
+  T* valptr = (T*)Get();
   return *valptr;
 }
 
 template< typename T >
-T& vary::get() {
+T& vary::Get() {
   EXPECTS(&tid<T>::value == mMetaData.typeInfo);
-  T* valptr = (T*)get();
+  T* valptr = (T*)Get();
   return *valptr;
 }
 
 template< typename T, typename V>
-inline void vary::set(T&& value) {
+inline void vary::Set(T&& value) {
   constexpr size_t vsize = sizeof(V);
 
   reset();
@@ -124,17 +124,17 @@ inline void vary::set(T&& value) {
   // finally emplace new.
   new (valptr) V(value);
 
-  mMetaData = { &destructor<V, useHeap>, &copyConstruct<V>, &tid<V>::value, useHeap };
+  mMetaData = { &Destructor<V, useHeap>, &CopyConstruct<V>, &tid<V>::value, useHeap };
 }
 
 template< typename T >
-void vary::copyConstruct(const void* from, void* to) {
+void vary::CopyConstruct(const void* from, void* to) {
   T* vFrom = (T*)from;
   new (to) T(*vFrom);
 }
 
 template< typename T, bool UseHeap >
-void vary::destructor(vary& v) {
+void vary::Destructor(vary& v) {
   T* vptr = nullptr;
 
   if constexpr (std::is_destructible_v<T>) {
@@ -155,7 +155,7 @@ void vary::destructor(vary& v) {
 
 template<typename T, typename V = std::decay_t<T>>
 void operator << (T&& lhs, const vary& rhs) {
-  lhs = rhs.get<V>();
+  lhs = rhs.Get<V>();
 }
 
 class VaryMap {
@@ -163,21 +163,21 @@ public:
 
   template<typename T>
   void set(std::string name, T&& value) {
-    mMap[name].set(value);
+    mMap[name].Set(value);
   }
 
   template<typename T>
   T& get(std::string_view name) {
     auto kv = mMap.find(name);
     EXPECTS(kv != mMap.end());
-    return kv->second.get<T>();
+    return kv->second.Get<T>();
   }
 
   template<typename T>
   bool get(std::string_view name, T& value) {
     auto kv = mMap.find(name);
     if(kv == mMap.end()) return false;
-    value = kv->second.get<T>();
+    value = kv->second.Get<T>();
     return true;
   }
 

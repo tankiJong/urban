@@ -76,11 +76,14 @@
     <ClInclude Include="engine\async\event\Observable.hpp">
       <Filter>async\event</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Graphics\Device.hpp" />
-    <ClInclude Include="engine\Graphics\CommandList.hpp" />
-    <ClInclude Include="engine\Graphics\CommandQueue.hpp" />
-    <ClInclude Include="engine\Graphics\utils.hpp" />
     <ClInclude Include="engine\application\Application.hpp" />
+    <ClInclude Include="engine\graphics\CommandList.hpp" />
+    <ClInclude Include="engine\graphics\CommandQueue.hpp" />
+    <ClInclude Include="engine\graphics\Device.hpp" />
+    <ClInclude Include="engine\graphics\utils.hpp" />
+    <ClInclude Include="engine\graphics\d3d12\d3d12Util.hpp" />
+    <ClInclude Include="engine\graphics\Buffer.hpp" />
+    <ClInclude Include="engine\graphics\Resource.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -123,9 +126,13 @@
     <ClCompile Include="engine\async\event\Observable.cpp">
       <Filter>async\event</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Graphics\Device.cpp" />
-    <ClCompile Include="engine\Graphics\CommandList.cpp" />
-    <ClCompile Include="engine\Graphics\CommandQueue.cpp" />
     <ClCompile Include="engine\application\Application.cpp" />
+    <ClCompile Include="engine\graphics\CommandList.cpp" />
+    <ClCompile Include="engine\graphics\CommandQueue.cpp" />
+    <ClCompile Include="engine\graphics\Device.cpp" />
+    <ClCompile Include="engine\graphics\Buffer.cpp" />
+    <ClCompile Include="engine\graphics\Resource.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Device.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\d3d12Util.cpp" />
   </ItemGroup>
 </Project>

@@ -2,14 +2,16 @@
 #include "Window.hpp"
 
 #include "engine/platform/win.hpp"
-
-#define GAME_WINDOW_CLASS TEXT("Simple Window Class") 
-
-
+#include "engine/graphics/d3d12/d3d12Util.hpp"
+#include "engine/graphics/Device.hpp"
+#include "engine/graphics/CommandQueue.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
-
+struct WindowData {
+   IDXGIFactory5Ptr dxgiFactory = nullptr;
+   IDXGISwapChain4Ptr swapChain = nullptr;
+};
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Static ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -29,12 +31,13 @@ LRESULT CALLBACK gameWndProc(HWND hwnd,
                              WPARAM wparam,
                              LPARAM lparam) {
   Window& window = Window::Get();
-  window.invoke(msg, wparam, lparam);
+  window.Invoke(msg, wparam, lparam);
 
   return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
 void Window::Init( uint2 pixelSize, std::string_view name )
 {
+   //////////////////////// Create Window ////////////////////////
    mPixelSize = pixelSize;
    // Define a window style/class
    WNDCLASSEX windowClassDescription;
@@ -46,7 +49,7 @@ void Window::Init( uint2 pixelSize, std::string_view name )
    windowClassDescription.hInstance     = GetModuleHandle( NULL );
    windowClassDescription.hIcon         = NULL;
    windowClassDescription.hCursor       = NULL;
-   windowClassDescription.lpszClassName = GAME_WINDOW_CLASS;
+   windowClassDescription.lpszClassName = L"Simple Window Class";
    RegisterClassEx( &windowClassDescription );
 
    float clientAspect = (float)pixelSize.x / (float)pixelSize.y;
@@ -93,18 +96,18 @@ void Window::Init( uint2 pixelSize, std::string_view name )
    HINSTANCE applicationInstanceHandle = GetModuleHandle( NULL );
 
    mHandle = CreateWindowEx(
-                          windowStyleExFlags,
-                          GAME_WINDOW_CLASS,
-                          windowTitle,
-                          windowStyleFlags,
-                          windowRect.left,
-                          windowRect.top,
-                          windowRect.right - windowRect.left,
-                          windowRect.bottom - windowRect.top,
-                          NULL,
-                          NULL,
-                          applicationInstanceHandle,
-                          NULL );
+                            windowStyleExFlags,
+                            L"Simple Window Class",
+                            windowTitle,
+                            windowStyleFlags,
+                            windowRect.left,
+                            windowRect.top,
+                            windowRect.right - windowRect.left,
+                            windowRect.bottom - windowRect.top,
+                            NULL,
+                            NULL,
+                            applicationInstanceHandle,
+                            NULL );
 
    HWND wnd = (HWND)mHandle;
    ShowWindow( wnd, SW_SHOW );
@@ -113,6 +116,27 @@ void Window::Init( uint2 pixelSize, std::string_view name )
 
    HCURSOR cursor = LoadCursor( NULL, IDC_ARROW );
    SetCursor( cursor );
+
+   //////////////////////// Create Factory/SwapChain ////////////////////////
+   mWindowData    = new WindowData;
+   uint dxgiFlags = 0;
+#if defined(_DEBUG)
+   // enable debug layer for debug mode.
+   // have to do this step before create device or it will inavalidate the active device
+   ID3D12Debug* debugLayer;
+   if(SUCCEEDED( D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer)) )) {
+      debugLayer->EnableDebugLayer();
+
+      dxgiFlags |= DXGI_CREATE_FACTORY_DEBUG;
+   }
+#endif
+
+   assert_win( CreateDXGIFactory2( dxgiFlags, IID_PPV_ARGS( &mWindowData->dxgiFactory ) ) );
+   BOOL    allowTearing = FALSE;
+   HRESULT hr           = mWindowData->dxgiFactory->CheckFeatureSupport( DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+                                                                         &allowTearing,
+                                                                         sizeof(allowTearing) );
+   mAllowTearing = allowTearing && SUCCEEDED( hr );
 }
 
 Window& Window::Get()
@@ -121,4 +145,31 @@ Window& Window::Get()
       gWindow = new Window();
    }
    return *gWindow;
+}
+
+void Window::AttachDevice( const S<Device>& device )
+{
+   mRenderDevice = device;
+   
+   IDXGISwapChain1Ptr sc;
+   
+   DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
+   swapChainDesc.BufferCount           = kFrameCount; // front buffer & back buffer
+   swapChainDesc.Width                 = 0;
+   swapChainDesc.Height                =
+      0; // will get figured out and fit the window, when calling `CreateSwapChainForHwnd`
+   swapChainDesc.Format      = DXGI_FORMAT_R8G8B8A8_UNORM;
+   swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+   swapChainDesc.SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD; // https://msdn.microsoft.com/en-us/library/hh706346(v=vs.85).aspx
+   swapChainDesc.SampleDesc.Count = 1;
+   swapChainDesc.Flags            = mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+   
+   const S<CommandQueue>& queue = device->GetMainQueue();
+   assert_win( mWindowData->dxgiFactory->CreateSwapChainForHwnd( 
+               queue->NativeHandle().Get(), (HWND)mHandle, 
+               &swapChainDesc, nullptr, nullptr, &sc ) );
+   sc->QueryInterface( IID_PPV_ARGS( &mWindowData->swapChain ) );
+
+   // do not support fullscreen 
+   assert_win( mWindowData->dxgiFactory->MakeWindowAssociation( (HWND)mHandle, DXGI_MWA_NO_ALT_ENTER) );
 }

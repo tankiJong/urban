@@ -1,7 +1,7 @@
 ﻿#include "engine/pch.h"
 #include "vary.hpp"
 
-const void* vary::get() const {
+const void* vary::Get() const {
   if(mMetaData.useHeap) {
     return mPtr.value;
   }
@@ -9,7 +9,7 @@ const void* vary::get() const {
   return &mStorage;
 }
 
-void* vary::get() {
+void* vary::Get() {
   if(mMetaData.useHeap) {
     return mPtr.value;
   }
@@ -56,8 +56,8 @@ vary::~vary() {
 }
 
 void vary::meta_data_t::reset() {
-  deleter = &defaultDelete;
-  copyConstructor = &defaultCopy;
+  deleter = &DefaultDelete;
+  copyConstructor = &DefaultCopy;
   useHeap = false;
   typeInfo = nullptr;
 }

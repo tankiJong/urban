@@ -100,7 +100,6 @@ int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
 
    auto id = GetCurrentProcessId();
    AllocConsole();
-   Window::Get().Init( {1000, 1000}, "hello" );
    GameApplication app;
    // BindCrtHandlesToStdHandles(true, true, true);
    freopen_s( (FILE**)stdout, "CONOUT$", "w", stdout ); //just works
@@ -109,4 +108,3 @@ int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
    FreeConsole();
    return 0;
 }
-

@@ -15,19 +15,19 @@ public:
 
    ~EventListener();
 
-   void setName( std::string_view name ) { mName = name; }
+   void SetName( std::string_view name ) { mName = name; }
 
    template< typename ...Args >
-   bool invoke( Args&& ...args ) const
+   bool Invoke( Args&& ...args ) const
    {
       for(const any_func& handle: mHandles) { handle( std::forward<Args>( args )... ); }
 
       return !mHandles.empty();
    }
 
-   void subscribe( any_func&& func );
+   void Subscribe( any_func&& func );
 
-   void unsubscribe( any_func&& func );
+   void Unsubscribe( any_func&& func );
 
 protected:
    std::vector<any_func> mHandles;

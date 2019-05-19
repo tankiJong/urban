@@ -11,6 +11,7 @@
 #include <vector>
 #include "engine/core/traits.hpp"
 #include "engine/core/util.hpp"
+#include "engine/math/primitives.hpp"
 #include "engine/debug/assert.hpp"
 
 // add headers that you want to pre-compile here

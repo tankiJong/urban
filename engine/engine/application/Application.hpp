@@ -10,23 +10,23 @@ class Application {
 public:
   virtual ~Application() = default;
 
-  virtual void onInit() {}
+  virtual void OnInit() {}
 
-  virtual void onStartFrame() {}
+  virtual void OnStartFrame() {}
 
-  virtual void onInput() {}
+  virtual void OnInput() {}
 
-  virtual void onUpdate() {}
-  virtual void postUpdate() {}
+  virtual void OnUpdate() {}
+  virtual void PostUpdate() {}
 
-  virtual void onRender() const {}
+  virtual void OnRender() const {}
 
-  virtual void onGui() {}
-  virtual void onQuit() {}
+  virtual void OnGui() {}
+  virtual void OnQuit() {}
 
-  virtual void onEndFrame() {}
+  virtual void OnEndFrame() {}
 
-  virtual void onDestroy() {}
+  virtual void OnDestroy() {}
 
   bool runFrame();
 protected:

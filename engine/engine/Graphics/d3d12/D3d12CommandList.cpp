@@ -1,6 +1,9 @@
 ﻿#include "engine/pch.h"
-#include "Resource.hpp"
-
+#include "d3d12Util.hpp"
+#include "../CommandQueue.hpp"
+#include "engine/graphics/CommandList.hpp"
+#include "engine/graphics/Fence.hpp"
+#include "engine/graphics/Device.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -16,18 +19,11 @@
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
+CommandList::CommandList()
+{
+   mDevice = &Device::Get();
+   mCreateFrame = mDevice->Get().AttachedWindow()->CurrentFrameCount();
+   Reset();
+}
 
-Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
-   : mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
 
-Resource::Resource(
-   const resource_handle_t& handle,
-   eType                    type,
-   eBindingFlag             bindingFlags,
-   eAllocationType          allocationType )
-   : WithHandle<resource_handle_t>( handle )
-   , mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}

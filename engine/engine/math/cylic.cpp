@@ -1,5 +1,5 @@
 ﻿#include "engine/pch.h"
-#include "Resource.hpp"
+#include "cylic.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -16,18 +16,11 @@
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
+void foo()
+{
+   cyclic<uint> a = 2, b = 3;
 
-Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
-   : mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
-
-Resource::Resource(
-   const resource_handle_t& handle,
-   eType                    type,
-   eBindingFlag             bindingFlags,
-   eAllocationType          allocationType )
-   : WithHandle<resource_handle_t>( handle )
-   , mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
+   cyclic<uint> c = a;
+   c = a < b;
+   c = a / c;
+}

@@ -1,5 +1,8 @@
 ﻿#include "engine/pch.h"
-#include "Resource.hpp"
+#include "engine/graphics/Device.hpp"
+#include "engine/graphics/CommandBuffer.hpp"
+#include "engine/graphics/CommandList.hpp"
+#include "engine/platform/win.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -17,17 +20,18 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
-   : mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
+void CommandBuffer::Init( Device& device )
+{
+   assert_win(device.NativeDevice()->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS( &mHandle) ));
+   mLastUpdateFrame = 0;
+}
 
-Resource::Resource(
-   const resource_handle_t& handle,
-   eType                    type,
-   eBindingFlag             bindingFlags,
-   eAllocationType          allocationType )
-   : WithHandle<resource_handle_t>( handle )
-   , mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
+void CommandBuffer::Reset()
+{
+   mHandle->Reset();
+}
+
+void CommandBuffer::Bind( CommandList& commandList )
+{
+   assert_win(commandList.Handle()->Reset( mHandle.Get(), nullptr ));
+}

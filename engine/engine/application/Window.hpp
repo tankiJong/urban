@@ -8,6 +8,7 @@
 struct IDXGISwapChain3;
 struct WindowData;
 class Device;
+class Texture2;
 
 using swapchain_handle_t = IDXGISwapChain3;
 
@@ -17,10 +18,13 @@ public:
    Window() = default;
    void Init( uint2 pixelSize, std::string_view name);
 
-   static Window& Get();
-
+   void SwapBuffer();
+   uint CurrentBackBufferIndex() const { return mCurrentBackBufferIndex; };
+   uint CurrentFrameCount() const { return mCurrentFrameCount; }
    WindowData* NativeData() const { return mWindowData; }
    void AttachDevice(const S<Device>& device);
+
+   static Window& Get();
 protected:
    
    uint2 mPixelSize;
@@ -28,4 +32,10 @@ protected:
    WindowData* mWindowData = nullptr;
    S<Device> mRenderDevice = nullptr;
    bool mAllowTearing = false;
+
+   uint mCurrentFrameCount = 0;
+   uint mCurrentBackBufferIndex = 0;
+   S<Texture2> mBackBuffers[kFrameCount];
+   S<Texture2> mDepthBuffers[kFrameCount];
+
 };

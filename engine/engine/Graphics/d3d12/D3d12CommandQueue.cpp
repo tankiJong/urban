@@ -1,6 +1,8 @@
 ﻿#include "engine/pch.h"
-#include "Resource.hpp"
-
+#include "d3d12Util.hpp"
+#include "engine/graphics/CommandQueue.hpp"
+#include "engine/graphics/Fence.hpp"
+#include "engine/graphics/CommandList.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -17,17 +19,19 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
-   : mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
 
-Resource::Resource(
-   const resource_handle_t& handle,
-   eType                    type,
-   eBindingFlag             bindingFlags,
-   eAllocationType          allocationType )
-   : WithHandle<resource_handle_t>( handle )
-   , mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
+void CommandQueue::IssueCommandList( CommandList& commandList )
+{
+   ID3D12CommandList* commandListHandle = commandList.Handle().Get();
+   mHandle->ExecuteCommandLists( 1, &commandListHandle );
+}
+
+void CommandQueue::Wait( Fence& fence )
+{
+   mHandle->Wait( fence.Handle().Get(), fence.ExpectedValue() );
+}
+
+void CommandQueue::Signal( Fence& fence )
+{
+   mHandle->Signal( fence.Handle().Get(), fence.ExpectedValue() );
+}

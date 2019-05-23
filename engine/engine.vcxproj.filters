@@ -84,6 +84,11 @@
     <ClInclude Include="engine\graphics\d3d12\d3d12Util.hpp" />
     <ClInclude Include="engine\graphics\Buffer.hpp" />
     <ClInclude Include="engine\graphics\Resource.hpp" />
+    <ClInclude Include="engine\graphics\Fence.hpp" />
+    <ClInclude Include="engine\graphics\Texture.hpp" />
+    <ClInclude Include="engine\graphics\View.hpp" />
+    <ClInclude Include="engine\math\cylic.hpp" />
+    <ClInclude Include="engine\graphics\CommandBuffer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -134,5 +139,15 @@
     <ClCompile Include="engine\graphics\Resource.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Device.cpp" />
     <ClCompile Include="engine\graphics\d3d12\d3d12Util.cpp" />
+    <ClCompile Include="engine\graphics\Fence.cpp" />
+    <ClCompile Include="engine\graphics\Texture.cpp" />
+    <ClCompile Include="engine\graphics\utils.cpp" />
+    <ClCompile Include="engine\graphics\View.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12CommandQueue.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Resource.cpp" />
+    <ClCompile Include="engine\math\cylic.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12CommandList.cpp" />
+    <ClCompile Include="engine\graphics\CommandBuffer.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12CommandBuffer.cpp" />
   </ItemGroup>
 </Project>

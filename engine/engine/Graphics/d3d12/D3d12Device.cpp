@@ -70,7 +70,7 @@ S<CommandQueue> Device::CreateCommandQueue( eQueueType type )
    command_queue_t handle;
    mHandle->CreateCommandQueue( &desc, IID_PPV_ARGS( &handle ));
 
-   return CommandQueue::create( handle );
+   return S<CommandQueue>(new CommandQueue( handle ));
 }
 
 
@@ -78,14 +78,17 @@ bool Device::RhiInit(Window& window)
 {
    IDXGIAdapter1* hardwareAdapter = nullptr;
    getHardwareAdapter( window.NativeData()->dxgiFactory.Get(), hardwareAdapter );
-   ASSERT_DIE( hardwareAdapter != nullptr, "The machine does not support D3D12" );
+   ASSERT_DIE( hardwareAdapter != nullptr);
 
    assert_win( D3D12CreateDevice(hardwareAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mHandle)) );
    if(mHandle == nullptr) { return false; }
 
-   mMainCommandQueue = CreateCommandQueue( eQueueType::Direct );
+   mCommandQueues[0] = CreateCommandQueue( eQueueType(0) );
+   mCommandQueues[1] = CreateCommandQueue( eQueueType(1) );
+   mCommandQueues[2] = CreateCommandQueue( eQueueType(2) );
 
    window.AttachDevice( shared_from_this() );
+   mWindow = &window;
 
    return true;
 }

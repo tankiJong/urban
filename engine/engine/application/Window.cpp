@@ -5,6 +5,9 @@
 #include "engine/graphics/d3d12/d3d12Util.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/graphics/CommandQueue.hpp"
+#include "engine/graphics/Texture.hpp"
+#include "engine/graphics/CommandList.hpp"
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -139,6 +142,14 @@ void Window::Init( uint2 pixelSize, std::string_view name )
    mAllowTearing = allowTearing && SUCCEEDED( hr );
 }
 
+void Window::SwapBuffer()
+{
+   // kick off all left work
+   // 
+
+   mCurrentFrameCount++;
+}
+
 Window& Window::Get()
 {
    if(!gWindow) {
@@ -164,12 +175,26 @@ void Window::AttachDevice( const S<Device>& device )
    swapChainDesc.SampleDesc.Count = 1;
    swapChainDesc.Flags            = mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
    
-   const S<CommandQueue>& queue = device->GetMainQueue();
+   const S<CommandQueue>& queue = device->GetMainQueue(eQueueType::Direct);
    assert_win( mWindowData->dxgiFactory->CreateSwapChainForHwnd( 
-               queue->NativeHandle().Get(), (HWND)mHandle, 
+               queue->Handle().Get(), (HWND)mHandle, 
                &swapChainDesc, nullptr, nullptr, &sc ) );
    sc->QueryInterface( IID_PPV_ARGS( &mWindowData->swapChain ) );
 
    // do not support fullscreen 
    assert_win( mWindowData->dxgiFactory->MakeWindowAssociation( (HWND)mHandle, DXGI_MWA_NO_ALT_ENTER) );
+
+   for(uint i = 0; i < kFrameCount; i++) {
+      resource_handle_t res;
+      mWindowData->swapChain->GetBuffer( i, IID_PPV_ARGS( &res ) );
+      mBackBuffers[i] = S<Texture2>(
+         new Texture2(res, eBindingFlag::RenderTarget | eBindingFlag::ShaderResource, 
+                      mPixelSize.x, mPixelSize.y, 1, 1, eTextureFormat::RGBA8Unorm));
+      mDepthBuffers[i] = S<Texture2>(
+         new Texture2(eBindingFlag::DepthStencil | eBindingFlag::ShaderResource, 
+                      mPixelSize.x, mPixelSize.y, 1, 1, eTextureFormat::D24Unorm_S8));
+      mDepthBuffers[i]->Init();
+   }
+
+   mCurrentBackBufferIndex = mWindowData->swapChain->GetCurrentBackBufferIndex();
 }

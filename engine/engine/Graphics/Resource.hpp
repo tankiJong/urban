@@ -2,12 +2,11 @@
 
 #include "engine/pch.h"
 #include "utils.hpp"
-class Resource {
+class Resource: public WithHandle<resource_handle_t>  {
 public:
-   
    /** Resource types. Notice there are no array types. Array are controlled using the array size parameter on texture creation.
    */
-   enum class Type: uint {
+   enum class eType: uint {
       Unknown,
       Buffer,                 ///< Buffer. Can be bound to all shader-stages
       Texture1D,              ///< 1D texture. Can be bound as render-target, shader-resource and UAV
@@ -19,7 +18,7 @@ public:
 
    /** Resource state. Keeps track of how the resource was last used
    */
-   enum class State: uint {
+   enum class eState: uint {
       Undefined,
       PreInitialized,
       Common,
@@ -43,8 +42,33 @@ public:
       AccelerationStructure,
    };
 
-   resource_handle_t Handle() const { return mHandle; }
 
+   virtual ~Resource() = default;
+
+   eType Type() const { return mType; }
+   eBindingFlag BindingFlags() const { return mBindingFlags; }
+
+   virtual bool Init() = 0;
 protected:
-   resource_handle_t mHandle = nullptr;
+   Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType );
+
+   Resource(
+      const resource_handle_t& handle,
+      eType                    type,
+      eBindingFlag             bindingFlags,
+      eAllocationType          allocationType );
+
+
+   struct {
+      bool                global                  = true;
+      eState              globalState             = eState::Undefined;
+      bool                globalInTransition      = false;
+      std::vector<eState> subresourceState        = {};
+      std::vector<bool>   subresourceInTransition = {};
+   } mutable              mState;
+
+   eType           mType           = eType::Unknown;
+   eBindingFlag    mBindingFlags   = eBindingFlag::None;
+   eAllocationType mAllocationType = eAllocationType::General;
+   
 };

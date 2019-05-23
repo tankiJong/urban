@@ -70,12 +70,12 @@ int SystemDialogue_YesNoCancel( const std::string& messageTitle, const std::stri
 //	- Triggers a debug breakpoint (if appropriate development suite is present)
 //	- Shuts down the app
 //
-#define ASSERT_DIE( condition, errorMessageText )												\
+#define ASSERT_DIE( condition )												\
 {																									\
 	if( !(condition) )																				\
 	{																								\
 		const char* conditionText = #condition;														\
-		FatalError( __FILE__,  __FUNCTION__, __LINE__, errorMessageText, conditionText );			\
+		FatalError( __FILE__,  __FUNCTION__, __LINE__, "Assert '"#condition"' failed", conditionText );			\
 	}																								\
 }
 
@@ -91,12 +91,12 @@ int SystemDialogue_YesNoCancel( const std::string& messageTitle, const std::stri
 //	- Triggers a debug breakpoint (if appropriate development suite is present)
 //	- Continues execution
 //
-#define ASSERT_RECOVERABLE( condition, errorMessageText )										\
+#define ASSERT_RECOVERABLE( condition )										\
 {																									\
 	if( !(condition) )																				\
 	{																								\
 		const char* conditionText = #condition;														\
-		RecoverableWarning( __FILE__,  __FUNCTION__, __LINE__, errorMessageText, conditionText );	\
+		RecoverableWarning( __FILE__,  __FUNCTION__, __LINE__, "Assert '"#condition"' failed", conditionText );	\
 	}																								\
 }
 

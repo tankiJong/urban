@@ -2,16 +2,18 @@
 
 #include "engine/pch.h"
 #include "utils.hpp"
+#include <queue>
 
+class Fence;
 class CommandList;
 
-class CommandQueue {
+class CommandQueue: public WithHandle<command_queue_t>  {
+   friend class Device;
 public:
-   void ExecuteCommandList( const S<CommandList>& commandList );
-   command_queue_t NativeHandle() const { return mHandle; };
+   void IssueCommandList( CommandList& commandList );
+   void Wait(Fence& fence);
+   void Signal(Fence& fence);
 
-   static S<CommandQueue> create( command_queue_t handle );
 protected:
-   CommandQueue( command_queue_t handle ): mHandle( handle ) {}
-   command_queue_t mHandle;
+   CommandQueue( command_queue_t handle ): WithHandle<command_queue_t>( handle ) {}
 };

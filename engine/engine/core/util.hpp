@@ -4,7 +4,6 @@
 
 using uint = uint32_t;
 
-
 // Adopted from Falcor
 
 // This is a helper class which should be used in case a class derives from a base class which derives from enable_shared_from_this

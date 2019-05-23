@@ -1,5 +1,5 @@
 ﻿#include "engine/pch.h"
-#include "Resource.hpp"
+#include "Fence.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -16,18 +16,3 @@
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
-
-Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
-   : mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
-
-Resource::Resource(
-   const resource_handle_t& handle,
-   eType                    type,
-   eBindingFlag             bindingFlags,
-   eAllocationType          allocationType )
-   : WithHandle<resource_handle_t>( handle )
-   , mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}

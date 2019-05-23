@@ -1,5 +1,7 @@
 ﻿#include "engine/pch.h"
 #include "CommandList.hpp"
+#include "Device.hpp"
+#include "CommandQueue.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -16,3 +18,28 @@
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
+void CommandList::Flush( bool wait )
+{
+   if(!mHasCommandPending) return;
+
+   // command list submission should not cross frame for now
+   ASSERT_DIE( mCreateFrame == mDevice->AttachedWindow()->CurrentFrameCount() );
+
+   S<CommandQueue> queue = mDevice->GetMainQueue( mRequireCommandQueueType );
+   queue->IssueCommandList( *this );
+   queue->Signal( mExecutionFence );
+
+   if(wait) {
+      mExecutionFence.Wait();
+   }
+
+   Reset();
+
+}
+
+void CommandList::Reset()
+{
+   mHasCommandPending = false;
+   mCurrentUsedCommandBuffer = &mDevice->GetThreadCommandBuffer();
+   mCurrentUsedCommandBuffer->Bind( *this );
+}

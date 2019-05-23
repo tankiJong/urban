@@ -4,6 +4,17 @@
 
 #include "d3d12/d3d12Util.hpp"
 
+template<typename HandleT>
+class WithHandle {
+public:
+   WithHandle() = default;
+   WithHandle(HandleT handle): mHandle( handle ) {}
+   const HandleT& Handle() const { return mHandle; }
+   HandleT& Handle() { return mHandle; } 
+protected:
+   HandleT mHandle;
+};
+
 enum class eCommandType: uint {
    Empty = 0u,
    Copy = BIT_FLAG( 0 ),
@@ -11,12 +22,11 @@ enum class eCommandType: uint {
    Graphics = BIT_FLAG( 2 ),
 };
 
-enum_class_operators( eCommandType );
-
 enum class eQueueType: uint {
    Copy = 0u,
    Compute,
    Direct,
+   Total, 
 };
 
 enum_class_operators( eQueueType );
@@ -38,3 +48,32 @@ enum class eBindingFlag: uint {
 };
 
 enum_class_operators( eBindingFlag );
+
+enum class eTextureFormatType {
+   Unknown,
+   Float,
+   Unorm,
+   UnormSrgb,
+   Snorm,
+   Uint,
+   Sint,
+};
+
+enum class eTextureFormat: uint {
+   Unknown = 0u,
+   RGBA8Unorm,
+   RGBA8Uint,
+   RG8Unorm,
+   R8Unorm,
+   D24Unorm_S8,
+   D32Float,
+};
+
+enum class eAllocationType: uint {
+   General,    /// < Allocated in an implicit managed heap
+   Temporary,  /// < Allocated in a ring buffer, should not expect to live more than one frame
+   Persistent, /// < Allocated in a linear allocator, should not release the resource until turn off the program
+};
+
+
+bool IsDepthFormat(eTextureFormat format);

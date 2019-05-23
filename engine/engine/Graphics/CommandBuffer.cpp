@@ -1,5 +1,5 @@
 ﻿#include "engine/pch.h"
-#include "Resource.hpp"
+#include "CommandBuffer.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -17,17 +17,27 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
-   : mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
 
-Resource::Resource(
-   const resource_handle_t& handle,
-   eType                    type,
-   eBindingFlag             bindingFlags,
-   eAllocationType          allocationType )
-   : WithHandle<resource_handle_t>( handle )
-   , mType( type )
-   , mBindingFlags( bindingFlags )
-   , mAllocationType( allocationType ) {}
+void CommandBufferChain::Init( Device& device )
+{
+   for(CommandBuffer& cb: mCommandBuffers) {
+      cb.Init( device );
+   }
+}
+
+CommandBuffer& CommandBufferChain::GetUsableCommandBuffer( bool forceSearch )
+{
+   CommandBuffer* buffer = &(mCommandBuffers[0]);
+
+   // the allocator used this frame should be the last updated one(when Window::SwapBuffer)
+   for(uint i = 1; i < mCommandBuffers.size(); i++) {
+      CommandBuffer& cb = mCommandBuffers[i];
+      ASSERT_DIE( cb.mLastUpdateFrame != buffer->mLastUpdateFrame ); // if they are the same... something is terribly wrong
+      if(cb.mLastUpdateFrame > buffer->mLastUpdateFrame) {
+         buffer = &cb;
+      }
+   }
+
+   return *buffer;
+}
+

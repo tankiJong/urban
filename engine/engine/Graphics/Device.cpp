@@ -9,6 +9,7 @@
 //////////////////////////// Static ////////////////////////////
 ////////////////////////////////////////////////////////////////
 S<Device> gDevice = nullptr;
+
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function /////////////////////
 ////////////////////////////////////////////////////////////////
@@ -20,6 +21,13 @@ Device::~Device()
 {
 }
 
+CommandBuffer& Device::GetThreadCommandBuffer()
+{
+   auto kv = mCommandAllocators.find( std::this_thread::get_id() );
+   ASSERT_DIE( kv != mCommandAllocators.end() );
+   return kv->second.GetUsableCommandBuffer();
+}
+
 Device& Device::Get()
 {
    return *gDevice;
@@ -29,7 +37,7 @@ Device& Device::Init(Window& window)
 {
    if(nullptr == gDevice) {
       gDevice = S<Device>(new Device());
-      ASSERT_DIE(gDevice->RhiInit(window), "Fail to init Device");
+      ASSERT_DIE(gDevice->RhiInit(window));
    }
 
    return *gDevice;

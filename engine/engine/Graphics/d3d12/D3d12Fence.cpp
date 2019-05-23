@@ -1,9 +1,9 @@
 ﻿#include "engine/pch.h"
+#include "d3d12Util.hpp"
+#include "../CommandQueue.hpp"
+#include "engine/graphics/Fence.hpp"
 #include "engine/graphics/Device.hpp"
-#include "engine/graphics/CommandBuffer.hpp"
-#include "engine/graphics/CommandList.hpp"
 #include "engine/platform/win.hpp"
-
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -20,18 +20,31 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-void CommandBuffer::Init( Device& device )
+Fence::Fence()
 {
-   assert_win( device.NativeDevice()->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS( &mHandle) ) );
-   mLastUpdateFrame = 0;
+   mEventHandle = CreateEvent( nullptr, FALSE, FALSE, nullptr );
+   assert_win( Device::Get().NativeDevice()->CreateFence( mExpectValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &mHandle ) ) );
 }
 
-void CommandBuffer::Reset()
+void Fence::Wait()
 {
-   mHandle->Reset();
+   uint64_t gpuVal = GpuCurrentValue();
+   if(gpuVal != mExpectValue) {
+      assert_win( mHandle->SetEventOnCompletion( mExpectValue, mEventHandle ) );
+      WaitForSingleObject( mEventHandle, INFINITE );
+   }
 }
 
-void CommandBuffer::Bind( CommandList& commandList )
+uint64_t Fence::Signal()
 {
-   assert_win( commandList.Handle()->Reset( mHandle.Get(), nullptr ) );
+   uint64_t oldVal = mExpectValue;
+   mExpectValue++;
+   mHandle->Signal( mExpectValue );
+   return oldVal;
 }
+
+uint64_t Fence::GpuCurrentValue()
+{
+   return mHandle->GetCompletedValue();
+}
+

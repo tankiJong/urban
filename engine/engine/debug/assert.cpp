@@ -45,7 +45,7 @@ void DebuggerPrintf( const char* messageFormat, ... )
 {
 	va_list variableArgumentList;
 	va_start( variableArgumentList, messageFormat );
-  //Log::tagv("debug", messageFormat, variableArgumentList);
+   OutputDebugStringA(Stringv( messageFormat, variableArgumentList ).c_str());
 	va_end( variableArgumentList );
 }
 

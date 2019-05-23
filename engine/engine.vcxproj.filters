@@ -149,5 +149,6 @@
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandList.cpp" />
     <ClCompile Include="engine\graphics\CommandBuffer.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandBuffer.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Fence.cpp" />
   </ItemGroup>
 </Project>

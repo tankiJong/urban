@@ -76,6 +76,8 @@ void Application::_update()
    OnRender();
    OnGui();
 
+   Window::Get().SwapBuffer();
+
    OnEndFrame();
 }
 

@@ -19,7 +19,7 @@ class CommandQueue;
  */
 class Fence: public WithHandle<fence_t> {
 public:
-
+   Fence();
    /**
     * \brief wait until the fence reach the expect value.
              GPU wait is achieved by `CommandQueue::Wait`
@@ -31,42 +31,44 @@ public:
              GPU signal is achieved by `CommandQueue::Signal`
     * \return the old value
     */
-   uint Signal();
+   uint64_t Signal();
 
    /**
     * \brief set the target value on cpu side, which will be the value later try to wait or signal
     * \param value to set
     * \return old value
     */
-   uint SetExpectValue( uint value );
+   uint64_t SetExpectValue( uint64_t value );
 
    /**
     * \brief increase the target value on cpu side, which will be the value later try to wait or signal
     * \param value to increase
     * \return old value
     */
-   uint IncreaseExpectedValue(uint value = 1u);
+   uint64_t IncreaseExpectedValue(uint64_t value = 1u) { mExpectValue += value; return mExpectValue; };
    
    /**
     * \brief 
     * \return current value on GPU
     */
-   uint GpuCurrentValue();
+   uint64_t GpuCurrentValue();
    
    /**
     * \brief 
     * \return the expected value on CPU side
     */
-   uint ExpectedValue();
+   uint64_t ExpectedValue() { return mExpectValue; };
 
+
+   static void WaitAll(Fence* fences, size_t count);
 protected:
-   uint mExpectValue = 0;
+   uint64_t mExpectValue = 0;
    void* mEventHandle = nullptr;
 };
 
-inline uint Fence::SetExpectValue( uint value )
+inline uint64_t Fence::SetExpectValue( uint64_t value )
 {
-   uint old     = mExpectValue;
+   uint64_t old     = mExpectValue;
    mExpectValue = value;
    return mExpectValue;
 }

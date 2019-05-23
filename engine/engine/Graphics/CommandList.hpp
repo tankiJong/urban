@@ -13,10 +13,11 @@ struct ViewInfo;
 
 class CommandList: public WithHandle<command_list_t>  {
 public:
-   CommandList();
+   CommandList(eQueueType type = eQueueType::Direct);
    
    void Flush(bool wait = false);
    void Reset();
+   void Close();
 
    // copy ------------------------------------------------------------//
    void TransitionBarrier(const Resource& resource, Resource::eState newState, const ViewInfo* viewInfo = nullptr);
@@ -34,6 +35,7 @@ public:
 
 protected:
    bool mHasCommandPending = false;
+   bool mIsClosed = false;
    eQueueType mRequireCommandQueueType = eQueueType::Copy;
    uint mCreateFrame = 0;
    Fence mExecutionFence;

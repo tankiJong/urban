@@ -26,6 +26,7 @@ class CommandBufferChain {
 public:
    void Init(Device& device);
    CommandBuffer& GetUsableCommandBuffer(bool forceSearch = false);
+   void ResetOldestCommandBuffer( uint currentFrame );
 protected:
    std::array<CommandBuffer, Window::kFrameCount> mCommandBuffers;
 };

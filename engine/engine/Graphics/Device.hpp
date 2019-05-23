@@ -21,9 +21,10 @@ public:
    const S<CommandQueue>& GetMainQueue(eQueueType type) const { return mCommandQueues[uint(type)]; };
    const device_handle_t& NativeDevice() const { return mHandle; };
    Window* AttachedWindow() const { return mWindow; }
-   // resource creation
-   CommandBuffer& GetThreadCommandBuffer();
 
+   CommandBuffer& GetThreadCommandBuffer();
+   void ResetAllCommandBuffer();
+   
    static Device& Get();
    static Device& Init( Window& window );
 protected:

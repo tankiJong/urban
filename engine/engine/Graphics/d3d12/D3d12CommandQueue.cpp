@@ -23,6 +23,7 @@
 void CommandQueue::IssueCommandList( CommandList& commandList )
 {
    ID3D12CommandList* commandListHandle = commandList.Handle().Get();
+   commandList.Close();
    mHandle->ExecuteCommandLists( 1, &commandListHandle );
 }
 

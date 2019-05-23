@@ -24,8 +24,21 @@ Device::~Device()
 CommandBuffer& Device::GetThreadCommandBuffer()
 {
    auto kv = mCommandAllocators.find( std::this_thread::get_id() );
-   ASSERT_DIE( kv != mCommandAllocators.end() );
-   return kv->second.GetUsableCommandBuffer();
+   if(kv == mCommandAllocators.end()) {
+      CommandBufferChain& cb = mCommandAllocators[std::this_thread::get_id()];
+      cb.Init( *this );
+      return cb.GetUsableCommandBuffer();
+   } else {
+      return kv->second.GetUsableCommandBuffer();
+   }
+}
+
+void Device::ResetAllCommandBuffer()
+{
+   uint currentFrame = mWindow->CurrentFrameCount();
+   for(auto& [_, cb]: mCommandAllocators) {
+      cb.ResetOldestCommandBuffer(currentFrame);
+   }
 }
 
 Device& Device::Get()

@@ -38,6 +38,14 @@ LRESULT CALLBACK gameWndProc(HWND hwnd,
 
   return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
+
+Window::~Window()
+{
+   mDevice = nullptr;
+   SAFE_DELETE( mFrameFence );
+   SAFE_DELETE( mWindowData );
+}
+
 void Window::Init( uint2 pixelSize, std::string_view name )
 {
    //////////////////////// Create Window ////////////////////////
@@ -144,10 +152,25 @@ void Window::Init( uint2 pixelSize, std::string_view name )
 
 void Window::SwapBuffer()
 {
-   // kick off all left work
-   // 
+   S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
 
+   CommandList list;
+   list.TransitionBarrier( BackBuffer(), Resource::eState::Present );
+   mainQueue->IssueCommandList( list );
+
+   mFrameFence->IncreaseExpectedValue( );
+   mainQueue->Signal( *mFrameFence );
+
+   mWindowData->swapChain->Present( 1, 0 );
+
+   mFrameFence->Wait();
+
+   DebuggerPrintf( "frame %d rendered\n", mCurrentFrameCount );
+
+   mCurrentBackBufferIndex = ( mCurrentBackBufferIndex + 1 ) % kFrameCount;
    mCurrentFrameCount++;
+
+   mDevice->ResetAllCommandBuffer();
 }
 
 Window& Window::Get()
@@ -160,7 +183,7 @@ Window& Window::Get()
 
 void Window::AttachDevice( const S<Device>& device )
 {
-   mRenderDevice = device;
+   mDevice = device;
    
    IDXGISwapChain1Ptr sc;
    
@@ -197,4 +220,6 @@ void Window::AttachDevice( const S<Device>& device )
    }
 
    mCurrentBackBufferIndex = mWindowData->swapChain->GetCurrentBackBufferIndex();
+
+   mFrameFence = new Fence();
 }

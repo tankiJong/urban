@@ -48,6 +48,9 @@ public:
    eType Type() const { return mType; }
    eBindingFlag BindingFlags() const { return mBindingFlags; }
 
+   eState GlobalState() const { return mState.globalState; }
+   bool   IsStateGlobal() const { return mState.global; }
+
    virtual bool Init() = 0;
 protected:
    Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType );

@@ -26,6 +26,7 @@
     <ClCompile Include="engine\async\event\EventTarget.cpp" />
     <ClCompile Include="engine\async\event\Observable.cpp" />
     <ClCompile Include="engine\core\any_func.cpp" />
+    <ClCompile Include="engine\core\Blob.cpp" />
     <ClCompile Include="engine\core\closure.cpp" />
     <ClCompile Include="engine\core\string.cpp" />
     <ClCompile Include="engine\core\util.cpp" />
@@ -39,14 +40,22 @@
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandList.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandQueue.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Fence.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12PipelineState.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Resource.cpp" />
     <ClCompile Include="engine\graphics\d3d12\d3d12Util.cpp" />
+    <ClCompile Include="engine\graphics\Descriptor.cpp" />
     <ClCompile Include="engine\graphics\Device.cpp" />
     <ClCompile Include="engine\graphics\Fence.cpp" />
+    <ClCompile Include="engine\graphics\PipelineState.cpp" />
+    <ClCompile Include="engine\graphics\program\BindingLayout.cpp" />
+    <ClCompile Include="engine\graphics\program\Program.cpp" />
+    <ClCompile Include="engine\graphics\program\ResourceBinding.cpp" />
+    <ClCompile Include="engine\graphics\program\Shader.cpp" />
     <ClCompile Include="engine\graphics\Resource.cpp" />
+    <ClCompile Include="engine\graphics\rgba.cpp" />
     <ClCompile Include="engine\graphics\Texture.cpp" />
     <ClCompile Include="engine\graphics\utils.cpp" />
-    <ClCompile Include="engine\graphics\View.cpp" />
+    <ClCompile Include="engine\graphics\ResourceView.cpp" />
     <ClCompile Include="engine\math\cylic.cpp" />
     <ClCompile Include="engine\math\util.cpp" />
     <ClCompile Include="engine\pch.cpp">
@@ -65,6 +74,7 @@
     <ClInclude Include="engine\async\event\EventTarget.hpp" />
     <ClInclude Include="engine\async\event\Observable.hpp" />
     <ClInclude Include="engine\core\any_func.hpp" />
+    <ClInclude Include="engine\core\Blob.hpp" />
     <ClInclude Include="engine\core\closure.hpp" />
     <ClInclude Include="engine\core\string.hpp" />
     <ClInclude Include="engine\core\traits.hpp" />
@@ -76,13 +86,20 @@
     <ClInclude Include="engine\graphics\CommandList.hpp" />
     <ClInclude Include="engine\graphics\CommandQueue.hpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Device.cpp" />
+    <ClInclude Include="engine\graphics\Descriptor.hpp" />
     <ClInclude Include="engine\graphics\Device.hpp" />
     <ClInclude Include="engine\graphics\d3d12\d3d12Util.hpp" />
     <ClInclude Include="engine\graphics\Fence.hpp" />
+    <ClInclude Include="engine\graphics\PipelineState.hpp" />
+    <ClInclude Include="engine\graphics\program\BindingLayout.hpp" />
+    <ClInclude Include="engine\graphics\program\Program.hpp" />
+    <ClInclude Include="engine\graphics\program\ResourceBinding.hpp" />
+    <ClInclude Include="engine\graphics\program\Shader.hpp" />
     <ClInclude Include="engine\graphics\Resource.hpp" />
+    <ClInclude Include="engine\graphics\rgba.hpp" />
     <ClInclude Include="engine\graphics\Texture.hpp" />
     <ClInclude Include="engine\graphics\utils.hpp" />
-    <ClInclude Include="engine\graphics\View.hpp" />
+    <ClInclude Include="engine\graphics\ResourceView.hpp" />
     <ClInclude Include="engine\math\cylic.hpp" />
     <ClInclude Include="engine\math\primitives.hpp" />
     <ClInclude Include="engine\math\util.hpp" />
@@ -175,7 +192,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
@@ -196,7 +213,7 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
@@ -219,7 +236,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
@@ -244,7 +261,7 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)external</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>

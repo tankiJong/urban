@@ -1,7 +1,7 @@
 ﻿#pragma once
 
+#include <atomic>
 #include "utils.hpp"
-
 class CommandQueue;
 
 /**
@@ -62,7 +62,7 @@ public:
 
    static void WaitAll(Fence* fences, size_t count);
 protected:
-   uint64_t mExpectValue = 0;
+   std::atomic<uint64_t> mExpectValue = 0;
    void* mEventHandle = nullptr;
 };
 

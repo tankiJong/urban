@@ -2,6 +2,10 @@
 
 #include "engine/pch.h"
 #include "utils.hpp"
+
+class RenderTargetView;
+class DepthStencilView;
+
 class Resource: public WithHandle<resource_handle_t>  {
 public:
    /** Resource types. Notice there are no array types. Array are controlled using the array size parameter on texture creation.
@@ -50,6 +54,9 @@ public:
 
    eState GlobalState() const { return mState.globalState; }
    bool   IsStateGlobal() const { return mState.global; }
+
+   virtual RenderTargetView* rtv(uint mip = 0, uint arraySlice = 0) { return nullptr; }
+   virtual DepthStencilView* dsv(uint mip = 0, uint arraySlice = 0) { return nullptr; }
 
    virtual bool Init() = 0;
 protected:

@@ -86,9 +86,17 @@
     <ClInclude Include="engine\graphics\Resource.hpp" />
     <ClInclude Include="engine\graphics\Fence.hpp" />
     <ClInclude Include="engine\graphics\Texture.hpp" />
-    <ClInclude Include="engine\graphics\View.hpp" />
     <ClInclude Include="engine\math\cylic.hpp" />
     <ClInclude Include="engine\graphics\CommandBuffer.hpp" />
+    <ClInclude Include="engine\graphics\rgba.hpp" />
+    <ClInclude Include="engine\graphics\program\Shader.hpp" />
+    <ClInclude Include="engine\core\Blob.hpp" />
+    <ClInclude Include="engine\graphics\program\Program.hpp" />
+    <ClInclude Include="engine\graphics\program\BindingLayout.hpp" />
+    <ClInclude Include="engine\graphics\PipelineState.hpp" />
+    <ClInclude Include="engine\graphics\ResourceView.hpp" />
+    <ClInclude Include="engine\graphics\program\ResourceBinding.hpp" />
+    <ClInclude Include="engine\graphics\Descriptor.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -142,7 +150,6 @@
     <ClCompile Include="engine\graphics\Fence.cpp" />
     <ClCompile Include="engine\graphics\Texture.cpp" />
     <ClCompile Include="engine\graphics\utils.cpp" />
-    <ClCompile Include="engine\graphics\View.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandQueue.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Resource.cpp" />
     <ClCompile Include="engine\math\cylic.cpp" />
@@ -150,5 +157,15 @@
     <ClCompile Include="engine\graphics\CommandBuffer.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandBuffer.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Fence.cpp" />
+    <ClCompile Include="engine\graphics\rgba.cpp" />
+    <ClCompile Include="engine\graphics\program\Shader.cpp" />
+    <ClCompile Include="engine\core\Blob.cpp" />
+    <ClCompile Include="engine\graphics\program\Program.cpp" />
+    <ClCompile Include="engine\graphics\program\BindingLayout.cpp" />
+    <ClCompile Include="engine\graphics\PipelineState.cpp" />
+    <ClCompile Include="engine\graphics\ResourceView.cpp" />
+    <ClCompile Include="engine\graphics\program\ResourceBinding.cpp" />
+    <ClCompile Include="engine\graphics\Descriptor.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12PipelineState.cpp" />
   </ItemGroup>
 </Project>

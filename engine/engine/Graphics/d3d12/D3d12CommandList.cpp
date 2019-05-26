@@ -5,6 +5,9 @@
 #include "engine/graphics/Fence.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/platform/win.hpp"
+#include "engine/graphics/Texture.hpp"
+#include "engine/graphics/PipelineState.hpp"
+#include "engine/graphics/program/Program.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -112,6 +115,30 @@ void CommandList::Close()
    mIsClosed = true;
 }
 
+void CommandList::SetComputePipelineState( ComputeState& pps )
+{
+   pps.Finalize();
+   mHandle->SetPipelineState( pps.Handle().Get() );
+}
+
+void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
+{
+   // # create pipeline state
+   // Program
+   // RenderState
+   // Input layout
+   // Frame buffer -> num render target
+   // Frame buffer -> rtv format, dsv format
+
+   // # set viewport/scissor rect <- Frame buffer
+
+   // # blend factor
+
+   // # Topology
+
+
+}
+
 void CommandList::TransitionBarrier( const Resource& resource, Resource::eState newState, const ViewInfo* viewInfo )
 {
    ASSERT_DIE( viewInfo == nullptr );
@@ -128,4 +155,9 @@ void CommandList::TransitionBarrier( const Resource& resource, Resource::eState 
    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
    mHandle->ResourceBarrier( 1,  &barrier);
+}
+
+void CommandList::Draw( uint start, uint count )
+{
+   mHandle->DrawInstanced( count, 1, start, 0 );
 }

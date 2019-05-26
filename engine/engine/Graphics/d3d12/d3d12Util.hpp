@@ -32,6 +32,8 @@ MAKE_SMART_COM_PTR( ID3D12CommandAllocator );
 MAKE_SMART_COM_PTR( ID3D12GraphicsCommandList4 );
 MAKE_SMART_COM_PTR( ID3D12Resource );
 MAKE_SMART_COM_PTR( ID3D12Fence );
+MAKE_SMART_COM_PTR( ID3D12DescriptorHeap );
+MAKE_SMART_COM_PTR( ID3D12PipelineState );
 
 using device_handle_t = ID3D12Device5Ptr;
 using command_queue_t = ID3D12CommandQueuePtr;
@@ -39,8 +41,15 @@ using command_buffer_t = ID3D12CommandAllocatorPtr;
 using command_list_t = ID3D12GraphicsCommandList4Ptr;
 using resource_handle_t = ID3D12ResourcePtr;
 using fence_t = ID3D12FencePtr;
+using pipelinestate_t = ID3D12PipelineStatePtr;
+
+using descriptor_heap_t = ID3D12DescriptorHeapPtr;
+using descriptor_cpu_handle_t = D3D12_CPU_DESCRIPTOR_HANDLE;
+using descriptor_gpu_handle_t = D3D12_GPU_DESCRIPTOR_HANDLE;
 
 enum class eTextureFormat: unsigned;
 
 DXGI_FORMAT ToDXGIFormat( eTextureFormat format );
 DXGI_FORMAT ToDXGITypelessFromDepthFormat(eTextureFormat format);
+
+constexpr uint kMaxRenderTargetSupport = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;

@@ -6,6 +6,15 @@
 #include <iostream>
 #include "engine/application/Window.hpp"
 #include "engine/application/Application.hpp"
+#include "engine/graphics/CommandList.hpp"
+#include "engine/graphics/PipelineState.hpp"
+#include "engine/graphics/program/Program.hpp"
+
+#include "pass_vs.h"
+#include "pass_ps.h"
+#include "engine/graphics/Texture.hpp"
+#include "engine/graphics/Device.hpp"
+#include "engine/graphics/CommandQueue.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -92,8 +101,34 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
-class GameApplication: public Application {
+class GameApplication final: public Application {
+public:
+   void OnRender() const override;
 };
+
+void GameApplication::OnRender() const
+{
+   static Program* prog = nullptr;
+
+   if(prog == nullptr) {
+      prog = new Program();
+
+      prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
+      prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
+   }
+   CommandList   list;
+   GraphicsState gs;
+
+   gs.SetProgram( prog );
+   gs.GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().rtv() );
+   gs.SetTopology( eTopology::Triangle );
+
+   list.SetGraphicsPipelineState( gs );
+   list.Draw( 0, 3 );
+
+   Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
+
+}
 
 int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
 {

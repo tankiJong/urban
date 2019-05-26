@@ -33,7 +33,7 @@ CommandBuffer& CommandBufferChain::GetUsableCommandBuffer( bool forceSearch )
 {
    CommandBuffer* buffer = &(mCommandBuffers[0]);
 
-   // the command buffer used this frame should be the latest updated one(when Window::SwapBuffer)
+   // the command mBuffer used this frame should be the latest updated one(when Window::SwapBuffer)
    for(uint i = 1; i < mCommandBuffers.size(); i++) {
       CommandBuffer& cb = mCommandBuffers[i];
       ASSERT_DIE( cb.mLastUpdateFrame != buffer->mLastUpdateFrame ); // if they are the same... something is terribly wrong
@@ -49,7 +49,7 @@ void CommandBufferChain::ResetOldestCommandBuffer( uint currentFrame )
 {   
    CommandBuffer* buffer = &(mCommandBuffers[0]);
 
-   // the command buffer available should be the oldest updated one
+   // the command mBuffer available should be the oldest updated one
    for(uint i = 1; i < mCommandBuffers.size(); i++) {
       CommandBuffer& cb = mCommandBuffers[i];
       ASSERT_DIE( cb.mLastUpdateFrame != buffer->mLastUpdateFrame ); // if they are the same... something is terribly wrong

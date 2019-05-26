@@ -1,10 +1,13 @@
 ﻿#pragma once
 
-#include "engine/pch.h"
-#include "utils.hpp"
 #include "Resource.hpp"
 #include "Fence.hpp"
 
+class GraphicsState;
+class ResourceBinding;
+class ComputeState;
+struct rgba;
+class Texture2;
 class Device;
 class Buffer;
 class Resource;
@@ -19,6 +22,10 @@ public:
    void Reset();
    void Close();
 
+   void SetComputePipelineState(ComputeState& pps);
+   void SetGraphicsPipelineState(GraphicsState& pps);
+   void BindResources(const ResourceBinding& bindings);
+
    // copy ------------------------------------------------------------//
    void TransitionBarrier(const Resource& resource, Resource::eState newState, const ViewInfo* viewInfo = nullptr);
    void UavBarrier(const Resource& resource);
@@ -28,6 +35,7 @@ public:
    void Dispatch(uint groupx, uint groupy, uint groupz);
 
    // graphics ------------------------------------------------------------//
+   void ClearRenderTarget(Texture2& tex, const rgba& color);
    void Draw(uint start, uint count);
    void DrawIndexed(uint vertStart, uint idxStart, uint count);
    void DrawInstanced(uint startVert, uint startIns, uint vertCount, uint insCount);

@@ -35,15 +35,15 @@ enum_class_operators( eQueueType );
 */
 enum class eBindingFlag: uint {
    None = 0x0,             ///< The resource will not be bound the pipeline. Use this to create a staging resource
-   VertexBuffer = 0x1,     ///< The resource will be bound as a vertex-buffer
-   IndexBuffer = 0x2,      ///< The resource will be bound as a index-buffer
-   ConstantBuffer = 0x4,   ///< The resource will be bound as a constant-buffer
-   StreamOutput = 0x8,     ///< The resource will be bound to the stream-output stage as an output buffer
+   VertexBuffer = 0x1,     ///< The resource will be bound as a vertex-mBuffer
+   IndexBuffer = 0x2,      ///< The resource will be bound as a index-mBuffer
+   ConstantBuffer = 0x4,   ///< The resource will be bound as a constant-mBuffer
+   StreamOutput = 0x8,     ///< The resource will be bound to the stream-output stage as an output mBuffer
    ShaderResource = 0x10,  ///< The resource will be bound as a shader-resource
    UnorderedAccess = 0x20, ///< The resource will be bound as an UAV
    RenderTarget = 0x40,    ///< The resource will be bound as a render-target
-   DepthStencil = 0x80,    ///< The resource will be bound as a depth-stencil buffer
-   IndirectArg = 0x100,    ///< The resource will be bound as an indirect argument buffer
+   DepthStencil = 0x80,    ///< The resource will be bound as a depth-stencil mBuffer
+   IndirectArg = 0x100,    ///< The resource will be bound as an indirect argument mBuffer
    AccelerationStructure = 0x80000000, ///< The resource will be bound as an acceleration structure
 };
 
@@ -71,9 +71,80 @@ enum class eTextureFormat: uint {
 
 enum class eAllocationType: uint {
    General,    /// < Allocated in an implicit managed heap
-   Temporary,  /// < Allocated in a ring buffer, should not expect to live more than one frame
+   Temporary,  /// < Allocated in a ring mBuffer, should not expect to live more than one frame
    Persistent, /// < Allocated in a linear allocator, should not release the resource until turn off the program
 };
 
+enum class eShaderType: uint {
+   Unknown = -1,
+   Compute = 0,
+   Vertex,
+   Pixel,
+   Total,
+};
+
+enum class eBlend: uint {
+   Zero,
+   One,
+   Src_Color,
+   Src_InvColor,
+   Src_Alpha,
+   Src_InvAlpha,
+   Dest_Color,
+   Dest_InvColor,
+   Dest_Alpha,
+   Dest_InvAlpha,
+};
+
+enum class eBlendOp: uint {
+   Add,
+   Subtract,
+   Subtract_Rev,
+   Min,
+   Max,
+};
+
+enum class eBlendLogicOp: uint {
+   Noop,
+   Clear,
+   Set,
+
+};
+
+struct RenderState {
+   struct BlendState {
+      bool independent;
+
+      struct {
+         bool enableBlend = false;
+         bool enableLogicOp = false;
+
+         struct Blend {
+            eBlend src = eBlend::One;
+            eBlend dest = eBlend::Zero;
+            eBlendOp op = eBlendOp::Add;
+         } color, alpha;
+
+         eBlendLogicOp logicOp = eBlendLogicOp::Noop;
+
+         // Write Mask, 0-R, 1-G, 2-B, 3-A
+         bool writeMask[4] = { true, true, true, true }; 
+      } individuals[8];
+
+   } blend;
+
+   struct RasterizerState {
+      
+   } rasterizer;
+
+   struct DepthStencilState {
+      
+   } depthStencil;
+};
+
+enum class eTopology {
+   Unknown = -1,
+   Triangle,
+};
 
 bool IsDepthFormat(eTextureFormat format);

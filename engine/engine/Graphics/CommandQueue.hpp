@@ -2,7 +2,7 @@
 
 #include "engine/pch.h"
 #include "utils.hpp"
-#include <queue>
+#include <mutex>
 
 class Fence;
 class CommandList;
@@ -16,4 +16,6 @@ public:
 
 protected:
    CommandQueue( command_queue_t handle ): WithHandle<command_queue_t>( handle ) {}
+
+   std::mutex mCpuLock;
 };

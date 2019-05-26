@@ -188,7 +188,7 @@ void Window::AttachDevice( const S<Device>& device )
    IDXGISwapChain1Ptr sc;
    
    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-   swapChainDesc.BufferCount           = kFrameCount; // front buffer & back buffer
+   swapChainDesc.BufferCount           = kFrameCount; // front mBuffer & back mBuffer
    swapChainDesc.Width                 = 0;
    swapChainDesc.Height                =
       0; // will get figured out and fit the window, when calling `CreateSwapChainForHwnd`

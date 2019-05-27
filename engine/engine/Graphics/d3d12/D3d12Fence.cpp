@@ -38,7 +38,7 @@ void Fence::Wait()
 uint64_t Fence::Signal()
 {
    uint64_t oldVal = mExpectValue;
-   mExpectValue++;
+   ++mExpectValue;
    mHandle->Signal( mExpectValue );
    return oldVal;
 }

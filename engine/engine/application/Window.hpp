@@ -23,16 +23,19 @@ public:
 
    uint CurrentBackBufferIndex() const { return mCurrentBackBufferIndex; };
    uint CurrentFrameCount() const { return mCurrentFrameCount; }
+   uint2 WindowSize() const { return mWindowSize; }
+   uint2 BackBufferSize() const { return mBufferSize; }
+
    Texture2& BackBuffer() const { return *mBackBuffers[mCurrentBackBufferIndex]; }
    Texture2& DepthBuffer() const { return *mDepthBuffers[mCurrentBackBufferIndex]; }
 
    WindowData* NativeData() const { return mWindowData; }
    void AttachDevice(const S<Device>& device);
-
    static Window& Get();
 protected:
    
-   uint2 mPixelSize;
+   uint2 mWindowSize;
+   uint2 mBufferSize;
    void* mHandle = nullptr;
    WindowData* mWindowData = nullptr;
    S<Device> mDevice = nullptr;

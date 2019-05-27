@@ -8,6 +8,7 @@
 #include "engine/graphics/Texture.hpp"
 #include "engine/graphics/PipelineState.hpp"
 #include "engine/graphics/program/Program.hpp"
+#include "engine/graphics/rgba.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -77,6 +78,17 @@ D3D12_COMMAND_LIST_TYPE ToD3d12CommandListType(eQueueType queueType)
       BAD_CODE_PATH();
    }
 }
+
+D3D12_PRIMITIVE_TOPOLOGY ToD3d12Topology(eTopology tp)
+{
+   switch(tp) {
+   case eTopology::Unknown: return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+   case eTopology::Triangle: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+   }
+   BAD_CODE_PATH();
+   return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+}
+
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
@@ -123,6 +135,20 @@ void CommandList::SetComputePipelineState( ComputeState& pps )
 
 void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
 {
+   pps.Finalize();
+   mHandle->SetPipelineState( pps.Handle().Get() );
+
+   const Shader& shader = pps.GetProgram()->GetStage( eShaderType::Vertex );
+
+   ID3DBlob* rootBlob;
+   assert_win( D3DGetBlobPart(shader.GetDataPtr(), shader.GetSize(), D3D_BLOB_ROOT_SIGNATURE, 0, &rootBlob));
+
+   ID3D12RootSignature* sig;
+   mDevice->Get().NativeDevice()->CreateRootSignature( 0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(), IID_PPV_ARGS( &sig ) );
+   
+   // # Topology, Rootsignature
+   mHandle->SetGraphicsRootSignature( sig );
+   mHandle->IASetPrimitiveTopology( ToD3d12Topology( pps.GetTopology() ) );
    // # create pipeline state
    // Program
    // RenderState
@@ -131,10 +157,34 @@ void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
    // Frame buffer -> rtv format, dsv format
 
    // # set viewport/scissor rect <- Frame buffer
+   D3D12_VIEWPORT vp;
+   vp.TopLeftX = 0;
+   vp.TopLeftY = 0;
+   vp.Width = Window::Get().BackBufferSize().x;
+   vp.Height = Window::Get().BackBufferSize().y;
+   vp.MinDepth = 0;
+   vp.MaxDepth = 1;
 
+   D3D12_RECT sr;
+   sr.left = 0;
+   sr.top = 0;
+   sr.right = vp.Width;
+   sr.bottom = vp.Height;
+
+   mHandle->RSSetViewports( 1,  &vp);
+   mHandle->RSSetScissorRects( 1, &sr );
+
+   const FrameBuffer& fb = pps.GetFrameBuffer();
+
+   D3D12_CPU_DESCRIPTOR_HANDLE rtvs[kMaxRenderTargetSupport];
+   for(uint i = 0; i < kMaxRenderTargetSupport; i++) {
+      const RenderTargetView* rtv = fb.GetRenderTarget( i );
+      ASSERT_DIE( rtv != nullptr )
+      rtvs[i] = rtv->GetHandle()->GetCpuHandle( 0 );
+   }
+
+   mHandle->OMSetRenderTargets( kMaxRenderTargetSupport, rtvs, false, nullptr );
    // # blend factor
-
-   // # Topology
 
 
 }
@@ -154,7 +204,22 @@ void CommandList::TransitionBarrier( const Resource& resource, Resource::eState 
    barrier.Transition.pResource = resource.Handle().Get();
    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
+   resource.mState.globalState = newState;
+
    mHandle->ResourceBarrier( 1,  &barrier);
+}
+
+void CommandList::ClearRenderTarget( Texture2& tex, const rgba& color )
+{
+   float c[4] = { color.r, color.g, color.b, color.a };
+   D3D12_RECT rect;
+
+   rect.top = 0;
+   rect.left = 0;
+   rect.right = tex.Width(  );
+   rect.bottom = tex.Height(  );
+
+   mHandle->ClearRenderTargetView( tex.rtv( )->GetHandle()->GetCpuHandle( 0 ), c, 1,  &rect);
 }
 
 void CommandList::Draw( uint start, uint count )

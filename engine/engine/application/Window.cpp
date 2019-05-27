@@ -49,7 +49,6 @@ Window::~Window()
 void Window::Init( uint2 pixelSize, std::string_view name )
 {
    //////////////////////// Create Window ////////////////////////
-   mPixelSize = pixelSize;
    // Define a window style/class
    WNDCLASSEX windowClassDescription;
    memset( &windowClassDescription, 0, sizeof(windowClassDescription) );
@@ -101,6 +100,9 @@ void Window::Init( uint2 pixelSize, std::string_view name )
    RECT windowRect = clientRect;
    AdjustWindowRectEx( &windowRect, windowStyleFlags, FALSE, windowStyleExFlags );
 
+   mWindowSize = { uint(windowRect.right - windowRect.left),
+                   uint(windowRect.bottom - windowRect.top) };
+
    WCHAR windowTitle[1024];
    MultiByteToWideChar( GetACP(), 0, name.data(), -1, windowTitle, sizeof(windowTitle) / sizeof(windowTitle[0]) );
 
@@ -113,8 +115,8 @@ void Window::Init( uint2 pixelSize, std::string_view name )
                             windowStyleFlags,
                             windowRect.left,
                             windowRect.top,
-                            windowRect.right - windowRect.left,
-                            windowRect.bottom - windowRect.top,
+                            mWindowSize.x,
+                            mWindowSize.y,
                             NULL,
                             NULL,
                             applicationInstanceHandle,
@@ -155,15 +157,15 @@ void Window::SwapBuffer()
    S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
 
    CommandList list;
+   list.Handle()->SetName( L"End CommandList" );
    list.TransitionBarrier( BackBuffer(), Resource::eState::Present );
    mainQueue->IssueCommandList( list );
 
    mFrameFence->IncreaseExpectedValue( );
    mainQueue->Signal( *mFrameFence );
-
+   mFrameFence->Wait();
    mWindowData->swapChain->Present( 1, 0 );
 
-   mFrameFence->Wait();
 
    DebuggerPrintf( "frame %d rendered\n", mCurrentFrameCount );
 
@@ -207,19 +209,26 @@ void Window::AttachDevice( const S<Device>& device )
    // do not support fullscreen 
    assert_win( mWindowData->dxgiFactory->MakeWindowAssociation( (HWND)mHandle, DXGI_MWA_NO_ALT_ENTER) );
 
+   ID3D12Resource* res;
+   sc->GetBuffer( 0, IID_PPV_ARGS( &res ) );
+   mBufferSize = { (uint)res->GetDesc().Width, (uint)res->GetDesc().Height };
+
    for(uint i = 0; i < kFrameCount; i++) {
       resource_handle_t res;
       mWindowData->swapChain->GetBuffer( i, IID_PPV_ARGS( &res ) );
       mBackBuffers[i] = S<Texture2>(
          new Texture2(res, eBindingFlag::RenderTarget | eBindingFlag::ShaderResource, 
-                      mPixelSize.x, mPixelSize.y, 1, 1, eTextureFormat::RGBA8Unorm));
+                      mBufferSize.x, mBufferSize.y, 1, 1, eTextureFormat::RGBA8Unorm));
       mDepthBuffers[i] = S<Texture2>(
          new Texture2(eBindingFlag::DepthStencil | eBindingFlag::ShaderResource, 
-                      mPixelSize.x, mPixelSize.y, 1, 1, eTextureFormat::D24Unorm_S8));
+                      mBufferSize.x, mBufferSize.y, 1, 1, eTextureFormat::D24Unorm_S8));
       mDepthBuffers[i]->Init();
    }
 
    mCurrentBackBufferIndex = mWindowData->swapChain->GetCurrentBackBufferIndex();
 
    mFrameFence = new Fence();
+
+   S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
+   mainQueue->Signal( *mFrameFence );
 }

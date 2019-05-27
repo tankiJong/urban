@@ -29,11 +29,12 @@ public:
    void SetRenderTarget(uint index, const RenderTargetView* rtv);
    void SetDepthStencilTarget(const DepthStencilView* dsv);
 
+   const RenderTargetView* GetRenderTarget(uint index) const { return mRenderTargets[index]; }
+
    const Desc& Describe() const { return mDesc; }
 
-
 protected:
-   FrameBuffer() = default;
+   FrameBuffer();
 
    Desc mDesc;
 

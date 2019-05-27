@@ -3,6 +3,7 @@
 #include "engine/platform/win.hpp"
 #include "engine/application/Window.hpp"
 #include "engine/graphics/CommandQueue.hpp"
+#include "engine/graphics/Descriptor.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -89,6 +90,28 @@ bool Device::RhiInit(Window& window)
 
    window.AttachDevice( shared_from_this() );
    mWindow = &window;
+   /*
+    *
+       16 * 1024    // rtv
+       16 * 1024    // dsv
+       16 * 1024    // srv
+       16 * 1024    // cbv
+       16 * 1024    // uav
+       2048;        // sampler
+    */
+   mCpuDescriptorHeap[0] = new CpuDescriptorHeap(eDescriptorType::Cbv | eDescriptorType::Uav | eDescriptorType::Srv, 16 * 1024 * 4);
+   mCpuDescriptorHeap[1] = new CpuDescriptorHeap(eDescriptorType::Rtv, 16 * 1024);
+   mCpuDescriptorHeap[2] = new CpuDescriptorHeap(eDescriptorType::Dsv, 16 * 1024);
+   mCpuDescriptorHeap[3] = new CpuDescriptorHeap(eDescriptorType::Sampler, 2 * 1024);
+   mCpuDescriptorHeap[0]->Init();
+   mCpuDescriptorHeap[1]->Init();
+   mCpuDescriptorHeap[2]->Init();
+   mCpuDescriptorHeap[3]->Init();
+   
+   mGpuDescriptorHeap[0] = new GpuDescriptorHeap(eDescriptorType::Cbv | eDescriptorType::Uav | eDescriptorType::Srv, 16 * 1024 * 4);
+   mGpuDescriptorHeap[1] = new GpuDescriptorHeap(eDescriptorType::Sampler, 2 * 1024);
+   mGpuDescriptorHeap[0]->Init();
+   mGpuDescriptorHeap[1]->Init();
 
    return true;
 }

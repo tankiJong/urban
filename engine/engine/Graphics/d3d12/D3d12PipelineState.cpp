@@ -5,6 +5,7 @@
 #include "engine/graphics/Device.hpp"
 #include "engine/platform/win.hpp"
 #include "engine/graphics/ResourceView.hpp"
+#include "engine/graphics/Resource.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -95,12 +96,22 @@ void SetD3d12BlendState(D3D12_BLEND_DESC* desc, const RenderState::BlendState& b
 
 void SetD3d12DepthStencilState(D3D12_DEPTH_STENCIL_DESC* desc, const RenderState::DepthStencilState& ds)
 {
-   *desc = D3D12_DEPTH_STENCIL_DESC{};
+   desc->DepthEnable = false;
 } 
 
 void SetD3d12RasterizerState( D3D12_RASTERIZER_DESC* desc, const RenderState::RasterizerState& rs )
 {
-   *desc = D3D12_RASTERIZER_DESC{};
+   desc->FillMode              = D3D12_FILL_MODE_SOLID;
+   desc->CullMode              = D3D12_CULL_MODE_NONE;
+   desc->FrontCounterClockwise = TRUE;
+   desc->DepthBias             = 0;
+   desc->DepthBiasClamp        = 0.0f;
+   desc->SlopeScaledDepthBias  = 0.0f;
+   desc->DepthClipEnable       = TRUE;
+   desc->MultisampleEnable     = FALSE;
+   desc->AntialiasedLineEnable = FALSE;
+   desc->ForcedSampleCount     = 0;
+   desc->ConservativeRaster    = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 };
 
 void SetD3d12InputLayout( D3D12_INPUT_LAYOUT_DESC* desc, const InputLayout* il )
@@ -112,11 +123,12 @@ void SetD3d12InputLayout( D3D12_INPUT_LAYOUT_DESC* desc, const InputLayout* il )
    ele->Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
    ele->InputSlot = 0;
    ele->AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
+   ele->InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+   ele->InstanceDataStepRate = 0;
    desc->pInputElementDescs = ele;
 };
 
-D3D12_PRIMITIVE_TOPOLOGY_TYPE ToD3d12Topology(eTopology tp)
+D3D12_PRIMITIVE_TOPOLOGY_TYPE ToD3d12TopologyType(eTopology tp)
 {
    switch(tp) {
    case eTopology::Unknown: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
@@ -128,9 +140,14 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE ToD3d12Topology(eTopology tp)
 
 void SetD3d12FrameBufferFormats( D3D12_GRAPHICS_PIPELINE_STATE_DESC* desc, const FrameBuffer::Desc& fbo )
 {
+   uint maxRenderTargetCount = -1;
+
    for(uint i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
       desc->RTVFormats[i] = ToDXGIFormat(fbo.renderTargets[i]);
+      if(fbo.renderTargets[i] != eTextureFormat::Unknown) maxRenderTargetCount = i;
    }
+   desc->NumRenderTargets = maxRenderTargetCount + 1;
+
    desc->DSVFormat = ToDXGIFormat(fbo.depthStencilTarget);
 };
 
@@ -141,8 +158,19 @@ void SetD3d12FrameBufferFormats( D3D12_GRAPHICS_PIPELINE_STATE_DESC* desc, const
 
 void FrameBuffer::SetRenderTarget( uint index, const RenderTargetView* rtv )
 {
+   if(rtv == nullptr) {
+      rtv = RenderTargetView::NullView();
+   }
    mDesc.renderTargets[index] = rtv->Format();
    mRenderTargets[index] = rtv;
+}
+
+FrameBuffer::FrameBuffer()
+{
+   for(const RenderTargetView*& renderTarget: mRenderTargets) {
+      renderTarget = RenderTargetView::NullView();
+   }
+   // mDepthStencilTarget = DepthStencilView::NullView()
 }
 
 bool ComputeState::Finalize()
@@ -168,7 +196,7 @@ bool GraphicsState::Finalize()
 {
    if(!mIsDirty) return false;
 
-   D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
+   D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 
    desc.pRootSignature = nullptr;
 
@@ -189,8 +217,9 @@ bool GraphicsState::Finalize()
    SetD3d12InputLayout( &desc.InputLayout, mInputLayout );
    SetD3d12FrameBufferFormats( &desc, mFrameBuffer.Describe() );
 
-   desc.PrimitiveTopologyType = ToD3d12Topology( mTopology );
-
+   desc.PrimitiveTopologyType = ToD3d12TopologyType( mTopology );
+   desc.SampleDesc.Count = 1;
+   desc.SampleMask = UINT_MAX;
    assert_win( Device::Get().NativeDevice()->CreateGraphicsPipelineState( &desc, IID_PPV_ARGS( &mHandle ) ) );
 
    delete[] desc.InputLayout.pInputElementDescs;

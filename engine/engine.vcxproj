@@ -39,9 +39,11 @@
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandBuffer.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandList.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandQueue.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Descriptor.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Fence.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12PipelineState.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Resource.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12ResourceView.cpp" />
     <ClCompile Include="engine\graphics\d3d12\d3d12Util.cpp" />
     <ClCompile Include="engine\graphics\Descriptor.cpp" />
     <ClCompile Include="engine\graphics\Device.cpp" />

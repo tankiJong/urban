@@ -15,6 +15,7 @@
 #include "engine/graphics/Texture.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/graphics/CommandQueue.hpp"
+#include "engine/graphics/rgba.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -109,6 +110,7 @@ public:
 void GameApplication::OnRender() const
 {
    static Program* prog = nullptr;
+   static GraphicsState* gs = nullptr;
 
    if(prog == nullptr) {
       prog = new Program();
@@ -116,16 +118,18 @@ void GameApplication::OnRender() const
       prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
       prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
    }
+
+   if(gs == nullptr) {
+      gs = new GraphicsState();
+      gs->SetProgram( prog );
+      gs->SetTopology( eTopology::Triangle );
+   }
    CommandList   list;
-   GraphicsState gs;
-
-   gs.SetProgram( prog );
-   gs.GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().rtv() );
-   gs.SetTopology( eTopology::Triangle );
-
-   list.SetGraphicsPipelineState( gs );
+   list.Handle()->SetName( L"Draw CommandList" );
+   gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().rtv() );
+   list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
+   list.SetGraphicsPipelineState( *gs );
    list.Draw( 0, 3 );
-
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
 
 }

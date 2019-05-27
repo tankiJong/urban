@@ -167,5 +167,7 @@
     <ClCompile Include="engine\graphics\program\ResourceBinding.cpp" />
     <ClCompile Include="engine\graphics\Descriptor.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12PipelineState.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Descriptor.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12ResourceView.cpp" />
   </ItemGroup>
 </Project>

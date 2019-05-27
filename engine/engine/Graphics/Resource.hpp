@@ -6,7 +6,8 @@
 class RenderTargetView;
 class DepthStencilView;
 
-class Resource: public WithHandle<resource_handle_t>  {
+class Resource: public WithHandle<resource_handle_t>, public std::enable_shared_from_this<Resource> {
+   friend class CommandList;
 public:
    /** Resource types. Notice there are no array types. Array are controlled using the array size parameter on texture creation.
    */
@@ -46,17 +47,15 @@ public:
       AccelerationStructure,
    };
 
-
    virtual ~Resource() = default;
 
-   eType Type() const { return mType; }
+   eType        Type() const { return mType; }
    eBindingFlag BindingFlags() const { return mBindingFlags; }
 
    eState GlobalState() const { return mState.globalState; }
    bool   IsStateGlobal() const { return mState.global; }
 
-   virtual RenderTargetView* rtv(uint mip = 0, uint arraySlice = 0) { return nullptr; }
-   virtual DepthStencilView* dsv(uint mip = 0, uint arraySlice = 0) { return nullptr; }
+   virtual RenderTargetView* rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const { return nullptr; }
 
    virtual bool Init() = 0;
 protected:
@@ -67,7 +66,6 @@ protected:
       eType                    type,
       eBindingFlag             bindingFlags,
       eAllocationType          allocationType );
-
 
    struct {
       bool                global                  = true;
@@ -80,5 +78,5 @@ protected:
    eType           mType           = eType::Unknown;
    eBindingFlag    mBindingFlags   = eBindingFlag::None;
    eAllocationType mAllocationType = eAllocationType::General;
-   
+
 };

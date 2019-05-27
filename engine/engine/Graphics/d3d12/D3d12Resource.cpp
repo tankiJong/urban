@@ -143,6 +143,23 @@ bool Texture::Init()
    }
 }
 
+RenderTargetView* Texture::rtv( uint mip, uint firstArraySlice, uint arraySize ) const
+{
+   ViewInfo viewInfo{ arraySize, firstArraySlice, mip, 1, eDescriptorType::Rtv };
+
+   auto kv = mRtvs.find( viewInfo );
+   if(kv==mRtvs.end() && is_all_set( mBindingFlags, eBindingFlag::RenderTarget )) {
+      S<RenderTargetView> view(new RenderTargetView{shared_from_this(), mip, firstArraySlice, arraySize });
+      auto result = mRtvs.emplace( viewInfo, view);
+
+      ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
+      
+      return view.get();
+   }
+
+   return kv->second.get();
+}
+
 Texture2::Texture2(
    eBindingFlag    bindingFlags,
    uint            width,

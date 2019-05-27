@@ -16,7 +16,11 @@ static const float4 colors[3] = {
    float4(.0, .0, 1., 1.f),
 };
 
-PSInput main( float4 pos : POSITION, uint Vid: VertexID )
+#define RootSig \
+    "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
+
+[RootSignature(RootSig)]
+PSInput main(uint Vid: SV_VertexID )
 {
    PSInput output;
    output.pos = positions[Vid];

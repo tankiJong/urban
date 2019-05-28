@@ -27,6 +27,7 @@ static FormatDesc formatDescs[] = {
    { eTextureFormat::RGBA8Uint, 	 "RGBA8Uint",   8, 4, eTextureFormatType::Uint,     { false, false } },
    { eTextureFormat::RG8Unorm,   "RG8Unorm",    8, 4, eTextureFormatType::Unorm,    { false, false } },
    { eTextureFormat::R8Unorm,    "R8Unorm",     8, 4, eTextureFormatType::Unorm,    { false, false } },
+   { eTextureFormat::RGBA16Float,"RGBA16Float", 16,4, eTextureFormatType::Float,    { false, false } },
    { eTextureFormat::D24Unorm_S8,"D24Unorm_S8", 8, 2, eTextureFormatType::Unorm,    { true,  true  } },
    { eTextureFormat::D32Float,   "D32Float",    8, 1, eTextureFormatType::Float,    { true,  false } },
 };
@@ -41,4 +42,10 @@ bool IsDepthFormat( eTextureFormat format )
 {
    ASSERT_DIE( formatDescs[uint(format)].format == format);
    return formatDescs[uint(format)].isDepth;
+}
+
+size_t GetTextureFormatStride( eTextureFormat format )
+{
+   ASSERT_DIE( formatDescs[uint(format)].format == format);
+   return formatDescs[uint(format)].bytePerUnit;
 }

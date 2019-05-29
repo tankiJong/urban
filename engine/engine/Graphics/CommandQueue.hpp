@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include <mutex>
 
+class Device;
 class Fence;
 class CommandList;
 
@@ -15,7 +16,8 @@ public:
    void Signal(Fence& fence);
 
 protected:
-   CommandQueue( command_queue_t handle ): WithHandle<command_queue_t>( handle ) {}
+   CommandQueue( Device* owner, command_queue_t handle ): WithHandle<command_queue_t>( handle ), mOwner( owner ) {}
 
    std::mutex mCpuLock;
+   Device* mOwner;
 };

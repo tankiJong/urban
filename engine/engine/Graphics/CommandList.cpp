@@ -2,6 +2,7 @@
 #include "CommandList.hpp"
 #include "Device.hpp"
 #include "CommandQueue.hpp"
+#include "Descriptor.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -36,4 +37,14 @@ void CommandList::Flush( bool wait )
    if(wait) { mExecutionFence.Wait(); }
 
    Reset();
+}
+
+void CommandList::IndicateDescriptorCount( size_t viewCount, size_t samplerCount )
+{
+   if(mGpuViewDescriptorPool != nullptr && mGpuSamplerDescripPool != nullptr) return;
+   ASSERT_DIE( mGpuViewDescriptorPool == nullptr );
+   ASSERT_DIE( mGpuSamplerDescripPool == nullptr );
+
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->AcquireDescriptorPool( mGpuViewDescriptorPool, viewCount );
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )->AcquireDescriptorPool( mGpuSamplerDescripPool, samplerCount );
 }

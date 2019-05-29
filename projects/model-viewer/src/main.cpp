@@ -104,8 +104,16 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 
 class GameApplication final: public Application {
 public:
+   void OnInit() override;
    void OnRender() const override;
+protected:
+   Texture2 mGroundTexture;
 };
+
+void GameApplication::OnInit()
+{
+   Texture2::Load( mGroundTexture, "Ground-Texture-(gray20).png" );
+}
 
 void GameApplication::OnRender() const
 {
@@ -124,12 +132,17 @@ void GameApplication::OnRender() const
       gs->SetProgram( prog );
       gs->SetTopology( eTopology::Triangle );
    }
+
    CommandList   list;
-   list.Handle()->SetName( L"Draw CommandList" );
+
+   list.SetName( L"Draw CommandList" );
    gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().rtv() );
+   list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
+   list.TransitionBarrier( mGroundTexture, Resource::eState::ShaderResource );
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
    list.SetGraphicsPipelineState( *gs );
    list.Draw( 0, 3 );
+
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
 
 }

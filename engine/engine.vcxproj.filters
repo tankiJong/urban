@@ -97,6 +97,10 @@
     <ClInclude Include="engine\graphics\ResourceView.hpp" />
     <ClInclude Include="engine\graphics\program\ResourceBinding.hpp" />
     <ClInclude Include="engine\graphics\Descriptor.hpp" />
+    <ClInclude Include="engine\core\Image.hpp" />
+    <ClInclude Include="engine\file\utils.hpp" />
+    <ClInclude Include="engine\graphics\d3d12\d3dx12.h" />
+    <ClInclude Include="external\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -169,5 +173,8 @@
     <ClCompile Include="engine\graphics\d3d12\D3d12PipelineState.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Descriptor.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12ResourceView.cpp" />
+    <ClCompile Include="engine\core\Image.cpp" />
+    <ClCompile Include="engine\file\utils.cpp" />
+    <ClCompile Include="external\stb\stb_image.c" />
   </ItemGroup>
 </Project>

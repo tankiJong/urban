@@ -47,5 +47,9 @@ bool IsDepthFormat( eTextureFormat format )
 size_t GetTextureFormatStride( eTextureFormat format )
 {
    ASSERT_DIE( formatDescs[uint(format)].format == format);
-   return formatDescs[uint(format)].bytePerUnit;
+
+   size_t bytePerChannel = formatDescs[uint(format)].bytePerUnit;
+   size_t ChannelCount = formatDescs[uint(format)].channelCount;
+   return bytePerChannel * ChannelCount;
 }
+

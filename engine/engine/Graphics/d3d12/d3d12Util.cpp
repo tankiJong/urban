@@ -1,6 +1,7 @@
 #include "engine/pch.h"
 #include "d3d12Util.hpp"
 #include "engine/graphics/utils.hpp"
+#include "engine/graphics/Resource.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -24,6 +25,7 @@ static const DxgiMapEntry kDxgiFormatMap[] = {
    { eTextureFormat::RGBA8Uint,    DXGI_FORMAT_R8G8B8A8_UINT },
    { eTextureFormat::RG8Unorm,     DXGI_FORMAT_R8G8_UNORM },
    { eTextureFormat::R8Unorm,      DXGI_FORMAT_R8_UNORM },
+   { eTextureFormat::RGBA16Float,      DXGI_FORMAT_R16G16B16A16_FLOAT },
    { eTextureFormat::D24Unorm_S8,         DXGI_FORMAT_D24_UNORM_S8_UINT },
    { eTextureFormat::D32Float,           DXGI_FORMAT_R32_FLOAT },
 };

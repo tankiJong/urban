@@ -43,7 +43,7 @@ uint64_t Fence::Signal()
    return oldVal;
 }
 
-uint64_t Fence::GpuCurrentValue()
+uint64_t Fence::GpuCurrentValue() const
 {
    return mHandle->GetCompletedValue();
 }

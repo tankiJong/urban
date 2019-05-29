@@ -29,8 +29,10 @@ public:
    Texture2& BackBuffer() const { return *mBackBuffers[mCurrentBackBufferIndex]; }
    Texture2& DepthBuffer() const { return *mDepthBuffers[mCurrentBackBufferIndex]; }
 
+   const Fence& FrameFence() const { return *mFrameFence; }
    WindowData* NativeData() const { return mWindowData; }
    void AttachDevice(const S<Device>& device);
+
    static Window& Get();
 protected:
    

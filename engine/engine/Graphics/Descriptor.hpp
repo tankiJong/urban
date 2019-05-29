@@ -2,8 +2,10 @@
 
 #include "utils.hpp"
 #include <map>
+#include <queue>
 
 class Descriptors;
+class Device;
 
 enum class eDescriptorType {
    None    = 0u,
@@ -58,6 +60,9 @@ public:
 
    Descriptors Allocate(size_t size);
    void Free(Descriptors& descriptors);
+
+   descriptor_heap_t HeapHandle() const;
+   DescriptorHeap* OwnerHeap() const { return mOwner; }
 protected:
 
    size_t           mMaxDescriptorCount;
@@ -83,7 +88,11 @@ public:
    descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const;
 
    void SetupDescriptorPool( DescriptorPool& pool );
-   void DestroyDescriptorPool( DescriptorPool& pool );
+   void ReleaseDescriptorPool( DescriptorPool& pool );
+
+   void AcquireDescriptorPool( DescriptorPool*& pool, size_t poolSize );
+   void DeferredFreeDescriptorPool(DescriptorPool* pool, size_t holdUntilValue);
+   void ExecuteDeferredRelease(size_t currentValue);
 
    Descriptors Allocate(size_t size);
    void Free(Descriptors& descriptors);
@@ -100,6 +109,12 @@ protected:
    size_t                  mDescriptorSize = 0;
    descriptor_cpu_handle_t mCpuStart       = {};
    descriptor_gpu_handle_t mGpuStart       = {};
+
+   struct ReleaseItem {
+      DescriptorPool* pool;
+      size_t expectValue;
+   };
+   std::queue<ReleaseItem> mPendingRelease;
 };
 
 
@@ -125,15 +140,24 @@ protected:
 
 
 class Descriptors {
+public:
+
+private:
    friend class DescriptorPool;
 public:
    Descriptors() = default;
    Descriptors(Descriptors&& from) noexcept;
    Descriptors(const Descriptors&) = delete;
+   Descriptors& operator=(const Descriptors&) = delete;
+   Descriptors& operator=( Descriptors&& other ) noexcept;
 
    descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const { return mOwner->GetGpuHandle( mPoolOffsetStart + offset ); }
    descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const { return mOwner->GetCpuHandle( mPoolOffsetStart + offset ); }
-   
+
+   bool Valid() const { return mOwner == nullptr; }
+
+   descriptor_heap_t HeapHandle() const { return mOwner->HeapHandle(); }
+   DescriptorHeap*  OwnerHeap() const { return mOwner->OwnerHeap(); } 
 protected:
    Descriptors( size_t maxDescriptorCount, size_t poolOffsetStart, DescriptorPool* owner )
       : mMaxDescriptorCount( maxDescriptorCount )

@@ -51,13 +51,13 @@ public:
     * \brief 
     * \return current value on GPU
     */
-   uint64_t GpuCurrentValue();
+   uint64_t GpuCurrentValue() const;
    
    /**
     * \brief 
     * \return the expected value on CPU side
     */
-   uint64_t ExpectedValue() { return mExpectValue; };
+   uint64_t ExpectedValue() const { return mExpectValue; };
 
 
    static void WaitAll(Fence* fences, size_t count);

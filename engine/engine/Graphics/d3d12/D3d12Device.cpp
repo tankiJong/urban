@@ -4,6 +4,7 @@
 #include "engine/application/Window.hpp"
 #include "engine/graphics/CommandQueue.hpp"
 #include "engine/graphics/Descriptor.hpp"
+#include "engine/graphics/Fence.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -71,7 +72,7 @@ S<CommandQueue> Device::CreateCommandQueue( eQueueType type )
    command_queue_t handle;
    mHandle->CreateCommandQueue( &desc, IID_PPV_ARGS( &handle ));
 
-   return S<CommandQueue>(new CommandQueue( handle ));
+   return S<CommandQueue>(new CommandQueue( this, handle ));
 }
 
 
@@ -113,5 +114,6 @@ bool Device::RhiInit(Window& window)
    mGpuDescriptorHeap[0]->Init();
    mGpuDescriptorHeap[1]->Init();
 
+   mCommandListCompletion = new Fence();
    return true;
 }

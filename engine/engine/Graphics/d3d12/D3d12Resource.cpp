@@ -5,6 +5,12 @@
 #include "engine/graphics/Texture.hpp"
 #include "engine/graphics/Buffer.hpp"
 #include "engine/graphics/Device.hpp"
+#include "engine/core/Image.hpp"
+#include "d3dx12.h"
+#include "engine/debug/assert.hpp"
+#include "engine/graphics/CommandList.hpp"
+#include "engine/graphics/CommandQueue.hpp"
+#include "engine/platform/win.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -82,18 +88,176 @@ D3D12_RESOURCE_DIMENSION ToD3d12TextureDimension( Resource::eType type )
    }
 }
 
-bool AllocateGeneralResource(resource_handle_t* inOutRes, const D3D12_RESOURCE_DESC& desc, const D3D12_CLEAR_VALUE* pClearVal)
+
+D3D12_RESOURCE_STATES ToD3d12ResourceState(Resource::eState state)
 {
-   Device::Get().NativeDevice()->CreateCommittedResource( 
-      &kDefaultHeapProps, D3D12_HEAP_FLAG_NONE, 
-      &desc, D3D12_RESOURCE_STATE_COMMON, pClearVal, 
-      IID_PPV_ARGS( &(*inOutRes) ));
+   switch(state) {
+   case Resource::eState::Undefined:
+   case Resource::eState::Common: return D3D12_RESOURCE_STATE_COMMON;
+   case Resource::eState::ConstantBuffer:
+   case Resource::eState::VertexBuffer: return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+   case Resource::eState::CopyDest: return D3D12_RESOURCE_STATE_COPY_DEST;
+   case Resource::eState::CopySource: return D3D12_RESOURCE_STATE_COPY_SOURCE;
+   case Resource::eState::DepthStencil: 
+      return D3D12_RESOURCE_STATE_DEPTH_WRITE; // If depth-writes are disabled, return D3D12_RESOURCE_STATE_DEPTH_WRITE
+   case Resource::eState::IndexBuffer: return D3D12_RESOURCE_STATE_INDEX_BUFFER;
+   case Resource::eState::IndirectArg: return D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
+   case Resource::eState::Predication: return D3D12_RESOURCE_STATE_PREDICATION;
+   case Resource::eState::Present: return D3D12_RESOURCE_STATE_PRESENT;
+   case Resource::eState::RenderTarget: return D3D12_RESOURCE_STATE_RENDER_TARGET;
+   case Resource::eState::ResolveDest: return D3D12_RESOURCE_STATE_RESOLVE_DEST;
+   case Resource::eState::ResolveSource: return D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+   case Resource::eState::ShaderResource: 
+      return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE; // Need the shader usage mask in case the SRV is used by non-PS
+   case Resource::eState::StreamOut: return D3D12_RESOURCE_STATE_STREAM_OUT;
+   case Resource::eState::UnorderedAccess: return D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+   case Resource::eState::GenericRead: return D3D12_RESOURCE_STATE_GENERIC_READ;
+   case Resource::eState::NonPixelShader: return D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+   case Resource::eState::AccelerationStructure: return D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+   default:
+   BAD_CODE_PATH();
+   }
+}
+
+bool AllocateGeneralResource(resource_handle_t& inOutRes, const D3D12_RESOURCE_DESC& desc,  const D3D12_HEAP_PROPERTIES& heapProps, const D3D12_CLEAR_VALUE* pClearVal, D3D12_RESOURCE_STATES initState)
+{
+   assert_win(Device::Get().NativeDevice()->CreateCommittedResource( 
+      &heapProps, D3D12_HEAP_FLAG_NONE, 
+      &desc, initState, pClearVal, 
+      IID_PPV_ARGS( &inOutRes )));
    return true;
 }
+
+bool CreateD3d12Resource(resource_handle_t& inOutRes, const D3D12_RESOURCE_DESC& desc, 
+                         eAllocationType type, const D3D12_HEAP_PROPERTIES& heapProps, D3D12_RESOURCE_STATES initState, const D3D12_CLEAR_VALUE* pClearVal)
+{
+   switch(type) {
+   case eAllocationType::Temporary:
+   case eAllocationType::Persistent:
+   case eAllocationType::General: 
+      AllocateGeneralResource( inOutRes, desc, heapProps, pClearVal, initState );
+      break;
+   default:
+      UNIMPLEMENTED();
+      return false;
+   }
+
+   return true;
+}
+
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
+
+
+//------------------------------------------------------------------//
+//---------------------------- Resource ----------------------------//
+//------------------------------------------------------------------//
+
+
+
+//------------------------------------------------------------------//
+//---------------------------- Buffer -----------------------------//
+//------------------------------------------------------------------//
+
+Buffer::Buffer( size_t size, eBindingFlag bindingFlags, eBufferUsage bufferUsage, eAllocationType allocationType )
+   : Resource( eType::Buffer, bindingFlags, allocationType )
+ , mSize( size )
+ , mBufferUsage( bufferUsage )
+{
+   if(is_all_set( bindingFlags, eBindingFlag::ConstantBuffer )) {
+      mSize = align_to( D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT, mSize );
+   }
+
+   if(mBufferUsage == eBufferUsage::Upload) {
+      SetGlobalState( eState::GenericRead );
+   } else if (mBufferUsage == eBufferUsage::ReadBack) {
+      ASSERT_DIE( mBindingFlags == eBindingFlag::None );
+      SetGlobalState( eState::CopyDest );
+   } else {
+      SetGlobalState( eState::Common );
+   }
+}
+
+bool Buffer::Init()
+{
+   D3D12_RESOURCE_DESC desc = {};
+   desc.Alignment = 0;
+   desc.DepthOrArraySize = 1;
+   desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+   desc.Flags = ToD3d12ResourceFlags( mBindingFlags );
+   desc.Format = DXGI_FORMAT_UNKNOWN;
+   desc.Height = 1;
+   desc.Width = mSize;
+   desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+   desc.MipLevels = 1;
+   desc.SampleDesc.Count = 1;
+   desc.SampleDesc.Quality = 0;
+
+   ASSERT_DIE( mState.global );
+   D3D12_RESOURCE_STATES initState = ToD3d12ResourceState( mState.globalState );
+
+   const D3D12_HEAP_PROPERTIES* prop;
+   switch(mBufferUsage) {
+   case eBufferUsage::Default:
+      prop = &kDefaultHeapProps;
+      break;
+   case eBufferUsage::Upload: 
+      prop = &kUploadHeapProps;
+      break;
+   case eBufferUsage::ReadBack:
+      prop = &kReadbackHeapProps;
+      break;
+   default:
+      BAD_CODE_PATH();
+      prop = &kDefaultHeapProps;
+   }
+
+   CreateD3d12Resource( mHandle, desc, mAllocationType, *prop, initState, nullptr );
+   D3D12_HEAP_PROPERTIES props;
+   mHandle->GetHeapProperties( &props, nullptr );
+   mHandle->SetName( L"Buffer" );
+}
+
+void Buffer::UpdateData( const void* data, size_t size, size_t offset )
+{
+   ASSERT_DIE_M( mBufferUsage != eBufferUsage::ReadBack, "Does not support write data to read back buffer" );
+   ASSERT_DIE( size + offset <= mSize );
+   if(mBufferUsage == eBufferUsage::Upload) {
+      UploadData( data, size, offset );
+   } else {
+      Buffer uploadBuffer(size - offset, eBindingFlag::None, eBufferUsage::Upload, eAllocationType::Temporary);
+      uploadBuffer.Init();
+
+      CommandList list;
+      list.TransitionBarrier( *this, eState::CopyDest );
+      list.Handle()->CopyBufferRegion( Handle().Get(), offset, uploadBuffer.Handle().Get(), 0, size );
+      list.TransitionBarrier( *this, eState::Common );
+
+      Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
+   }
+}
+
+void Buffer::UploadData( const void* data, size_t size, size_t offset )
+{
+   ASSERT_DIE_M( mBufferUsage == eBufferUsage::Upload, "Only upload buffer can upload data");
+   ASSERT_DIE( offset + size <= mSize );
+   if(mCpuVirtualPtr == nullptr) {
+      D3D12_RANGE readRange;
+      readRange.Begin = 0;
+      readRange.End = 0;
+      mHandle->Map( 0, &readRange, &mCpuVirtualPtr );
+   }
+
+   uint8_t* pDst = (uint8_t*)mCpuVirtualPtr + offset;
+   std::memcpy( pDst, data, size );
+}
+
+
+//------------------------------------------------------------------//
+//---------------------------- Texture -----------------------------//
+//------------------------------------------------------------------//
 bool Texture::Init()
 {
    if(mHandle != nullptr) return true;
@@ -132,15 +296,10 @@ bool Texture::Init()
       pClearVal   = nullptr;
    }
 
-   switch(mAllocationType) {
-   case eAllocationType::General:
-      return AllocateGeneralResource( &mHandle, desc, pClearVal );
-   case eAllocationType::Temporary:
-   case eAllocationType::Persistent:
-   default: 
-      UNIMPLEMENTED();
-      return false;
-   }
+   bool result = CreateD3d12Resource(mHandle, desc, mAllocationType, kDefaultHeapProps, D3D12_RESOURCE_STATE_COMMON, pClearVal);
+   mHandle->SetName( L"Texture" );
+
+   return result;
 }
 
 RenderTargetView* Texture::rtv( uint mip, uint firstArraySlice, uint arraySize ) const
@@ -180,3 +339,38 @@ Texture2::Texture2(
    eTextureFormat           format,
    eAllocationType          allocationType )
    : Texture( handle, eType::Texture2D, bindingFlags, width, height, arraySize, mipLevels, format, allocationType ) {}
+
+
+void Texture2::Load( Texture2& tex, fs::path path )
+{
+   tex.~Texture2();
+
+   Image image;
+   Image::Load( image, path );
+
+   new (&tex)Texture2(eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, image.Dimension().x, image.Dimension().y,
+                      1, 1, image.Format(), eAllocationType::Persistent);
+   tex.Init();
+   tex.UpdateData( image.Data(), image.Size() );
+}
+
+void Texture::UpdateData( const void* data, size_t size, size_t offset )
+{
+   uint64_t uploadBufferSize = GetRequiredIntermediateSize( mHandle.Get(), 0, mMipLevels );
+   Buffer uploadBuffer(uploadBufferSize, eBindingFlag::None, Buffer::eBufferUsage::Upload, eAllocationType::Temporary);
+   uploadBuffer.Init();
+   uploadBuffer.UploadData( data, size, offset );
+
+   uint pixelSize = GetTextureFormatStride( mFormat ) / 8;
+   D3D12_SUBRESOURCE_DATA textureData = {
+      data,
+      size_t(Width() * pixelSize),
+      size_t(Width() * Height() * pixelSize),
+   };
+
+   CommandList list(eQueueType::Copy);
+   list.TransitionBarrier( *this, eState::CopyDest );
+   UpdateSubresources( list.Handle().Get(), Handle().Get(), uploadBuffer.Handle().Get(), 
+      0, 0, mMipLevels, &textureData);
+   Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
+}

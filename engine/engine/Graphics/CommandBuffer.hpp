@@ -14,10 +14,11 @@ class CommandList;
 class CommandBuffer: public WithHandle<command_buffer_t> {
    friend class CommandBufferChain;
 public:
-   void Init(Device& device);
+   void Init(Device& device, eQueueType type);
    void Reset();
    void Bind(CommandList& commandList);
 protected:
+   eQueueType mQueueType;
    cyclic<uint> mLastUpdateFrame;
 };
 
@@ -25,8 +26,8 @@ protected:
 class CommandBufferChain {
 public:
    void Init(Device& device);
-   CommandBuffer& GetUsableCommandBuffer(bool forceSearch = false);
+   CommandBuffer& GetUsableCommandBuffer(eQueueType type, bool forceSearch = false);
    void ResetOldestCommandBuffer( uint currentFrame );
 protected:
-   std::array<CommandBuffer, Window::kFrameCount> mCommandBuffers;
+   std::array<CommandBuffer, Window::kFrameCount> mCommandBuffers[uint(eQueueType::Total)];
 };

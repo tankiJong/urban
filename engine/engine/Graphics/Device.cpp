@@ -1,6 +1,7 @@
 ﻿#include "engine/pch.h"
 #include "Device.hpp"
 #include "Descriptor.hpp"
+#include "Fence.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -27,6 +28,8 @@ Device::~Device()
    for(uint i = 0; i < _countof( mGpuDescriptorHeap ); i++) {
       SAFE_DELETE( mGpuDescriptorHeap[i] );
    }
+
+   SAFE_DELETE( mCommandListCompletion );
 }
 
 CpuDescriptorHeap* Device::GetCpuDescriptorHeap( eDescriptorType type )
@@ -53,15 +56,15 @@ GpuDescriptorHeap* Device::GetGpuDescriptorHeap( eDescriptorType type )
    BAD_CODE_PATH();
 }
 
-CommandBuffer& Device::GetThreadCommandBuffer()
+CommandBuffer& Device::GetThreadCommandBuffer(eQueueType type)
 {
    auto kv = mCommandAllocators.find( std::this_thread::get_id() );
    if(kv == mCommandAllocators.end()) {
       CommandBufferChain& cb = mCommandAllocators[std::this_thread::get_id()];
       cb.Init( *this );
-      return cb.GetUsableCommandBuffer();
+      return cb.GetUsableCommandBuffer(type);
    } else {
-      return kv->second.GetUsableCommandBuffer();
+      return kv->second.GetUsableCommandBuffer(type);
    }
 }
 
@@ -71,6 +74,39 @@ void Device::ResetAllCommandBuffer()
    for(auto& [_, cb]: mCommandAllocators) {
       cb.ResetOldestCommandBuffer(currentFrame);
    }
+}
+
+size_t Device::AcquireNextCommandListId()
+{
+   return mNextCommandListId.fetch_add( 1 );
+}
+
+size_t Device::GetRecentCompletedCommandListId()
+{
+   return mCommandListCompletion->GpuCurrentValue();
+}
+
+void Device::RelaseObject( device_obj_t obj )
+{
+   size_t currentValue = mNextCommandListId;
+
+   mDeferredReleaseList.push( { 
+         currentValue,
+         obj
+      } );
+
+}
+
+void Device::ExecuteDeferredRelease()
+{
+   size_t currentValue = mCommandListCompletion->GpuCurrentValue();
+
+   while( !mDeferredReleaseList.empty() && cyclic(mDeferredReleaseList.front().expectValueToRelease) < cyclic(currentValue) ) {
+      mDeferredReleaseList.pop();
+   }
+
+   mGpuDescriptorHeap[0]->ExecuteDeferredRelease( currentValue );
+   mGpuDescriptorHeap[1]->ExecuteDeferredRelease( currentValue );
 }
 
 Device& Device::Get()

@@ -11,6 +11,12 @@ public:
    WithHandle( HandleT handle ): mHandle( handle ) {}
    const HandleT& Handle() const { return mHandle; }
    HandleT&       Handle() { return mHandle; }
+
+   template<typename = decltype(HandleT()->SetName(L""))>
+   void SetName(const wchar_t* name)
+   {
+      mHandle->SetName(name);
+   }
 protected:
    HandleT mHandle;
 };
@@ -143,3 +149,4 @@ enum class eTopology {
 };
 
 bool IsDepthFormat( eTextureFormat format );
+size_t GetTextureFormatStride(eTextureFormat format);

@@ -18,48 +18,46 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-
 void CommandBufferChain::Init( Device& device )
 {
    uint currentFrame = device.AttachedWindow()->CurrentFrameCount();
-   for(uint i = 0; i < (uint)mCommandBuffers.size(); i++) {
-      CommandBuffer& cb = mCommandBuffers[i];
-      cb.Init( device );
-      cb.mLastUpdateFrame = currentFrame - i;
+   for(uint i = 0; i < uint( eQueueType::Total ); i++) {
+      for(uint j = 0; j < (uint)mCommandBuffers[i].size(); j++) {
+         CommandBuffer& cb = mCommandBuffers[i][j];
+         cb.Init( device, eQueueType(i) );
+         cb.mLastUpdateFrame = currentFrame - j;
+      }
    }
 }
 
-CommandBuffer& CommandBufferChain::GetUsableCommandBuffer( bool forceSearch )
+CommandBuffer& CommandBufferChain::GetUsableCommandBuffer( eQueueType type, bool forceSearch )
 {
-   CommandBuffer* buffer = &(mCommandBuffers[0]);
+   CommandBuffer* buffer = &(mCommandBuffers[uint( type )][0]);
 
    // the command mBuffer used this frame should be the latest updated one(when Window::SwapBuffer)
-   for(uint i = 1; i < mCommandBuffers.size(); i++) {
-      CommandBuffer& cb = mCommandBuffers[i];
+   for(uint i = 1; i < mCommandBuffers[uint( type )].size(); i++) {
+      CommandBuffer& cb = mCommandBuffers[uint( type )][i];
       ASSERT_DIE( cb.mLastUpdateFrame != buffer->mLastUpdateFrame ); // if they are the same... something is terribly wrong
-      if(cb.mLastUpdateFrame > buffer->mLastUpdateFrame) {
-         buffer = &cb;
-      }
+      if(cb.mLastUpdateFrame > buffer->mLastUpdateFrame) { buffer = &cb; }
    }
 
    return *buffer;
 }
 
 void CommandBufferChain::ResetOldestCommandBuffer( uint currentFrame )
-{   
-   CommandBuffer* buffer = &(mCommandBuffers[0]);
+{
+   for(uint k = 0; k < uint( eQueueType::Total ); k++) {
+      CommandBuffer* buffer = &(mCommandBuffers[k][0]);
 
-   // the command mBuffer available should be the oldest updated one
-   for(uint i = 1; i < mCommandBuffers.size(); i++) {
-      CommandBuffer& cb = mCommandBuffers[i];
-      ASSERT_DIE( cb.mLastUpdateFrame != buffer->mLastUpdateFrame ); // if they are the same... something is terribly wrong
-      if(cb.mLastUpdateFrame < buffer->mLastUpdateFrame) {
-         buffer = &cb;
+      // the command mBuffer available should be the oldest updated one
+      for(uint i = 1; i < mCommandBuffers[k].size(); i++) {
+         CommandBuffer& cb = mCommandBuffers[k][i];
+         ASSERT_DIE( cb.mLastUpdateFrame != buffer->
+                    mLastUpdateFrame ); // if they are the same... something is terribly wrong
+         if(cb.mLastUpdateFrame < buffer->mLastUpdateFrame) { buffer = &cb; }
       }
+
+      buffer->mLastUpdateFrame = currentFrame;
+      buffer->Reset();
    }
-
-   buffer->mLastUpdateFrame = currentFrame;
-   buffer->Reset();
-   
 }
-

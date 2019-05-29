@@ -33,9 +33,11 @@ MAKE_SMART_COM_PTR( ID3D12CommandAllocator );
 MAKE_SMART_COM_PTR( ID3D12GraphicsCommandList4 );
 MAKE_SMART_COM_PTR( ID3D12Resource );
 MAKE_SMART_COM_PTR( ID3D12Fence );
+MAKE_SMART_COM_PTR( IUnknown );
 MAKE_SMART_COM_PTR( ID3D12DescriptorHeap );
 MAKE_SMART_COM_PTR( ID3D12PipelineState );
 
+using device_obj_t = IUnknownPtr;
 using device_handle_t = ID3D12Device5Ptr;
 using command_queue_t = ID3D12CommandQueuePtr;
 using command_buffer_t = ID3D12CommandAllocatorPtr;
@@ -54,3 +56,4 @@ DXGI_FORMAT ToDXGIFormat( eTextureFormat format );
 DXGI_FORMAT ToDXGITypelessFromDepthFormat(eTextureFormat format);
 
 constexpr uint kMaxRenderTargetSupport = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
+

@@ -173,6 +173,11 @@ FrameBuffer::FrameBuffer()
    // mDepthStencilTarget = DepthStencilView::NullView()
 }
 
+PipelineState::~PipelineState()
+{
+   Device::Get().RelaseObject( mHandle );
+}
+
 bool ComputeState::Finalize()
 {
    if(!mIsDirty) return false;
@@ -185,6 +190,9 @@ bool ComputeState::Finalize()
    desc.CS.pShaderBytecode = cs.GetDataPtr();
    desc.pRootSignature     = nullptr;
 
+   if(mHandle != nullptr) {
+      Device::Get().RelaseObject( mHandle );
+   }
    assert_win( Device::Get().NativeDevice()->CreateComputePipelineState( &desc, IID_PPV_ARGS( &mHandle ) ) );
 
    mIsDirty = false;
@@ -220,6 +228,11 @@ bool GraphicsState::Finalize()
    desc.PrimitiveTopologyType = ToD3d12TopologyType( mTopology );
    desc.SampleDesc.Count = 1;
    desc.SampleMask = UINT_MAX;
+
+   if(mHandle != nullptr) {
+      Device::Get().RelaseObject( mHandle );
+   }
+
    assert_win( Device::Get().NativeDevice()->CreateGraphicsPipelineState( &desc, IID_PPV_ARGS( &mHandle ) ) );
 
    delete[] desc.InputLayout.pInputElementDescs;

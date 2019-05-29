@@ -3,6 +3,7 @@
 #include "engine/graphics/CommandQueue.hpp"
 #include "engine/graphics/Fence.hpp"
 #include "engine/graphics/CommandList.hpp"
+#include "engine/graphics/Device.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -27,6 +28,7 @@ void CommandQueue::IssueCommandList( CommandList& commandList )
    ID3D12CommandList* commandListHandle = commandList.Handle().Get();
    commandList.Close();
    mHandle->ExecuteCommandLists( 1, &commandListHandle );
+   mHandle->Signal( mOwner->GetCommandListCompletionFence().Handle().Get(), commandList.Id() );
 }
 
 void CommandQueue::Wait( Fence& fence )

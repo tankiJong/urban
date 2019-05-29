@@ -156,23 +156,25 @@ void Window::SwapBuffer()
 {
    S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
 
+   mFrameFence->Wait();
+
    CommandList list;
-   list.Handle()->SetName( L"End CommandList" );
+   list.SetName( L"End CommandList" );
    list.TransitionBarrier( BackBuffer(), Resource::eState::Present );
    mainQueue->IssueCommandList( list );
 
    mFrameFence->IncreaseExpectedValue( );
    mainQueue->Signal( *mFrameFence );
-   mFrameFence->Wait();
    mWindowData->swapChain->Present( 1, 0 );
 
 
-   DebuggerPrintf( "frame %d rendered\n", mCurrentFrameCount );
+   printf( "frame %d rendered\n", mCurrentFrameCount );
 
    mCurrentBackBufferIndex = ( mCurrentBackBufferIndex + 1 ) % kFrameCount;
    mCurrentFrameCount++;
 
    mDevice->ResetAllCommandBuffer();
+   mDevice->ExecuteDeferredRelease();
 }
 
 Window& Window::Get()

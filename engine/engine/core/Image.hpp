@@ -13,7 +13,8 @@ public:
    void* At(uint x, uint y);
 
    uint2 Dimension() const { return mDimension; }
-   const void* Data() const { return mData.Data(); };
+   const void* Data() const { return mData.Data(); }
+   eTextureFormat Format() const { return mFormat; };
    size_t Size() const { return mData.Size(); }
    size_t Stride() const;
 

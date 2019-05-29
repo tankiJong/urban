@@ -1,5 +1,6 @@
 ﻿#include "engine/pch.h"
 #include "Resource.hpp"
+#include "Device.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -17,6 +18,7 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
+
 Resource::Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType )
    : mType( type )
    , mBindingFlags( bindingFlags )
@@ -31,3 +33,19 @@ Resource::Resource(
    , mType( type )
    , mBindingFlags( bindingFlags )
    , mAllocationType( allocationType ) {}
+
+Resource::~Resource()
+{
+   Device::Get().RelaseObject( mHandle );
+}
+
+void  Resource::SetGlobalState(eState state) const
+{
+   ASSERT_DIE( !mState.globalInTransition );
+   for(bool inTransition: mState.subresourceInTransition) {
+      ASSERT_DIE( !inTransition );
+   }
+
+   mState.global = true;
+   mState.globalState = state;
+};

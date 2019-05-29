@@ -5,10 +5,13 @@
 #include <algorithm>
 #include <unordered_map>
 #include "ResourceView.hpp"
+#include "engine/file/utils.hpp"
 
 class Texture: public Resource, public inherit_shared_from_this<Resource, Texture> {
 public:
    using inherit_shared_from_this<Resource, Texture>::shared_from_this;
+
+   Texture() = default;
 
    Texture(
       eType           type,
@@ -32,7 +35,8 @@ public:
    eTextureFormat Format() const { return mFormat; }
 
    virtual bool Init() override;
-   RenderTargetView* rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
+   virtual void UpdateData(const void* data, size_t size, size_t offset = 0) override;
+   virtual RenderTargetView* rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
 protected:
 
    Texture(
@@ -60,6 +64,9 @@ protected:
 class Texture2 final: public Texture, public inherit_shared_from_this<Texture, Texture2> {
 public:
    using inherit_shared_from_this<Texture, Texture2>::shared_from_this;
+
+   Texture2() = default;
+
    Texture2(
       eBindingFlag    bindingFlags,
       uint            width,
@@ -79,4 +86,5 @@ public:
       eTextureFormat           format,
       eAllocationType          allocationType = eAllocationType::General );
 
+   static void Load(Texture2& tex, fs::path path);
 };

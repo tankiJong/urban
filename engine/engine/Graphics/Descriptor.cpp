@@ -1,5 +1,6 @@
 ﻿#include "engine/pch.h"
 #include "Descriptor.hpp"
+#include "engine/math/cylic.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -124,9 +125,20 @@ void DescriptorHeap::SetupDescriptorPool( DescriptorPool& pool )
    pool.mHeapOffsetStart = mAllocator.Allocate( pool.mMaxDescriptorCount );
 }
 
-void DescriptorHeap::DestroyDescriptorPool( DescriptorPool& pool )
+void DescriptorHeap::AcquireDescriptorPool( DescriptorPool*& pool, size_t poolSize )
+{
+   pool = new DescriptorPool(poolSize);
+   SetupDescriptorPool( *pool );
+}
+
+void DescriptorHeap::ReleaseDescriptorPool( DescriptorPool& pool )
 {
    mAllocator.Free( pool.mHeapOffsetStart, pool.mMaxDescriptorCount );
+}
+
+void DescriptorHeap::DeferredFreeDescriptorPool( DescriptorPool* pool, size_t holdUntilValue )
+{
+   mPendingRelease.push( ReleaseItem{ pool, holdUntilValue } );
 }
 
 descriptor_gpu_handle_t DescriptorPool::GetGpuHandle( size_t offset ) const
@@ -151,8 +163,20 @@ void DescriptorPool::Free( Descriptors& descriptors )
    descriptors.Reset();
 }
 
+descriptor_heap_t DescriptorPool::HeapHandle() const
+{
+   return mOwner->Handle();
+}
+
 CpuDescriptorHeap::CpuDescriptorHeap( eDescriptorType type, size_t count )
    : DescriptorHeap( type, count, count, false ) {}
+
+void DescriptorHeap::ExecuteDeferredRelease( size_t currentValue )
+{
+   while(!mPendingRelease.empty() && cyclic(mPendingRelease.front().expectValue) < cyclic(currentValue)) {
+      mPendingRelease.pop();  
+   }
+}
 
 Descriptors DescriptorHeap::Allocate( size_t size ) { return mReservedPool.Allocate( size ); }
 
@@ -164,7 +188,25 @@ GpuDescriptorHeap::GpuDescriptorHeap( eDescriptorType type, size_t count )
 Descriptors::Descriptors( Descriptors&& from ) noexcept
    : mMaxDescriptorCount( from.mMaxDescriptorCount )
  , mPoolOffsetStart( from.mPoolOffsetStart )
- , mOwner( from.mOwner ) { from.Reset(); }
+ , mOwner( from.mOwner )
+{
+   from.Reset();
+}
+
+Descriptors& Descriptors::operator=( Descriptors&& other ) noexcept
+{
+   if(this == &other) return *this;
+
+   Reset();
+
+   mMaxDescriptorCount = other.mMaxDescriptorCount;
+   mPoolOffsetStart    = other.mPoolOffsetStart;
+   mOwner              = other.mOwner;
+
+   other.Reset();
+
+   return *this;
+}
 
 void Descriptors::Reset()
 {

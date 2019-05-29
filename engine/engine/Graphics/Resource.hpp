@@ -47,7 +47,7 @@ public:
       AccelerationStructure,
    };
 
-   virtual ~Resource() = default;
+   virtual ~Resource();
 
    eType        Type() const { return mType; }
    eBindingFlag BindingFlags() const { return mBindingFlags; }
@@ -55,9 +55,13 @@ public:
    eState GlobalState() const { return mState.globalState; }
    bool   IsStateGlobal() const { return mState.global; }
 
+   void SetGlobalState(eState state) const;
    virtual RenderTargetView* rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const { return nullptr; }
 
    virtual bool Init() = 0;
+
+   // The data is not promised to be updated immediately, it only schedule the commands on the copy queue
+   virtual void UpdateData(const void* data, size_t size, size_t offset = 0) = 0;
 protected:
    Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType );
 
@@ -66,6 +70,8 @@ protected:
       eType                    type,
       eBindingFlag             bindingFlags,
       eAllocationType          allocationType );
+
+   Resource() = default;
 
    struct {
       bool                global                  = true;

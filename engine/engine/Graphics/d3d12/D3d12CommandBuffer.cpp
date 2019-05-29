@@ -16,13 +16,17 @@
 /////////////////////// Standalone Function /////////////////////
 ////////////////////////////////////////////////////////////////
 
+// defined in `D3d12CommandList.cpp`
+D3D12_COMMAND_LIST_TYPE ToD3d12CommandListType(eQueueType queueType);
+
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-void CommandBuffer::Init( Device& device )
+void CommandBuffer::Init( Device& device, eQueueType type )
 {
-   assert_win( device.NativeDevice()->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS( &mHandle) ) );
+   mQueueType = type;
+   assert_win( device.NativeDevice()->CreateCommandAllocator( ToD3d12CommandListType(type), IID_PPV_ARGS( &mHandle) ) );
    mLastUpdateFrame = 0;
 }
 

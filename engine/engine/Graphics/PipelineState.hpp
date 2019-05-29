@@ -59,6 +59,8 @@ public:
    void InitResourceBinding( ResourceBinding& rb ) const;
 
    virtual bool Finalize() = 0;
+
+   virtual ~PipelineState();
 protected:
    PipelineState( ePipelineType type ): mType( type ) {}
    ePipelineType  mType    = ePipelineType::Unknown;

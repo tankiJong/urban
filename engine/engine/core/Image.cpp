@@ -2,7 +2,7 @@
 #include "Image.hpp"
 
 #include "engine/graphics/utils.hpp"
-
+#include "external/stb/stb_image.h"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -47,6 +47,12 @@ size_t Image::Stride() const
 void Image::Load( Image& image, fs::path path )
 {
    image.~Image();
-   new (&image)Image();
+
+   int w,h;
+   int channelCount;
+   ASSERT_DIE( fs::exists( path ) );
+   unsigned char* imageData = stbi_load(path.generic_string().c_str(), &w, &h, &channelCount, 4);
+   new (&image)Image(w, h, eTextureFormat::RGBA8Unorm, imageData, w * h * 4);
+   stbi_image_free( imageData );
 }
 

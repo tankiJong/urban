@@ -16,6 +16,7 @@
 #include "engine/graphics/Device.hpp"
 #include "engine/graphics/CommandQueue.hpp"
 #include "engine/graphics/rgba.hpp"
+#include "engine/graphics/program/ResourceBinding.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -107,24 +108,28 @@ public:
    void OnInit() override;
    void OnRender() const override;
 protected:
-   Texture2 mGroundTexture;
+   S<Texture2> mGroundTexture;
 };
 
 void GameApplication::OnInit()
 {
-   Texture2::Load( mGroundTexture, "Ground-Texture-(gray20).png" );
+   mGroundTexture.reset(new Texture2());
+   Texture2::Load( *mGroundTexture, "Ground-Texture-(gray20).png" );
 }
 
 void GameApplication::OnRender() const
 {
    static Program* prog = nullptr;
    static GraphicsState* gs = nullptr;
-
+   static ResourceBinding* binding = nullptr;
    if(prog == nullptr) {
       prog = new Program();
 
       prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
       prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
+      prog->Finalize();
+      binding = new ResourceBinding(prog);
+      binding->SetSrv(mGroundTexture->Srv(), 0);
    }
 
    if(gs == nullptr) {
@@ -133,14 +138,16 @@ void GameApplication::OnRender() const
       gs->SetTopology( eTopology::Triangle );
    }
 
+   gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
+
    CommandList   list;
 
    list.SetName( L"Draw CommandList" );
-   gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().rtv() );
-   list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
-   list.TransitionBarrier( mGroundTexture, Resource::eState::ShaderResource );
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
+   list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
+   list.TransitionBarrier( *mGroundTexture, Resource::eState::ShaderResource );
    list.SetGraphicsPipelineState( *gs );
+   list.BindResources( *binding );
    list.Draw( 0, 3 );
 
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );

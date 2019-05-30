@@ -7,8 +7,24 @@
 template< typename HandleT >
 class WithHandle {
 public:
+   WithHandle( const WithHandle& other ) = delete;
+
+   WithHandle( WithHandle&& other ) noexcept
+      : mHandle( std::move(other.mHandle) ) {}
+
+   WithHandle& operator=( const WithHandle& other ) = delete;
+
+   WithHandle& operator=( WithHandle&& other ) noexcept
+   {
+      if(this == &other)
+         return *this;
+      std::swap(mHandle, other.mHandle );
+      return *this;
+   }
+
    WithHandle() = default;
    WithHandle( HandleT handle ): mHandle( handle ) {}
+
    const HandleT& Handle() const { return mHandle; }
    HandleT&       Handle() { return mHandle; }
 

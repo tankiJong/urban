@@ -206,7 +206,7 @@ bool GraphicsState::Finalize()
 
    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 
-   desc.pRootSignature = nullptr;
+   desc.pRootSignature = mProgram->Handle().Get();
 
    const Shader& vs = GetProgram()->GetStage( eShaderType::Vertex );
    {

@@ -26,7 +26,7 @@ public:
 
    void SetComputePipelineState(ComputeState& pps);
    void SetGraphicsPipelineState(GraphicsState& pps);
-   void BindResources(const ResourceBinding& bindings);
+   void BindResources(const ResourceBinding& bindings, bool forCompute = false);
 
    void IndicateDescriptorCount(size_t viewCount = 64, size_t samplerCount = 32);
 
@@ -47,6 +47,8 @@ public:
    void DrawIndirect(Buffer& args, uint count = 1, uint offset = 0);
 
 protected:
+   void SetupDescriptorPools(size_t viewCount, size_t samplerCount);
+   void CleanupDescriptorPools();
    bool mHasCommandPending = false;
    bool mIsClosed = false;
    eQueueType mRequireCommandQueueType = eQueueType::Copy;
@@ -58,4 +60,5 @@ protected:
    DescriptorPool* mGpuViewDescriptorPool;
    DescriptorPool* mGpuSamplerDescripPool;
 };
+
 

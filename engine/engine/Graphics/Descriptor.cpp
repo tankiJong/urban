@@ -93,8 +93,8 @@ void GenericAllocator::Free( offset_t offset, size_t size )
       // |<-----prev.size----->|~~~~|<------size-------->|<-----next.size----->|
       newSize   = size + nextBlockIter->second.size;
       newOffset = offset;
-      mFreeBlocks.erase( nextBlockIter );
       mFreeBlocksBySize.erase( nextBlockIter->second.sizeTracker );
+      mFreeBlocks.erase( nextBlockIter );
 
    } else {
       // prev.offset                offset                   next.offset
@@ -151,16 +151,16 @@ descriptor_cpu_handle_t DescriptorPool::GetCpuHandle( size_t offset ) const
    return mOwner->GetCpuHandle( mHeapOffsetStart + offset );
 }
 
-Descriptors DescriptorPool::Allocate( size_t size )
+Descriptors DescriptorPool::Allocate( size_t size, bool needToFree )
 {
    size_t offsetInPool = mAllocator.Allocate( size );
-   return Descriptors{ size, offsetInPool, this };
+   return Descriptors{ size, offsetInPool, this, needToFree };
 }
 
 void DescriptorPool::Free( Descriptors& descriptors )
 {
+   if(!descriptors.mNeedToFree) return;
    mAllocator.Free( descriptors.mPoolOffsetStart, descriptors.mMaxDescriptorCount );
-   descriptors.Reset();
 }
 
 descriptor_heap_t DescriptorPool::HeapHandle() const
@@ -174,6 +174,8 @@ CpuDescriptorHeap::CpuDescriptorHeap( eDescriptorType type, size_t count )
 void DescriptorHeap::ExecuteDeferredRelease( size_t currentValue )
 {
    while(!mPendingRelease.empty() && cyclic(mPendingRelease.front().expectValue) < cyclic(currentValue)) {
+      ReleaseDescriptorPool( *mPendingRelease.front().pool );
+      delete mPendingRelease.front().pool;
       mPendingRelease.pop();  
    }
 }
@@ -189,7 +191,9 @@ Descriptors::Descriptors( Descriptors&& from ) noexcept
    : mMaxDescriptorCount( from.mMaxDescriptorCount )
  , mPoolOffsetStart( from.mPoolOffsetStart )
  , mOwner( from.mOwner )
+ , mNeedToFree( from.mNeedToFree )
 {
+   from.mOwner = nullptr;
    from.Reset();
 }
 
@@ -210,6 +214,9 @@ Descriptors& Descriptors::operator=( Descriptors&& other ) noexcept
 
 void Descriptors::Reset()
 {
+   if(mOwner != nullptr && mNeedToFree) {
+      mOwner->Free( *this );
+   }
    mMaxDescriptorCount = 0;
    mPoolOffsetStart    = 0;
    mOwner              = nullptr;

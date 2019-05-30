@@ -2,6 +2,7 @@
 #include "d3d12Util.hpp"
 #include "engine/graphics/utils.hpp"
 #include "engine/graphics/Resource.hpp"
+#include "engine/graphics/Descriptor.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -44,7 +45,29 @@ DXGI_FORMAT ToDXGITypelessFromDepthFormat( eTextureFormat format )
    case eTextureFormat::D32Float:
       return DXGI_FORMAT_R32_TYPELESS;
    default: 
-      ASSERT_DIE( !IsDepthFormat( format ) );
       return kDxgiFormatMap[uint(format)].dxgiFormat;
    }
+}
+
+D3D12_DESCRIPTOR_HEAP_TYPE ToD3d12HeapType( eDescriptorType types )
+{
+   D3D12_DESCRIPTOR_HEAP_TYPE dtype;
+
+   if(types == eDescriptorType::Sampler) {
+      return D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+   }
+
+   if(is_all_set(eDescriptorType::Cbv | eDescriptorType::Srv | eDescriptorType::Uav, types)) {
+      return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+   }
+
+   if(types == eDescriptorType::Rtv) {
+      return D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+   }
+
+   if(types == eDescriptorType::Dsv) {
+      return D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+   }
+
+   BAD_CODE_PATH();
 }

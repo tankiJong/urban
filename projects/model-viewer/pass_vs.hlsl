@@ -17,7 +17,12 @@ static const float4 colors[3] = {
 };
 
 #define RootSig \
-    "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
+   "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
+	"DescriptorTable(SRV(t0, numDescriptors = 1, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+   "StaticSampler(s0, maxAnisotropy = 8, visibility = SHADER_VISIBILITY_PIXEL)," 
+
+Texture2D<float4> gTex: register(t0);
+SamplerState gSampler : register(s0);
 
 [RootSignature(RootSig)]
 PSInput main(uint Vid: SV_VertexID )

@@ -9,6 +9,38 @@
 
 class Texture: public Resource, public inherit_shared_from_this<Resource, Texture> {
 public:
+
+   Texture( const Texture& other ) = delete;
+
+   Texture( Texture&& other ) noexcept
+      : Resource( std::move(other) )
+    , inherit_shared_from_this<Resource, Texture>( std::move(other) )
+    , mWidth( other.mWidth )
+    , mHeight( other.mHeight )
+    , mDepthOrArraySize( other.mDepthOrArraySize )
+    , mMipLevels( other.mMipLevels )
+    , mFormat( other.mFormat )
+    , mRtvs( std::move(other.mRtvs) )
+    , mSrvs( std::move(other.mSrvs) ) {}
+
+   Texture& operator=( const Texture& other ) = delete;
+
+   Texture& operator=( Texture&& other ) noexcept
+   {
+      if(this == &other)
+         return *this;
+      Resource::operator=( std::move( other ) );
+      inherit_shared_from_this<Resource, Texture>::operator =( std::move( other ) );
+      mWidth            = other.mWidth;
+      mHeight           = other.mHeight;
+      mDepthOrArraySize = other.mDepthOrArraySize;
+      mMipLevels        = other.mMipLevels;
+      mFormat           = other.mFormat;
+      std::swap( mRtvs, other.mRtvs );
+      std::swap( mSrvs, other.mSrvs );
+      return *this;
+   }
+
    using inherit_shared_from_this<Resource, Texture>::shared_from_this;
 
    Texture() = default;
@@ -21,22 +53,27 @@ public:
       uint            depthOrArraySize,
       uint            mipLevels,
       eTextureFormat  format,
-      eAllocationType allocationType);
+      eAllocationType allocationType );
 
-   uint Width( uint mip = 0 )  const { return (mip < mMipLevels) ? max( 1u, mWidth >> mip ) : 0u; }
+   uint Width( uint mip = 0 ) const { return (mip < mMipLevels) ? max( 1u, mWidth >> mip ) : 0u; }
    uint Height( uint mip = 0 ) const { return (mip < mMipLevels) ? max( 1u, mHeight >> mip ) : 0u; }
-   uint Depth( uint mip = 0 )  const { return (mip < mMipLevels) ? max( 1u, mDepthOrArraySize >> mip ) : 0u; }
+   uint Depth( uint mip = 0 ) const { return (mip < mMipLevels) ? max( 1u, mDepthOrArraySize >> mip ) : 0u; }
 
-   uint2 size(uint mip = 0) const { return uint2{ Width( mip ), Height( mip ) }; }
+   uint2 size( uint mip = 0 ) const { return uint2{ Width( mip ), Height( mip ) }; }
 
    uint ArraySize() const { return mDepthOrArraySize; }
-   uint MipCount()  const { return mMipLevels; }
+   uint MipCount() const { return mMipLevels; }
 
    eTextureFormat Format() const { return mFormat; }
 
-   virtual bool Init() override;
-   virtual void UpdateData(const void* data, size_t size, size_t offset = 0) override;
-   virtual RenderTargetView* rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
+   virtual bool                Init() override;
+   virtual void                UpdateData( const void* data, size_t size, size_t offset = 0 ) override;
+   virtual RenderTargetView*   Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
+   virtual ShaderResourceView* Srv(
+      uint mip              = 0,
+      uint mipCount         = kMaxPossible,
+      uint firstArraySlice  = 0,
+      uint depthOrArraySize = kMaxPossible ) const override;
 protected:
 
    Texture(
@@ -48,7 +85,7 @@ protected:
       uint                     depthOrArraySize,
       uint                     mipLevels,
       eTextureFormat           format,
-      eAllocationType          allocationType);
+      eAllocationType          allocationType );
 
 protected:
    uint mWidth            = 0;
@@ -58,11 +95,29 @@ protected:
 
    eTextureFormat mFormat = eTextureFormat::RGBA8Unorm;
 
-   mutable std::unordered_map<ViewInfo, S<RenderTargetView>> mRtvs;
+   mutable std::unordered_map<ViewInfo, S<RenderTargetView>>   mRtvs;
+   mutable std::unordered_map<ViewInfo, S<ShaderResourceView>> mSrvs;
 };
 
 class Texture2 final: public Texture, public inherit_shared_from_this<Texture, Texture2> {
 public:
+   Texture2( const Texture2& other ) = delete;
+
+   Texture2( Texture2&& other ) noexcept
+      : Texture( std::move(other) )
+    , inherit_shared_from_this<Texture, Texture2>( std::move(other) ) {}
+
+   Texture2& operator=( const Texture2& other ) = delete;
+
+   Texture2& operator=( Texture2&& other ) noexcept
+   {
+      if(this == &other)
+         return *this;
+      Texture::operator=( std::move( other ) );
+      inherit_shared_from_this<Texture, Texture2>::operator=( std::move( other ) );
+      return *this;
+   }
+
    using inherit_shared_from_this<Texture, Texture2>::shared_from_this;
 
    Texture2() = default;
@@ -74,7 +129,7 @@ public:
       uint            arraySize,
       uint            mipLevels,
       eTextureFormat  format,
-      eAllocationType allocationType = eAllocationType::General);
+      eAllocationType allocationType = eAllocationType::General );
 
    Texture2(
       const resource_handle_t& handle,
@@ -86,5 +141,5 @@ public:
       eTextureFormat           format,
       eAllocationType          allocationType = eAllocationType::General );
 
-   static void Load(Texture2& tex, fs::path path);
+   static void Load( Texture2& tex, fs::path path );
 };

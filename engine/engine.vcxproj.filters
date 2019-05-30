@@ -176,5 +176,7 @@
     <ClCompile Include="engine\core\Image.cpp" />
     <ClCompile Include="engine\file\utils.cpp" />
     <ClCompile Include="external\stb\stb_image.c" />
+    <ClCompile Include="engine\graphics\d3d12\D3dResourceBinding.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Program.cpp" />
   </ItemGroup>
 </Project>

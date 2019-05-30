@@ -93,9 +93,9 @@ bool Device::RhiInit(Window& window)
    mWindow = &window;
    /*
     *
-       16 * 1024    // rtv
+       16 * 1024    // Rtv
        16 * 1024    // dsv
-       16 * 1024    // srv
+       16 * 1024    // Srv
        16 * 1024    // cbv
        16 * 1024    // uav
        2048;        // sampler

@@ -58,7 +58,7 @@ public:
    descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const;
    descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const;
 
-   Descriptors Allocate(size_t size);
+   Descriptors Allocate(size_t size, bool needToFree = true);
    void Free(Descriptors& descriptors);
 
    descriptor_heap_t HeapHandle() const;
@@ -159,15 +159,16 @@ public:
    descriptor_heap_t HeapHandle() const { return mOwner->HeapHandle(); }
    DescriptorHeap*  OwnerHeap() const { return mOwner->OwnerHeap(); } 
 protected:
-   Descriptors( size_t maxDescriptorCount, size_t poolOffsetStart, DescriptorPool* owner )
+   Descriptors( size_t maxDescriptorCount, size_t poolOffsetStart, DescriptorPool* owner, bool needToFree )
       : mMaxDescriptorCount( maxDescriptorCount )
     , mPoolOffsetStart( poolOffsetStart )
-    , mOwner( owner ) {}
+    , mOwner( owner )
+    , mNeedToFree( needToFree ) {}
 
    void Reset();
    size_t mMaxDescriptorCount = 0;
    size_t mPoolOffsetStart = 0;
    DescriptorPool* mOwner = nullptr;
-
+   bool mNeedToFree = true;
 };
 

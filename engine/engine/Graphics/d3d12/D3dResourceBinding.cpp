@@ -1,5 +1,7 @@
 ﻿#include "engine/pch.h"
-#include "Program.hpp"
+#include "engine/graphics/program/BindingLayout.hpp"
+#include "engine/graphics/program/ResourceBinding.hpp"
+#include "engine/platform/win.hpp"
 #include "engine/graphics/Device.hpp"
 
 ////////////////////////////////////////////////////////////////
@@ -14,18 +16,20 @@
 /////////////////////// Standalone Function /////////////////////
 ////////////////////////////////////////////////////////////////
 
+
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
-Program::Program()
+
+BindingLayout::BindingLayout( const std::vector<table_t>& ranges )
+   : mLayout( ranges )
 {
-   for(uint i = 0; i < mStages.size(); i++) {
-      mStages[i].SetType( eShaderType(i) );
-   }
+   D3D12_DESCRIPTOR_RANGE range;
+
+   size_t byteSize = 0;
+
 }
 
-Program::~Program()
+BindingLayout::~BindingLayout()
 {
-   Device::Get().RelaseObject( mHandle );
 }
-

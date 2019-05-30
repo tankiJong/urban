@@ -10,6 +10,7 @@
 ////////////////////////////////////////////////////////////////
 
 S<RenderTargetView> RenderTargetView::sNullView = nullptr;
+S<ShaderResourceView> ShaderResourceView::sNullView = nullptr;
 
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function /////////////////////
@@ -19,10 +20,25 @@ S<RenderTargetView> RenderTargetView::sNullView = nullptr;
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
+RenderTargetView::RenderTargetView()
+   : RenderTargetView( W<const Texture>() ) {}
+
 RenderTargetView* RenderTargetView::NullView()
 {
    if(!sNullView) {
       sNullView = S<RenderTargetView>(new RenderTargetView());
+   }
+
+   return sNullView.get();
+}
+
+ShaderResourceView::ShaderResourceView()
+   : ShaderResourceView( W<const Texture>() ) {}
+
+ShaderResourceView* ShaderResourceView::NullView()
+{
+   if(!sNullView) {
+      sNullView = S<ShaderResourceView>( new ShaderResourceView() );
    }
 
    return sNullView.get();

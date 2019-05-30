@@ -42,9 +42,28 @@ void CommandList::Flush( bool wait )
 void CommandList::IndicateDescriptorCount( size_t viewCount, size_t samplerCount )
 {
    if(mGpuViewDescriptorPool != nullptr && mGpuSamplerDescripPool != nullptr) return;
+
    ASSERT_DIE( mGpuViewDescriptorPool == nullptr );
    ASSERT_DIE( mGpuSamplerDescripPool == nullptr );
 
+   SetupDescriptorPools( viewCount, samplerCount );
+}
+
+void CommandList::SetupDescriptorPools( size_t viewCount, size_t samplerCount )
+{
    mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->AcquireDescriptorPool( mGpuViewDescriptorPool, viewCount );
-   mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )->AcquireDescriptorPool( mGpuSamplerDescripPool, samplerCount );
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )
+          ->AcquireDescriptorPool( mGpuSamplerDescripPool, samplerCount );
+}
+
+void CommandList::CleanupDescriptorPools()
+{
+   if(mGpuViewDescriptorPool == nullptr) {
+      ASSERT_DIE( mGpuViewDescriptorPool == nullptr );
+      ASSERT_DIE( mGpuSamplerDescripPool == nullptr );
+      return;
+   }
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->DeferredFreeDescriptorPool( mGpuViewDescriptorPool, mCommandListId );
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )
+          ->DeferredFreeDescriptorPool( mGpuSamplerDescripPool, mCommandListId );
 }

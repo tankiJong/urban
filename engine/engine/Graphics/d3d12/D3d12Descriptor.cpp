@@ -15,29 +15,6 @@
 /////////////////////// Standalone Function /////////////////////
 ////////////////////////////////////////////////////////////////
 
-D3D12_DESCRIPTOR_HEAP_TYPE ToD3d12HeapType( eDescriptorType types )
-{
-   D3D12_DESCRIPTOR_HEAP_TYPE dtype;
-
-   if(types == eDescriptorType::Sampler) {
-      return D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-   }
-
-   if(types == (eDescriptorType::Cbv | eDescriptorType::Srv | eDescriptorType::Uav)) {
-      return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-   }
-
-   if(types == eDescriptorType::Rtv) {
-      return D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-   }
-
-   if(types == eDescriptorType::Dsv) {
-      return D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-   }
-
-   BAD_CODE_PATH();
-}
-
 
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////

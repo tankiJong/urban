@@ -13,12 +13,17 @@ public:
     , mBinary( data, size ) {}
 
    size_t GetSize() const { return mBinary.Size(); }
-
    void* GetDataPtr() const { return mBinary.Data(); }
+   void SetBinary( const void* data, size_t size );
 
-   void SetBinary( const void* data, size_t size ) { mBinary.Set( data, size ); }
+   const BindingLayout& GetBindingLayout() const { return mBindingLayout; }
+
    void SetType( eShaderType t ) { mType = t; }
+
+   bool Valid() const { return mBinary.Size() > 0; } 
 protected:
+
+   void SetupBindingLayout();
    eShaderType   mType = eShaderType::Unknown;
    Blob          mBinary;
    BindingLayout mBindingLayout;

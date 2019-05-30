@@ -57,7 +57,7 @@ public:
 
    const ViewInfo& GetViewInfo() const { return mViewInfo; }
    S<const Resource> GetResource() const { return mResource.lock(); }
-   const H& GetHandle() const { return mHandle; }
+   const H& Handle() const { return mHandle; }
 
    ResourceView(W<const Resource> res, uint depthOrArraySize, uint firstArraySlice, uint mostDetailedMip, uint mipCount, eDescriptorType type)
       : mViewInfo{ depthOrArraySize, firstArraySlice, mostDetailedMip, mipCount, type }
@@ -76,7 +76,6 @@ public:
    RenderTargetView(W<const Texture> tex, uint mipLevel = 0, uint firstArraySlice = 0, uint arraySize = kMaxPossible);
    RenderTargetView();
 
-
    eTextureFormat Format() const { return mFormat; }
 
    static RenderTargetView* NullView();
@@ -94,4 +93,16 @@ public:
 protected:
    eTextureFormat mFormat;
    static S<DepthStencilView> sNullView;
+};
+
+class ShaderResourceView: public ResourceView<S<Descriptors>> {
+public:
+   ShaderResourceView(W<const Texture> res, uint mostDetailedMip = 0, uint mipCount = kMaxPossible, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible);
+   ShaderResourceView();
+
+   eTextureFormat Format() const { return mFormat; }
+   static ShaderResourceView* NullView();
+protected:
+   eTextureFormat mFormat = eTextureFormat::Unknown;
+   static S<ShaderResourceView> sNullView;
 };

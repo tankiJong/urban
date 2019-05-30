@@ -23,6 +23,7 @@
 
 #define MAKE_SMART_COM_PTR(_a) typedef Microsoft::WRL::ComPtr<_a> _a##Ptr
 
+enum class eDescriptorType;
 enum class eTopology;
 MAKE_SMART_COM_PTR( IDXGIFactory5 );
 MAKE_SMART_COM_PTR( ID3D12Device5 );
@@ -36,6 +37,8 @@ MAKE_SMART_COM_PTR( ID3D12Fence );
 MAKE_SMART_COM_PTR( IUnknown );
 MAKE_SMART_COM_PTR( ID3D12DescriptorHeap );
 MAKE_SMART_COM_PTR( ID3D12PipelineState );
+MAKE_SMART_COM_PTR( ID3D12RootSignature );
+MAKE_SMART_COM_PTR( ID3DBlob );
 
 using device_obj_t = IUnknownPtr;
 using device_handle_t = ID3D12Device5Ptr;
@@ -45,7 +48,7 @@ using command_list_t = ID3D12GraphicsCommandList4Ptr;
 using resource_handle_t = ID3D12ResourcePtr;
 using fence_t = ID3D12FencePtr;
 using pipelinestate_t = ID3D12PipelineStatePtr;
-
+using rootsignature_t = ID3D12RootSignaturePtr;
 using descriptor_heap_t = ID3D12DescriptorHeapPtr;
 using descriptor_cpu_handle_t = D3D12_CPU_DESCRIPTOR_HANDLE;
 using descriptor_gpu_handle_t = D3D12_GPU_DESCRIPTOR_HANDLE;
@@ -54,6 +57,7 @@ enum class eTextureFormat: unsigned;
 
 DXGI_FORMAT ToDXGIFormat( eTextureFormat format );
 DXGI_FORMAT ToDXGITypelessFromDepthFormat(eTextureFormat format);
+D3D12_DESCRIPTOR_HEAP_TYPE ToD3d12HeapType( eDescriptorType types );
 
 constexpr uint kMaxRenderTargetSupport = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
 

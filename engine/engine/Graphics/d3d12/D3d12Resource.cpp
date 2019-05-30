@@ -302,17 +302,34 @@ bool Texture::Init()
    return result;
 }
 
-RenderTargetView* Texture::rtv( uint mip, uint firstArraySlice, uint arraySize ) const
+RenderTargetView* Texture::Rtv( uint mip, uint firstArraySlice, uint arraySize ) const
 {
    ViewInfo viewInfo{ arraySize, firstArraySlice, mip, 1, eDescriptorType::Rtv };
 
    auto kv = mRtvs.find( viewInfo );
-   if(kv==mRtvs.end() && is_all_set( mBindingFlags, eBindingFlag::RenderTarget )) {
-      S<RenderTargetView> view(new RenderTargetView{shared_from_this(), mip, firstArraySlice, arraySize });
-      auto result = mRtvs.emplace( viewInfo, view);
+   if(kv == mRtvs.end() && is_all_set( mBindingFlags, eBindingFlag::RenderTarget )) {
+      S<RenderTargetView> view( new RenderTargetView{ shared_from_this(), mip, firstArraySlice, arraySize } );
+      auto                result = mRtvs.emplace( viewInfo, view );
 
       ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
-      
+
+      return view.get();
+   }
+
+   return kv->second.get();
+}
+
+ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArraySlice, uint depthOrArraySize ) const
+{
+   ViewInfo viewInfo{ depthOrArraySize, firstArraySlice, mip, mipCount, eDescriptorType::Srv };
+
+   auto kv = mSrvs.find( viewInfo );
+   if(kv == mSrvs.end() && is_all_set( mBindingFlags, eBindingFlag::ShaderResource )) {
+      S<ShaderResourceView> view( new ShaderResourceView{ shared_from_this(), mip, mipCount, firstArraySlice, depthOrArraySize } );
+      auto                  result = mSrvs.emplace( viewInfo, view );
+
+      ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
+
       return view.get();
    }
 
@@ -343,12 +360,11 @@ Texture2::Texture2(
 
 void Texture2::Load( Texture2& tex, fs::path path )
 {
-   tex.~Texture2();
 
    Image image;
    Image::Load( image, path );
 
-   new (&tex)Texture2(eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, image.Dimension().x, image.Dimension().y,
+   tex = Texture2(eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, image.Dimension().x, image.Dimension().y,
                       1, 1, image.Format(), eAllocationType::Persistent);
    tex.Init();
    tex.UpdateData( image.Data(), image.Size() );

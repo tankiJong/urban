@@ -73,7 +73,7 @@ public:
       AccelerationStructure,
    };
 
-   static constexpr uint kMaxPossible = -1;
+   static constexpr uint kMaxPossible = UINT32_MAX;
 
    virtual ~Resource();
 
@@ -84,13 +84,11 @@ public:
    bool   IsStateGlobal() const { return mState.global; }
 
    void                      SetGlobalState( eState state ) const;
-   virtual RenderTargetView* Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const { return nullptr; }
+   virtual RenderTargetView* Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const 
+      { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( arraySize ); return nullptr; }
 
-   virtual ShaderResourceView* Srv(
-      uint mip              = 0,
-      uint mipCount         = kMaxPossible,
-      uint firstArraySlice  = 0,
-      uint depthOrArraySize = kMaxPossible ) const { return nullptr; }
+   virtual ShaderResourceView* Srv( uint mip = 0, uint mipCount = kMaxPossible, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible ) const 
+      { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( mipCount ); UNUSED( depthOrArraySize ); return nullptr; }
 
    virtual bool Init() = 0;
 

@@ -14,16 +14,16 @@ struct cyclic {
 template<typename U>
 constexpr bool operator<(const cyclic<U>& a, const cyclic<U>& b)
 {
-   constexpr U HALF_MAX = 0x1 << (8 * sizeof(U) - 1);
-   U diff = b - a;
-   return diff > 0 && (diff <= HALF_MAX - 1);
+   constexpr size_t HALF_MAX = 0x1ui64 << (8 * sizeof(U) - 1);
+   size_t diff = b - a;
+   return diff > 0u && (diff <= HALF_MAX - 1);
 }
 
 template<typename U>
 constexpr bool operator<=(const cyclic<U>& a, const cyclic<U>& b)
 {
-  constexpr U HALF_MAX = 0x1 << (8 * sizeof(U) - 1);
-  U diff = b - a;
+  constexpr size_t HALF_MAX = 0x1ui64 << (8 * sizeof(U) - 1);
+  size_t diff = b - a;
   return diff <= HALF_MAX - 1;
 }
 

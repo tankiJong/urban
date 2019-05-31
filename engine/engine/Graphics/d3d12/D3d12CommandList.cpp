@@ -121,16 +121,16 @@ void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
    D3D12_VIEWPORT vp;
    vp.TopLeftX = 0;
    vp.TopLeftY = 0;
-   vp.Width    = Window::Get().BackBufferSize().x;
-   vp.Height   = Window::Get().BackBufferSize().y;
+   vp.Width    = (FLOAT)Window::Get().BackBufferSize().x;
+   vp.Height   = (FLOAT)Window::Get().BackBufferSize().y;
    vp.MinDepth = 0;
    vp.MaxDepth = 1;
 
    D3D12_RECT sr;
    sr.left   = 0;
    sr.top    = 0;
-   sr.right  = vp.Width;
-   sr.bottom = vp.Height;
+   sr.right  = Window::Get().BackBufferSize().x;
+   sr.bottom = Window::Get().BackBufferSize().y;
 
    mHandle->RSSetViewports( 1, &vp );
    mHandle->RSSetScissorRects( 1, &sr );

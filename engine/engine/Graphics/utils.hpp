@@ -97,7 +97,7 @@ enum class eAllocationType: uint {
 };
 
 enum class eShaderType: uint {
-   Unknown = -1,
+   Unknown = UINT32_MAX,
    Compute = 0,
    Vertex,
    Pixel,
@@ -159,9 +159,9 @@ struct RenderState {
    struct DepthStencilState { } depthStencil;
 };
 
-enum class eTopology {
-   Unknown = -1,
-   Triangle,
+enum class eTopology: uint {
+   Unknown = UINT32_MAX,
+   Triangle = 0u,
 };
 
 bool IsDepthFormat( eTextureFormat format );

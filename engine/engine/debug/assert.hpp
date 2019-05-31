@@ -153,9 +153,15 @@ int SystemDialogue_YesNoCancel( const std::string& messageTitle, const std::stri
 #endif
 
 #if defined( DISABLE_ASSERTS )
-#define INFO( msg )
+#define FATAL( msg )
 #else
-#define WARN( msg ) SystemDialogue_Okay("Info", msg, SEVERITY_INFORMATION);
+#define FATAL( msg ) SystemDialogue_Okay("Info", msg, SEVERITY_FATAL);
+#endif
+
+#if defined( DISABLE_ASSERTS )
+#define WARN( msg )
+#else
+#define WARN( msg ) SystemDialogue_Okay("Info", msg, SEVERITY_WARNING);
 #endif
 
 

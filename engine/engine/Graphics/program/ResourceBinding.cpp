@@ -89,13 +89,13 @@ void ResourceBinding::RegenerateFlattened() const
    size_t totalItemCount = 0;
 
    mFlattenedBindings.clear();
-   for(uint i = 0; i < tableSizeLayout.size(); i++) {
+   for(size_t i = 0; i < tableSizeLayout.size(); i++) {
       auto&  tableSize        = tableSizeLayout[i];
-      uint currentTableSize = std::accumulate( tableSize.begin(), tableSize.end(), uint( 0 ) );
+      size_t currentTableSize = std::accumulate( tableSize.begin(), tableSize.end(), size_t( 0 ) );
       totalItemCount += currentTableSize;
 
-      uint offset = currentTableSize;
-      for(uint j = 0; j < tableSize.size(); j++) {
+      size_t offset = currentTableSize;
+      for(size_t j = 0; j < tableSize.size(); j++) {
          const BindingLayout::range& range = layout[i][j];
 
          descriptor_cpu_handle_t handle;
@@ -117,17 +117,17 @@ void ResourceBinding::RegenerateFlattened() const
          BAD_CODE_PATH();
          }
 
-         for(uint rangeOffset = tableSize[j], registerIndexOffset = 0; rangeOffset > 0;
+         for(size_t rangeOffset = tableSize[j], registerIndexOffset = 0; rangeOffset > 0;
              --rangeOffset, ++registerIndexOffset) {
             mFlattenedBindings.push_back( {
                handle,
                range.type,
-               range.baseRegisterIndex + registerIndexOffset,
+               range.baseRegisterIndex + (uint)registerIndexOffset,
                range.registerSpace,
-               i,
-               i,
-               offset,
-               rangeOffset
+               (uint)i,
+               (uint)j,
+               (uint)offset,
+               (uint)rangeOffset
             } );
          }
 

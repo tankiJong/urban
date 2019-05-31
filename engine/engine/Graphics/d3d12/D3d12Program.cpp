@@ -33,19 +33,19 @@ D3D12_DESCRIPTOR_RANGE_TYPE ToD3d12RangeType(const eDescriptorType type)
 
 void initParamAndRange(D3D12_ROOT_PARAMETER& param, std::vector<D3D12_DESCRIPTOR_RANGE>& range, const BindingLayout::table_t& table)
 {
-   uint rangeCount = table.size();
+   size_t rangeCount = table.size();
    range.resize( rangeCount );
 
    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
    param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-   param.DescriptorTable.NumDescriptorRanges = rangeCount;
+   param.DescriptorTable.NumDescriptorRanges = (uint)rangeCount;
    param.DescriptorTable.pDescriptorRanges = range.data();
 
    for(size_t i = 0; i < rangeCount; i++ ) {
       const auto& r = table[i];
       range[i].RegisterSpace = r.registerSpace;
       range[i].BaseShaderRegister = r.baseRegisterIndex;
-      range[i].NumDescriptors = r.attribs.size();
+      range[i].NumDescriptors = (uint)r.attribs.size();
       range[i].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
       range[i].RangeType = ToD3d12RangeType(r.type);
    }
@@ -94,10 +94,9 @@ void initRootSignature(rootsignature_t& handle, const std::vector<BindingLayout:
    assert_win( D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &sigBlob, &errBlob) );
 
    // https://docs.microsoft.com/en-us/windows/desktop/direct3d12/root-signature-limits
-   uint totalSize = 8 * d3dranges.size(); // each range(in my case, are all descriptor table) cost 1 DWORD => 1 byte
+   uint totalSize = 8 * (uint)d3dranges.size(); // each range(in my case, are all descriptor table) cost 1 DWORD => 1 byte
    if(totalSize > sizeof( uint ) + D3D12_MAX_ROOT_COST) {
-      ERROR( "Root-signature cost is too high. D3D12 root-signatures are limited to 64 DWORDs, trying to create a signature with"
-             + std::to_string( totalSize / sizeof( uint ) ) + "DWORDS" );
+      FATAL( "Root-signature cost is too high. D3D12 root-signatures are limited to 64 DWORDs" );
    }
 
    Device::Get().NativeDevice()->CreateRootSignature( 0, sigBlob->GetBufferPointer(), 

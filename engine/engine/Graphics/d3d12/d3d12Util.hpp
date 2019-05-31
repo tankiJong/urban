@@ -24,7 +24,7 @@
 #define MAKE_SMART_COM_PTR(_a) typedef Microsoft::WRL::ComPtr<_a> _a##Ptr
 
 enum class eDescriptorType;
-enum class eTopology;
+enum class eTopology: uint;
 MAKE_SMART_COM_PTR( IDXGIFactory5 );
 MAKE_SMART_COM_PTR( ID3D12Device5 );
 MAKE_SMART_COM_PTR( IDXGISwapChain4 );

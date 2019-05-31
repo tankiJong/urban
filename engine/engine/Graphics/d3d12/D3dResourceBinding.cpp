@@ -24,10 +24,6 @@
 BindingLayout::BindingLayout( const std::vector<table_t>& ranges )
    : mLayout( ranges )
 {
-   D3D12_DESCRIPTOR_RANGE range;
-
-   size_t byteSize = 0;
-
 }
 
 BindingLayout::~BindingLayout()

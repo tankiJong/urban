@@ -218,6 +218,8 @@ bool Buffer::Init()
    D3D12_HEAP_PROPERTIES props;
    mHandle->GetHeapProperties( &props, nullptr );
    mHandle->SetName( L"Buffer" );
+
+   return true;
 }
 
 void Buffer::UpdateData( const void* data, size_t size, size_t offset )
@@ -377,11 +379,11 @@ void Texture::UpdateData( const void* data, size_t size, size_t offset )
    uploadBuffer.Init();
    uploadBuffer.UploadData( data, size, offset );
 
-   uint pixelSize = GetTextureFormatStride( mFormat ) / 8;
+   size_t pixelSize = GetTextureFormatStride( mFormat ) / 8u;
    D3D12_SUBRESOURCE_DATA textureData = {
       data,
-      size_t(Width() * pixelSize),
-      size_t(Width() * Height() * pixelSize),
+      LONG_PTR(Width() * pixelSize),
+      LONG_PTR(Width() * Height() * pixelSize),
    };
 
    CommandList list(eQueueType::Copy);

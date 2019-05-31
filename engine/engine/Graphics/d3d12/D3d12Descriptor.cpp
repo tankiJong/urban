@@ -38,7 +38,7 @@ void DescriptorHeap::Init()
 {
    D3D12_DESCRIPTOR_HEAP_DESC desc = {
       ToD3d12HeapType( mAllowedTypes ),
-      mHeapSize,
+      uint( mHeapSize ),
       mIsShaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE
    };
 

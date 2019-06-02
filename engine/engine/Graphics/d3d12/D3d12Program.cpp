@@ -154,14 +154,14 @@ void Shader::SetupBindingLayout()
 
       for(uint j = 0; j < descriptorTables.NumDescriptorRanges; ++j) {
          auto& trange            = descriptorTables.pDescriptorRanges[j];
-         auto& range             = table[i];
+         auto& range             = table[j];
          range.baseRegisterIndex = trange.BaseShaderRegister;
          range.registerSpace     = trange.RegisterSpace;
          range.type              = ToRangeType( trange.RangeType );
 
          range.attribs.resize( trange.NumDescriptors );
          for(uint k = 0; k < trange.NumDescriptors; ++k) {
-            auto& attrib = range.attribs[i];
+            auto& attrib = range.attribs[k];
             attrib.name  = Stringf( "attr-%u", total );
             attrib.count = 1;
          }

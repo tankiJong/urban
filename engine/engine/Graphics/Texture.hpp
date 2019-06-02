@@ -67,7 +67,7 @@ public:
    eTextureFormat Format() const { return mFormat; }
 
    virtual bool                Init() override;
-   virtual void                UpdateData( const void* data, size_t size, size_t offset = 0 ) override;
+   virtual void                UpdateData( const void* data, size_t size, size_t offset = 0, CommandList* commandList = nullptr) override;
    virtual RenderTargetView*   Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
    virtual ShaderResourceView* Srv(
       uint mip              = 0,

@@ -210,12 +210,12 @@ void CommandList::BindResources( const ResourceBinding& bindings, bool forComput
 
    uint tableIndex = 0;
    if(forCompute) {
-      for(uint i = 0; i < flattened.size(); i += flattened[i].nextRangeOffset) {
+      for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
          mHandle->SetComputeRootDescriptorTable( tableIndex, descriptors.GetGpuHandle( i ) );
          ++tableIndex;
       }
    } else {
-      for(uint i = 0; i < flattened.size(); i += flattened[i].nextRangeOffset) {
+      for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
          mHandle->SetGraphicsRootDescriptorTable( tableIndex, descriptors.GetGpuHandle( i ) );
          ++tableIndex;
       }

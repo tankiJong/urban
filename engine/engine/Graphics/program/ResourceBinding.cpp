@@ -49,6 +49,15 @@ void ResourceBinding::SetSrv( ShaderResourceView* srv, uint registerIndex, uint 
    b.location = srv->Handle()->GetCpuHandle( 0 );
 }
 
+void ResourceBinding::SetCbv( const ConstantBufferView* cbv, uint registerIndex, uint registerSpace )
+{
+   if(mIsDirty) RegenerateFlattened();
+
+   auto& b    = FindBindingItem( eDescriptorType::Cbv, registerIndex, registerSpace );
+   b.type     = eDescriptorType::Cbv;
+   b.location = cbv->Handle()->GetCpuHandle( 0 );
+}
+
 ResourceBinding::BindingItem& ResourceBinding::FindBindingItem( eDescriptorType type, uint registerIndex, uint registerSpace )
 {
    for(auto& item: mFlattenedBindings) {
@@ -100,11 +109,12 @@ void ResourceBinding::RegenerateFlattened() const
 
          descriptor_cpu_handle_t handle;
          switch(range.type) {
-         case eDescriptorType::Srv: handle = ShaderResourceView::NullView()->Handle()->GetCpuHandle( 0 );
+         case eDescriptorType::Srv: 
+            handle = ShaderResourceView::NullView()->Handle()->GetCpuHandle( 0 );
             break;
          case eDescriptorType::Cbv:
-            // handle = ConstantBufferView::NullView()->Handle()->GetCpuHandle( 0 );
-            // break;
+            handle = ConstantBufferView::NullView()->Handle()->GetCpuHandle( 0 );
+            break;
          case eDescriptorType::Uav: 
             // handle = UnorderedAccessView::NullView()->Handle()->GetCpuHandle( 0 );
             //

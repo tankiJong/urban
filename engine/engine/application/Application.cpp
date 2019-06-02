@@ -71,6 +71,7 @@ void Application::_update()
 
    _input();
 
+   OnUpdate();
    PostUpdate();
 
    OnRender();

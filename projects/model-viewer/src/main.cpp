@@ -17,6 +17,8 @@
 #include "engine/graphics/CommandQueue.hpp"
 #include "engine/graphics/rgba.hpp"
 #include "engine/graphics/program/ResourceBinding.hpp"
+#include "engine/graphics/ConstantBuffer.hpp"
+#include "engine/framework/Camera.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -103,18 +105,64 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
+//-----------------------------------------------------------------------------------------------
+double InitializeTime( LARGE_INTEGER& out_initialTime )
+{
+	LARGE_INTEGER countsPerSecond;
+	QueryPerformanceFrequency( &countsPerSecond );
+	QueryPerformanceCounter( &out_initialTime );
+	return( 1.0 / static_cast< double >( countsPerSecond.QuadPart ) );
+}
+
+double GetCurrentTimeSeconds()
+{
+   static LARGE_INTEGER initialTime;
+	static double secondsPerCount = InitializeTime( initialTime );
+	LARGE_INTEGER currentCount;
+	QueryPerformanceCounter( &currentCount );
+	LONGLONG elapsedCountsSinceInitialTime = currentCount.QuadPart - initialTime.QuadPart;
+
+	double currentSeconds = static_cast< double >( elapsedCountsSinceInitialTime ) * secondsPerCount;
+	return currentSeconds;
+};
+
+
 class GameApplication final: public Application {
 public:
    void OnInit() override;
+   void OnUpdate() override;
    void OnRender() const override;
 protected:
    S<Texture2> mGroundTexture;
+   S<ConstantBuffer> mCameraBuffer;
+   Camera mCamera;
 };
 
 void GameApplication::OnInit()
 {
-   mGroundTexture.reset(new Texture2());
+   mGroundTexture.reset( new Texture2() );
    Texture2::Load( *mGroundTexture, "Ground-Texture-(gray20).png" );
+   mCameraBuffer.reset( new ConstantBuffer( sizeof( camera_t ) ) );
+   mCameraBuffer->Init();
+   mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
+}
+
+void GameApplication::OnUpdate()
+{
+   static double prevTime = GetCurrentTimeSeconds(), currentTime = GetCurrentTimeSeconds();
+   static float deg = 0;
+   prevTime = currentTime;
+   currentTime = GetCurrentTimeSeconds();
+
+   float dt = currentTime - prevTime;
+
+   deg = deg + dt * 360.f;
+
+   float3 position = {cosf( deg * D2R) * 5.f, 0, sinf( deg * D2R ) * 5.f };
+   mCamera.LookAt( position, float3::Zero );
+
+   camera_t data = mCamera.ComputeCameraBlock();
+   mCameraBuffer->SetData( &data, sizeof(camera_t));
 }
 
 void GameApplication::OnRender() const
@@ -130,6 +178,7 @@ void GameApplication::OnRender() const
       prog->Finalize();
       binding = new ResourceBinding(prog);
       binding->SetSrv(mGroundTexture->Srv(), 0);
+      binding->SetCbv(mCameraBuffer->Cbv(), 0);
    }
 
    if(gs == nullptr) {
@@ -140,9 +189,12 @@ void GameApplication::OnRender() const
 
    gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
 
-   CommandList   list;
+
+   CommandList list;
+
 
    list.SetName( L"Draw CommandList" );
+   mCameraBuffer->UploadGpu(&list);
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
    list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
    list.TransitionBarrier( *mGroundTexture, Resource::eState::ShaderResource );

@@ -6,6 +6,8 @@
 class RenderTargetView;
 class DepthStencilView;
 class ShaderResourceView;
+class ConstantBufferView;
+class CommandList;
 
 class Resource: public WithHandle<resource_handle_t>, public std::enable_shared_from_this<Resource> {
 public:
@@ -79,6 +81,7 @@ public:
 
    eType        Type() const { return mType; }
    eBindingFlag BindingFlags() const { return mBindingFlags; }
+   uint64_t     GpuStartAddress() const;
 
    eState GlobalState() const { return mState.globalState; }
    bool   IsStateGlobal() const { return mState.global; }
@@ -90,10 +93,13 @@ public:
    virtual ShaderResourceView* Srv( uint mip = 0, uint mipCount = kMaxPossible, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible ) const 
       { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( mipCount ); UNUSED( depthOrArraySize ); return nullptr; }
 
+   virtual const ConstantBufferView* Cbv() const { return nullptr; };
+
    virtual bool Init() = 0;
 
    // The data is not promised to be updated immediately, it only schedule the commands on the copy queue
-   virtual void UpdateData( const void* data, size_t size, size_t offset = 0 ) = 0;
+   virtual void UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList) = 0;
+   void UpdateData( const void* data, size_t size, size_t offset = 0) { UpdateData( data, size, offset, nullptr ); };
 protected:
    Resource( eType type, eBindingFlag bindingFlags, eAllocationType allocationType );
 

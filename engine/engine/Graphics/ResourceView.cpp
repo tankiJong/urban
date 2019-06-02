@@ -11,6 +11,7 @@
 
 S<RenderTargetView> RenderTargetView::sNullView = nullptr;
 S<ShaderResourceView> ShaderResourceView::sNullView = nullptr;
+S<ConstantBufferView> ConstantBufferView::sNullView = nullptr;
 
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function /////////////////////
@@ -39,6 +40,17 @@ ShaderResourceView* ShaderResourceView::NullView()
 {
    if(!sNullView) {
       sNullView = S<ShaderResourceView>( new ShaderResourceView() );
+   }
+
+   return sNullView.get();
+}
+
+ConstantBufferView::ConstantBufferView(): ConstantBufferView( W<const Buffer>() ) {}
+
+ConstantBufferView* ConstantBufferView::NullView()
+{
+   if(!sNullView) {
+      sNullView = S<ConstantBufferView>( new ConstantBufferView() );
    }
 
    return sNullView.get();

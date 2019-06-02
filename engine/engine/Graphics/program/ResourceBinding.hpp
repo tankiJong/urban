@@ -35,6 +35,7 @@ public:
 
    const Flattened& GetFlattened() const;
    void             SetSrv( ShaderResourceView* srv, uint registerIndex, uint registerSpace = 0 );
+   void             SetCbv( const ConstantBufferView* cbv, uint registerIndex, uint registerSpace = 0 );
 
 protected:
 

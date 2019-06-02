@@ -222,7 +222,7 @@ bool Buffer::Init()
    return true;
 }
 
-void Buffer::UpdateData( const void* data, size_t size, size_t offset )
+void Buffer::UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList )
 {
    ASSERT_DIE_M( mBufferUsage != eBufferUsage::ReadBack, "Does not support write data to read back buffer" );
    ASSERT_DIE( size + offset <= mSize );
@@ -231,14 +231,29 @@ void Buffer::UpdateData( const void* data, size_t size, size_t offset )
    } else {
       Buffer uploadBuffer(size - offset, eBindingFlag::None, eBufferUsage::Upload, eAllocationType::Temporary);
       uploadBuffer.Init();
+      uploadBuffer.UploadData( data, size, offset );
+      if(commandList == nullptr) {
+         CommandList list;
+         list.TransitionBarrier( *this, eState::CopyDest );
+         list.Handle()->CopyBufferRegion( Handle().Get(), offset, uploadBuffer.Handle().Get(), 0, size );
+         list.TransitionBarrier( *this, eState::Common );
 
-      CommandList list;
-      list.TransitionBarrier( *this, eState::CopyDest );
-      list.Handle()->CopyBufferRegion( Handle().Get(), offset, uploadBuffer.Handle().Get(), 0, size );
-      list.TransitionBarrier( *this, eState::Common );
-
-      Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
+         Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
+      } else {
+         commandList->TransitionBarrier( *this, eState::CopyDest );
+         commandList->Handle()->CopyBufferRegion( Handle().Get(), offset, uploadBuffer.Handle().Get(), 0, size );
+         commandList->TransitionBarrier( *this, eState::Common );
+      }
    }
+}
+
+const ConstantBufferView* Buffer::Cbv() const
+{
+   if(!mCbv && is_all_set( mBindingFlags, eBindingFlag::ConstantBuffer )) {
+      mCbv.reset( new ConstantBufferView(shared_from_this()));
+   }
+
+   return mCbv.get();
 }
 
 void Buffer::UploadData( const void* data, size_t size, size_t offset )
@@ -372,7 +387,7 @@ void Texture2::Load( Texture2& tex, fs::path path )
    tex.UpdateData( image.Data(), image.Size() );
 }
 
-void Texture::UpdateData( const void* data, size_t size, size_t offset )
+void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList )
 {
    uint64_t uploadBufferSize = GetRequiredIntermediateSize( mHandle.Get(), 0, mMipLevels );
    Buffer uploadBuffer(uploadBufferSize, eBindingFlag::None, Buffer::eBufferUsage::Upload, eAllocationType::Temporary);
@@ -386,9 +401,20 @@ void Texture::UpdateData( const void* data, size_t size, size_t offset )
       LONG_PTR(Width() * Height() * pixelSize),
    };
 
-   CommandList list(eQueueType::Copy);
-   list.TransitionBarrier( *this, eState::CopyDest );
-   UpdateSubresources( list.Handle().Get(), Handle().Get(), uploadBuffer.Handle().Get(), 
-      0, 0, mMipLevels, &textureData);
-   Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
+   if(commandList == nullptr) {
+      CommandList list(eQueueType::Copy);
+      list.TransitionBarrier( *this, eState::CopyDest );
+      UpdateSubresources( list.Handle().Get(), Handle().Get(), uploadBuffer.Handle().Get(), 
+         0, 0, mMipLevels, &textureData);
+      Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );      
+   } else {
+      commandList->TransitionBarrier( *this, eState::CopyDest );
+      UpdateSubresources( commandList->Handle().Get(), Handle().Get(), uploadBuffer.Handle().Get(), 
+         0, 0, mMipLevels, &textureData);
+   }
+}
+
+uint64_t Resource::GpuStartAddress() const
+{
+   return mHandle->GetGPUVirtualAddress();
 }

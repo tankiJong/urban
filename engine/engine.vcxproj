@@ -34,10 +34,13 @@
     <ClCompile Include="engine\core\vary.cpp" />
     <ClCompile Include="engine\debug\assert.cpp" />
     <ClCompile Include="engine\file\utils.cpp" />
+    <ClCompile Include="engine\framework\Camera.cpp" />
+    <ClCompile Include="engine\framework\Transform.cpp" />
     <ClCompile Include="engine\graphics\Buffer.cpp" />
     <ClCompile Include="engine\graphics\CommandBuffer.cpp" />
     <ClCompile Include="engine\graphics\CommandList.cpp" />
     <ClCompile Include="engine\graphics\CommandQueue.cpp" />
+    <ClCompile Include="engine\graphics\ConstantBuffer.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandBuffer.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandList.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12CommandQueue.cpp" />
@@ -59,6 +62,7 @@
     <ClCompile Include="engine\graphics\program\Shader.cpp" />
     <ClCompile Include="engine\graphics\Resource.cpp" />
     <ClCompile Include="engine\graphics\rgba.cpp" />
+    <ClCompile Include="engine\graphics\StructuredBuffer.cpp" />
     <ClCompile Include="engine\graphics\Texture.cpp" />
     <ClCompile Include="engine\graphics\utils.cpp" />
     <ClCompile Include="engine\graphics\ResourceView.cpp" />
@@ -96,11 +100,14 @@
     <ClInclude Include="engine\core\vary.hpp" />
     <ClInclude Include="engine\debug\assert.hpp" />
     <ClInclude Include="engine\file\utils.hpp" />
+    <ClInclude Include="engine\framework\Camera.hpp" />
+    <ClInclude Include="engine\framework\Transform.hpp" />
     <ClInclude Include="engine\graphics\Buffer.hpp" />
     <ClInclude Include="engine\graphics\CommandBuffer.hpp" />
     <ClInclude Include="engine\graphics\CommandList.hpp" />
     <ClInclude Include="engine\graphics\CommandQueue.hpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Device.cpp" />
+    <ClInclude Include="engine\graphics\ConstantBuffer.hpp" />
     <ClInclude Include="engine\graphics\d3d12\d3dx12.h" />
     <ClInclude Include="engine\graphics\Descriptor.hpp" />
     <ClInclude Include="engine\graphics\Device.hpp" />
@@ -113,6 +120,7 @@
     <ClInclude Include="engine\graphics\program\Shader.hpp" />
     <ClInclude Include="engine\graphics\Resource.hpp" />
     <ClInclude Include="engine\graphics\rgba.hpp" />
+    <ClInclude Include="engine\graphics\StructuredBuffer.hpp" />
     <ClInclude Include="engine\graphics\Texture.hpp" />
     <ClInclude Include="engine\graphics\utils.hpp" />
     <ClInclude Include="engine\graphics\ResourceView.hpp" />

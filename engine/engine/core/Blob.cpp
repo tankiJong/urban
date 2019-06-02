@@ -43,14 +43,18 @@ Blob Blob::Clone() const
 
 void Blob::Set( const void* data, size_t size, size_t offset )
 {
-   if(mDataSize + mBufferSize < offset + size) {
-      void* newBuffer = malloc( offset + size );
-      memcpy( newBuffer, mBuffer, mDataSize );
+   if(mBufferSize < offset + size) {
+      void* newBuffer = malloc( (offset + size) * 2u );
+      memcpy( newBuffer, mBuffer, mBufferSize );
       free( mBuffer );
       mBuffer   = newBuffer;
+      mBufferSize = offset + size;
       mDataSize = offset + size;
+   } else {
+      size_t totalSize = mDataSize + mBufferSize;
+      mDataSize = offset + size;
+      mBufferSize = totalSize - mDataSize;
    }
-
    memcpy( (std::byte*)mBuffer + offset, data, size );
 }
 

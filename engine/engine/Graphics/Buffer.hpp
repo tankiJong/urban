@@ -11,7 +11,6 @@ public:
       ReadBack,
    };
 
-
    Buffer(
       size_t          size,
       eBindingFlag    bindingFlags,
@@ -20,14 +19,20 @@ public:
 
    Buffer() = default;
 
+   using inherit_shared_from_this<Resource, Buffer>::shared_from_this;
+
    void UploadData(const void* data, size_t size, size_t offset);
-   
+
    virtual bool Init() override;
-   virtual void UpdateData(const void* data, size_t size, size_t offset = 0) override;
+   virtual void UpdateData(const void* data, size_t size, size_t offset = 0, CommandList* commandList = nullptr) override;
+   size_t Size() const { return mSize; };
+
+   const ConstantBufferView* Cbv() const override;;
 
 protected:
 
    size_t mSize = 0;
    eBufferUsage mBufferUsage = eBufferUsage::Default;
    void* mCpuVirtualPtr = nullptr;
+   mutable S<ConstantBufferView> mCbv;
 };

@@ -28,21 +28,15 @@ public:
 
    void Set( const void* data, size_t size, size_t offset = 0 );
 
-   template< typename T >
-   operator T() { return As<T>(); }
-
-   template< typename T >
-   operator const T() const { return As<T>(); }
-
    operator bool() const { return Valid(); }
 
    Blob& operator=( Blob&& other ) noexcept;
 
    template< typename T >
-   T As();
+   T* As();
 
    template< typename T >
-   const T As() const;
+   const T* As() const;
 
    bool   Valid() const { return mDataSize != 0; };
    size_t Size() const { return mDataSize; };
@@ -54,14 +48,12 @@ protected:
 
 };
 
-template< typename T > T Blob::As()
+template< typename T > T* Blob::As()
 {
-   static_assert(std::is_pointer<T>::value, "T has to be pointer type");
-   return reinterpret_cast<T>(mBuffer);
+   return reinterpret_cast<T*>(mBuffer);
 }
 
-template< typename T > const T Blob::As() const
+template< typename T > const T* Blob::As() const
 {
-   static_assert(std::is_pointer<T>::value, "T has to be pointer type");
-   return reinterpret_cast<const T>(mBuffer);
+   return reinterpret_cast<const T*>(mBuffer);
 }

@@ -5,6 +5,7 @@
 
 class Resource;
 class Texture;
+class Buffer;
 
 struct ViewInfo {
    uint depthOrArraySize;
@@ -105,4 +106,15 @@ public:
 protected:
    eTextureFormat mFormat = eTextureFormat::Unknown;
    static S<ShaderResourceView> sNullView;
+};
+
+class ConstantBufferView: public ResourceView<S<Descriptors>> {
+public:
+   ConstantBufferView(W<const Buffer> res);
+   ConstantBufferView();
+
+   static ConstantBufferView* NullView();
+
+protected:
+   static S<ConstantBufferView> sNullView;
 };

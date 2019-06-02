@@ -3,6 +3,7 @@
 #include "engine/graphics/Device.hpp"
 #include "engine/platform/win.hpp"
 #include "engine/graphics/Texture.hpp"
+#include "engine/graphics/Buffer.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -138,7 +139,7 @@ RenderTargetView::RenderTargetView( W<const Texture> tex, uint mipLevel, uint fi
 
 ShaderResourceView::ShaderResourceView(
    W<const Texture> res, uint mostDetailedMip, uint mipCount, uint firstArraySlice, uint depthOrArraySize )
-   : ResourceView<std::shared_ptr<Descriptors>>( res, depthOrArraySize, firstArraySlice, mostDetailedMip, mipCount, eDescriptorType::Srv )
+   : ResourceView<S<Descriptors>>( res, depthOrArraySize, firstArraySlice, mostDetailedMip, mipCount, eDescriptorType::Srv )
 {
    S<const Texture>                ptr        = res.lock();
    D3D12_SHADER_RESOURCE_VIEW_DESC desc       = {};
@@ -159,4 +160,23 @@ ShaderResourceView::ShaderResourceView(
    mHandle.reset( new Descriptors( std::move( descriptors ) ) );
 
    Device::Get().NativeDevice()->CreateShaderResourceView( restHandle.Get(), &desc, mHandle->GetCpuHandle( 0 ) );
+}
+
+ConstantBufferView::ConstantBufferView( W<const Buffer> res )
+   : ResourceView<S<Descriptors>>( res, 1, 0, 0, 1, eDescriptorType::Cbv )
+{
+   S<const Buffer>                 ptr       = res.lock();
+   D3D12_CONSTANT_BUFFER_VIEW_DESC desc      = {};
+   resource_handle_t               resHandle = nullptr;
+
+   if(ptr) {
+      desc.BufferLocation = ptr->GpuStartAddress();
+      desc.SizeInBytes    = (uint)ptr->Size();
+      resHandle           = ptr->Handle();
+   }
+
+   Descriptors descriptors = Device::Get().GetCpuDescriptorHeap( eDescriptorType::Cbv )->Allocate( 1 );
+   mHandle.reset( new Descriptors( std::move( descriptors ) ) );
+
+   Device::Get().NativeDevice()->CreateConstantBufferView( &desc, mHandle->GetCpuHandle( 0 ) );
 }

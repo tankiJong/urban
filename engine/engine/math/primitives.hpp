@@ -48,8 +48,20 @@ struct vec<3, T> {
    template< typename U, typename = std::enable_if_t<!std::is_same_v<T, U>> >
    explicit operator vec3<U>() { return vec3<U>{ U( x ), U( y ), U( z ) }; }
 
-   T Dot( const vec3<T>& rhs ) const { return x * rhs + y * rhs.y + z * rhs.z; }
+   T Dot( const vec3<T>& rhs ) const { return x * rhs.x + y * rhs.y + z * rhs.z; }
    T Len2() const { return Dot( *this ); }
+   T Len()  const { return T( sqrt( double( Len2() ) ) ); }
+   vec3<T> Norm() { return *this / vec3<T>{ Len() }; }
+
+   // left hand, x.cross(y) == z
+   vec3<T> Cross( const vec3<T>& rhs ) const
+   {
+      return {
+         y * rhs.z - z * rhs.y,
+         z * rhs.x - x * rhs.z,
+         x * rhs.y - y * rhs.x,
+      };
+   };
 
    static const vec3<T> Zero;
    static const vec3<T> One;
@@ -81,8 +93,12 @@ struct vec<4, T> {
    template< typename U, typename = std::enable_if_t<!std::is_same_v<T, U>> >
    explicit operator vec4<U>() { return vec4<U>{ U( x ), U( y ), U( z ), U( w ) }; }
 
-   T Dot( const vec4<T>& rhs ) const { return x * rhs + y * rhs.y + z * rhs.z; }
+   T Dot( const vec4<T>& rhs ) const { return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w; }
    T Len2() const { return Dot( *this ); }
+
+   vec<3, T> xyz() const { return { x, y, z }; }
+   vec<3, T> xy() const { return { x, y }; }
+   vec<3, T> xz() const { return { x, z }; }
 };
 
 template<typename T> vec<2, T>    operator - ( const vec<2, T>& rhs ) { return { - rhs.x, - rhs.y }; }
@@ -131,6 +147,7 @@ using float2 = vec<2, float>;
 
 using uint3 = vec<3, uint32_t>;
 using float3 = vec<3, float>;
+using euler = float3;
 
 using uint4 = vec<4, uint32_t>;
 using float4 = vec<4, float>;
@@ -175,22 +192,38 @@ struct mat44 {
       , iw( iw ), jw( jw ), kw( kw ), tw( tw ) {}
 
    constexpr explicit mat44( float4 col0, float4 col1, float4 col2, float4 col3 = { 0, 0, 0, 1 } )
-      : i( col0 ) , j( col1 ) , k( col2 ) , t( col3 ) {}
+      : i( col0 )
+    , j( col1 )
+    , k( col2 )
+    , t( col3 ) {}
 
    constexpr explicit mat44( const float3& right, const float3& up, const float3& forward, const float3& translation )
-      : i( right, 0 ) , j( up, 0 ) , k( forward, 0 ) , t( translation, 1 ) {}
+      : i( right, 0 )
+    , j( up, 0 )
+    , k( forward, 0 )
+    , t( translation, 1 ) {}
 
-   mat44 operator*(const mat44& rhs) const;
-   float4 operator*(const float4& rhs) const;
-   bool operator==(const mat44& rhs) const;
+   float4 X() const;
+   float4 Y() const;
+   float4 Z() const;
+   float4 W() const;
+
+   mat44  operator*( const mat44& rhs ) const;
+   float4 operator*( const float4& rhs ) const;
+   bool   operator==( const mat44& rhs ) const;
 
    mat44 Transpose() const;
    mat44 Inverse() const;
+   euler Euler() const;
 
-   static mat44 Perspective(float fovDeg, float aspect, float nz, float fz);
-   static mat44 Perspective(float fovDeg, float width, float height, float nz, float fz);
-   static mat44 LookAt(const float3& position, const float3& target, const float3& up = float3::Y);
+   static mat44       Perspective( float fovDeg, float aspect, float nz, float fz );
+   static mat44       Perspective( float fovDeg, float width, float height, float nz, float fz );
+   static mat44       LookAt( const float3& position, const float3& target, const float3& up = float3::Y );
 
+   static mat44       Translation( const float3& translation );
+   // ZXY Rotation
+   static mat44       Rotation( const euler& translation );
+   static mat44       Scale( const float3& scale );
    static const mat44 Identity;
 };
 

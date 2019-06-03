@@ -45,16 +45,6 @@ public:
 
    Texture() = default;
 
-   Texture(
-      eType           type,
-      eBindingFlag    bindingFlags,
-      uint            width,
-      uint            height,
-      uint            depthOrArraySize,
-      uint            mipLevels,
-      eTextureFormat  format,
-      eAllocationType allocationType );
-
    uint Width( uint mip = 0 ) const { return (mip < mMipLevels) ? max( 1u, mWidth >> mip ) : 0u; }
    uint Height( uint mip = 0 ) const { return (mip < mMipLevels) ? max( 1u, mHeight >> mip ) : 0u; }
    uint Depth( uint mip = 0 ) const { return (mip < mMipLevels) ? max( 1u, mDepthOrArraySize >> mip ) : 0u; }
@@ -75,6 +65,16 @@ public:
       uint firstArraySlice  = 0,
       uint depthOrArraySize = kMaxPossible ) const override;
 protected:
+
+   Texture(
+      eType           type,
+      eBindingFlag    bindingFlags,
+      uint            width,
+      uint            height,
+      uint            depthOrArraySize,
+      uint            mipLevels,
+      eTextureFormat  format,
+      eAllocationType allocationType );
 
    Texture(
       const resource_handle_t& handle,
@@ -122,7 +122,7 @@ public:
 
    Texture2() = default;
 
-   Texture2(
+   static S<Texture2> Create(
       eBindingFlag    bindingFlags,
       uint            width,
       uint            height,
@@ -130,6 +130,8 @@ public:
       uint            mipLevels,
       eTextureFormat  format,
       eAllocationType allocationType = eAllocationType::General );
+
+   static void Load( Texture2& tex, fs::path path );
 
    Texture2(
       const resource_handle_t& handle,
@@ -141,5 +143,14 @@ public:
       eTextureFormat           format,
       eAllocationType          allocationType = eAllocationType::General );
 
-   static void Load( Texture2& tex, fs::path path );
+protected:
+   Texture2(
+      eBindingFlag    bindingFlags,
+      uint            width,
+      uint            height,
+      uint            arraySize,
+      uint            mipLevels,
+      eTextureFormat  format,
+      eAllocationType allocationType = eAllocationType::General );
+
 };

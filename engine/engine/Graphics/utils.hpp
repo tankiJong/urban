@@ -86,7 +86,7 @@ enum class eTextureFormat: uint {
    RG8Unorm,
    R8Unorm,
    RGBA16Float,
-   D24Unorm_S8,
+   D24Unorm_S8Uint,
    D32Float,
 };
 

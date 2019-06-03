@@ -87,12 +87,12 @@ protected:
 
 class DepthStencilView: public ResourceView<S<Descriptors>> {
 public:
-   DepthStencilView(W<const Texture> tex, uint mipLevel = 0, uint arraySlice = 0);
+   DepthStencilView(W<const Texture> tex, uint mipLevel = 0, uint firstArraySlice = 0);
    DepthStencilView();
 
    eTextureFormat Format() { return mFormat; }
 protected:
-   eTextureFormat mFormat;
+   eTextureFormat mFormat = eTextureFormat::D24Unorm_S8Uint;
    static S<DepthStencilView> sNullView;
 };
 

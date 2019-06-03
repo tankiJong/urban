@@ -1,5 +1,5 @@
 ﻿#include "engine/pch.h"
-#include "Buffer.hpp"
+#include "Mesh.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -17,13 +17,11 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-S<Buffer> Buffer::Create(
-   size_t size,
-   eBindingFlag bindingFlags,
-   eBufferUsage bufferUsage,
-   eAllocationType allocationType )
+Mesh::Mesh( S<StructuredBuffer> vertexBuffer, S<StructuredBuffer> indexBuffer, const draw_instr_t& instr )
+   : mVertexBuffer( vertexBuffer )
+   , mIndexBuffer( indexBuffer )
+   , mDrawInstr( instr )
 {
-   S<Buffer> res( new Buffer(size, bindingFlags, bufferUsage, allocationType));
-   res->Init();
-   return res;
+   ASSERT_DIE( vertexBuffer != nullptr );
+   ASSERT_DIE_M( mDrawInstr.useIndices == (indexBuffer != nullptr ), "Missing IndexBuffer for Indexed Mesh");
 }

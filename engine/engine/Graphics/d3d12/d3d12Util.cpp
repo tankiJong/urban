@@ -27,7 +27,7 @@ static const DxgiMapEntry kDxgiFormatMap[] = {
    { eTextureFormat::RG8Unorm,     DXGI_FORMAT_R8G8_UNORM },
    { eTextureFormat::R8Unorm,      DXGI_FORMAT_R8_UNORM },
    { eTextureFormat::RGBA16Float,      DXGI_FORMAT_R16G16B16A16_FLOAT },
-   { eTextureFormat::D24Unorm_S8,         DXGI_FORMAT_D24_UNORM_S8_UINT },
+   { eTextureFormat::D24Unorm_S8Uint,         DXGI_FORMAT_D24_UNORM_S8_UINT },
    { eTextureFormat::D32Float,           DXGI_FORMAT_R32_FLOAT },
 };
 
@@ -40,7 +40,7 @@ DXGI_FORMAT ToDXGIFormat( eTextureFormat format )
 DXGI_FORMAT ToDXGITypelessFromDepthFormat( eTextureFormat format )
 {
    switch(format) { 
-   case eTextureFormat::D24Unorm_S8: 
+   case eTextureFormat::D24Unorm_S8Uint: 
       return DXGI_FORMAT_R24G8_TYPELESS;
    case eTextureFormat::D32Float:
       return DXGI_FORMAT_R32_TYPELESS;

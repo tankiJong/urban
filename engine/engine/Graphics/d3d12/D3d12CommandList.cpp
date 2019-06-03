@@ -10,6 +10,7 @@
 #include "engine/graphics/program/Program.hpp"
 #include "engine/graphics/rgba.hpp"
 #include "engine/graphics/program/ResourceBinding.hpp"
+#include "engine/graphics/model/Mesh.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -93,12 +94,14 @@ void CommandList::Close()
 
 void CommandList::SetComputePipelineState( ComputeState& pps )
 {
+   ASSERT_DIE( mRequireCommandQueueType == eQueueType::Compute || mRequireCommandQueueType == eQueueType::Direct );
    pps.Finalize();
    mHandle->SetPipelineState( pps.Handle().Get() );
 }
 
 void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
 {
+   ASSERT_DIE( mRequireCommandQueueType == eQueueType::Direct );
    pps.Finalize();
    mHandle->SetPipelineState( pps.Handle().Get() );
 
@@ -168,8 +171,47 @@ void CommandList::TransitionBarrier( const Resource& resource, Resource::eState 
    mHandle->ResourceBarrier( 1, &barrier );
 }
 
+void CommandList::CopyBufferRegion( Buffer& from, size_t fromOffset, Buffer& to, size_t toOffset, size_t byteCount )
+{
+   mHasCommandPending = true;
+   mHandle->CopyBufferRegion( to.Handle().Get(), toOffset, from.Handle().Get(), 
+                              fromOffset, byteCount );
+}
+
+void CommandList::DrawMesh( const Mesh& mesh )
+{
+   mHasCommandPending = true;
+
+   D3D12_VERTEX_BUFFER_VIEW vb = {};
+
+   const StructuredBuffer* vbo = mesh.GetVertexBuffer();
+   ASSERT_DIE( vbo != nullptr );
+   vb.BufferLocation = vbo->Handle()->GetGPUVirtualAddress();
+   vb.StrideInBytes  = (UINT)vbo->GetStride();
+   vb.SizeInBytes    = (UINT)vbo->GetByteSize();
+
+   mHandle->IASetVertexBuffers( 0, 1, &vb );
+
+   const StructuredBuffer* ibo = mesh.GetIndexBuffer();
+   if(ibo != nullptr) {
+      D3D12_INDEX_BUFFER_VIEW ib = {};
+      ib.BufferLocation          = ibo->Handle()->GetGPUVirtualAddress();
+      ib.SizeInBytes             = (UINT)ibo->GetByteSize();
+      ib.Format                  = DXGI_FORMAT_R32_UINT;
+      mHandle->IASetIndexBuffer( &ib );
+
+      DrawIndexed( 0, mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );
+   } else {
+      mHandle->IASetIndexBuffer( nullptr );
+      Draw( mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );
+   }
+}
+
 void CommandList::ClearRenderTarget( Texture2& tex, const rgba& color )
 {
+   mHasCommandPending = true;
+
+   ASSERT_DIE( mRequireCommandQueueType == eQueueType::Direct );
    float      c[4] = { color.r, color.g, color.b, color.a };
    D3D12_RECT rect;
 
@@ -183,7 +225,16 @@ void CommandList::ClearRenderTarget( Texture2& tex, const rgba& color )
 
 void CommandList::Draw( uint start, uint count )
 {
+   ASSERT_DIE( mRequireCommandQueueType == eQueueType::Direct );
+   mHasCommandPending = true;
    mHandle->DrawInstanced( count, 1, start, 0 );
+}
+
+void CommandList::DrawIndexed( uint vertStart, uint idxStart, uint count )
+{
+   ASSERT_DIE( mRequireCommandQueueType == eQueueType::Direct );
+   mHasCommandPending = true;
+   mHandle->DrawIndexedInstanced(count, 1, idxStart, vertStart, 0);
 }
 
 void CommandList::BindResources( const ResourceBinding& bindings, bool forCompute )

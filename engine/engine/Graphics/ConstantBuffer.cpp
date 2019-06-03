@@ -25,7 +25,7 @@ ConstantBuffer::ConstantBuffer( size_t size, eAllocationType allocationType )
    mCpuCache.Set( data, size, 0 );
 }
 
-void ConstantBuffer::SetData( void* data, size_t size, size_t offset )
+void ConstantBuffer::SetData( const void* data, size_t size, size_t offset )
 {
    mCpuCache.Set( data, size, offset );
    mIsDirty = true;
@@ -33,11 +33,20 @@ void ConstantBuffer::SetData( void* data, size_t size, size_t offset )
 
 void ConstantBuffer::UploadGpu( CommandList* list )
 {
-   if(mHandle == nullptr) {
-      Init();
-   }
+   if(mHandle == nullptr) { Init(); }
 
    if(!mIsDirty) return;
    UpdateData( mCpuCache.Data(), mCpuCache.Size(), 0, list );
    mIsDirty = false;
+}
+
+S<ConstantBuffer> ConstantBuffer::Create( size_t size, eAllocationType allocationType, const void* data )
+{
+   S<ConstantBuffer> res(new ConstantBuffer(size, allocationType));
+   res->Init();
+   if(data != nullptr) {
+      res->SetData( data, size );
+   }
+
+   return res;
 }

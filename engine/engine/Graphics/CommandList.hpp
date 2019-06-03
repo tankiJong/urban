@@ -3,6 +3,7 @@
 #include "Resource.hpp"
 #include "Fence.hpp"
 
+class Mesh;
 class GraphicsState;
 class ResourceBinding;
 class ComputeState;
@@ -40,6 +41,8 @@ public:
    void Dispatch(uint groupx, uint groupy, uint groupz);
 
    // graphics ------------------------------------------------------------//
+   void DrawMesh(const Mesh& mesh);
+
    void ClearRenderTarget(Texture2& tex, const rgba& color);
    void Draw(uint start, uint count);
    void DrawIndexed(uint vertStart, uint idxStart, uint count);

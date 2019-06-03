@@ -1,4 +1,13 @@
 
+struct VSInput {
+   float3 position: POSITION;
+   float2 uv: UV;
+   float4 color: COLOR;
+   float3 normal: NORMAL;
+   float3 tangent: TANGENT;
+   float3 bitangent: BITANGENT;
+};
+
 struct PSInput {
    float4 pos: SV_POSITION;
    float4 color: COLOR;
@@ -32,10 +41,10 @@ Texture2D<float4> gTex: register(t0);
 SamplerState gSampler : register(s0);
 
 [RootSignature(RootSig)]
-PSInput main(uint Vid: SV_VertexID )
+PSInput main( VSInput input )
 {
    PSInput output;
-   output.pos = mul(mul(proj, view), positions[Vid]);
-   output.color = colors[Vid];
+   output.pos = mul(mul(proj, view), float4(input.position, 1.f));
+   output.color = float4(input.uv, 0.f, 1.f);
 	return output;
 }

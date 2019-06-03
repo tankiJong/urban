@@ -11,12 +11,6 @@ public:
       ReadBack,
    };
 
-   Buffer(
-      size_t          size,
-      eBindingFlag    bindingFlags,
-      eBufferUsage    bufferUsage = eBufferUsage::Default,
-      eAllocationType allocationType = eAllocationType::General );
-
    Buffer() = default;
 
    using inherit_shared_from_this<Resource, Buffer>::shared_from_this;
@@ -29,7 +23,18 @@ public:
 
    const ConstantBufferView* Cbv() const override;;
 
+   static S<Buffer> Create(
+      size_t          size,
+      eBindingFlag    bindingFlags,
+      eBufferUsage    bufferUsage = eBufferUsage::Default,
+      eAllocationType allocationType = eAllocationType::General );
 protected:
+
+   Buffer(
+      size_t          size,
+      eBindingFlag    bindingFlags,
+      eBufferUsage    bufferUsage = eBufferUsage::Default,
+      eAllocationType allocationType = eAllocationType::General );
 
    size_t mSize = 0;
    eBufferUsage mBufferUsage = eBufferUsage::Default;

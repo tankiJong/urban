@@ -1,6 +1,8 @@
 ﻿#include "engine/pch.h"
 #include "StructuredBuffer.hpp"
 #include "CommandList.hpp"
+#include "Device.hpp"
+#include "CommandQueue.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -18,21 +20,53 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-void StructuredBuffer::UploadGpu( CommandList& list )
+void StructuredBuffer::UploadGpu( CommandList* list )
 {
    if(!mIsDirty) return;
 
-   list.CopyBufferRegion( *mUploadBuffer, 0, *this, 0, mStride * mCount );
+   if(list == nullptr) {
+      CommandList commandList(eQueueType::Copy);
+      commandList.TransitionBarrier( *this, eState::CopyDest );
+      commandList.CopyBufferRegion( *mUploadBuffer, 0, *this, 0, mStride * mCount );
+      commandList.TransitionBarrier( *this, eState::Common );
+      Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( commandList );
+   } else {
+      list->TransitionBarrier( *this, eState::CopyDest );
+      list->CopyBufferRegion( *mUploadBuffer, 0, *this, 0, mStride * mCount );
+      list->TransitionBarrier( *this, eState::Common );
+   }
    mIsDirty = false;
 }
 
-void StructuredBuffer::SetVariable( size_t index, const void* data, size_t byteSize )
+S<StructuredBuffer> StructuredBuffer::Create(
+   size_t stride,
+   size_t count,
+   eBindingFlag bindingFlags,
+   eAllocationType allocationType )
 {
-   ASSERT_DIE( index * mStride + byteSize <= mCpuCache.size() );
-   uint8_t* start = mCpuCache.data() + index * mStride;
-   memcpy( start, data, byteSize );
+   S<StructuredBuffer> res(new StructuredBuffer(stride, count, bindingFlags, allocationType));
+   res->Init();
+   return res;
+}
 
-   mUploadBuffer->UploadData( data, byteSize, index * mStride );
+bool StructuredBuffer::Init()
+{
+   bool result = Buffer::Init();
+   mUploadBuffer = Buffer::Create( GetByteSize(), eBindingFlag::None, eBufferUsage::Upload, mAllocationType );
+
+   return result;
+}
+
+void StructuredBuffer::SetCache( size_t indexOffset, const void* data, size_t elementCount )
+{
+   ASSERT_DIE( indexOffset * mStride + elementCount * mStride <= mCpuCache.size() );
+
+   size_t byteCount = elementCount * mStride;
+
+   uint8_t* start = mCpuCache.data() + indexOffset * mStride;
+   memcpy( start, data, byteCount );
+
+   mUploadBuffer->UploadData( data, byteCount, indexOffset * mStride );
 
    mIsDirty = true;
 }

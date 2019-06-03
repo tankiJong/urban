@@ -105,6 +105,9 @@
     <ClInclude Include="engine\framework\Camera.hpp" />
     <ClInclude Include="engine\graphics\StructuredBuffer.hpp" />
     <ClInclude Include="engine\graphics\ConstantBuffer.hpp" />
+    <ClInclude Include="engine\graphics\model\Mesh.hpp" />
+    <ClInclude Include="engine\graphics\model\vertex.hpp" />
+    <ClInclude Include="engine\graphics\model\PrimBuilder.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -187,5 +190,8 @@
     <ClCompile Include="engine\framework\Camera.cpp" />
     <ClCompile Include="engine\graphics\StructuredBuffer.cpp" />
     <ClCompile Include="engine\graphics\ConstantBuffer.cpp" />
+    <ClCompile Include="engine\graphics\model\Mesh.cpp" />
+    <ClCompile Include="engine\graphics\model\vertex.cpp" />
+    <ClCompile Include="engine\graphics\model\PrimBuilder.cpp" />
   </ItemGroup>
 </Project>

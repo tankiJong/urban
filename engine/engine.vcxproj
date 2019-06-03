@@ -55,6 +55,9 @@
     <ClCompile Include="engine\graphics\Descriptor.cpp" />
     <ClCompile Include="engine\graphics\Device.cpp" />
     <ClCompile Include="engine\graphics\Fence.cpp" />
+    <ClCompile Include="engine\graphics\model\Mesh.cpp" />
+    <ClCompile Include="engine\graphics\model\PrimBuilder.cpp" />
+    <ClCompile Include="engine\graphics\model\vertex.cpp" />
     <ClCompile Include="engine\graphics\PipelineState.cpp" />
     <ClCompile Include="engine\graphics\program\BindingLayout.cpp" />
     <ClCompile Include="engine\graphics\program\Program.cpp" />
@@ -113,6 +116,9 @@
     <ClInclude Include="engine\graphics\Device.hpp" />
     <ClInclude Include="engine\graphics\d3d12\d3d12Util.hpp" />
     <ClInclude Include="engine\graphics\Fence.hpp" />
+    <ClInclude Include="engine\graphics\model\Mesh.hpp" />
+    <ClInclude Include="engine\graphics\model\PrimBuilder.hpp" />
+    <ClInclude Include="engine\graphics\model\vertex.hpp" />
     <ClInclude Include="engine\graphics\PipelineState.hpp" />
     <ClInclude Include="engine\graphics\program\BindingLayout.hpp" />
     <ClInclude Include="engine\graphics\program\Program.hpp" />

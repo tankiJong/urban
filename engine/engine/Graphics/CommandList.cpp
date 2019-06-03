@@ -21,8 +21,7 @@
 ////////////////////////////////////////////////////////////////
 void CommandList::Flush( bool wait )
 {
-   if(!mHasCommandPending)
-      return;
+   if(!mHasCommandPending) return;
 
    // command list submission should not cross frame for now
    ASSERT_DIE( mCreateFrame == mDevice->AttachedWindow()->CurrentFrameCount() );

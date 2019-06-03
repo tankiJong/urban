@@ -215,8 +215,7 @@ bool Buffer::Init()
    }
 
    CreateD3d12Resource( mHandle, desc, mAllocationType, *prop, initState, nullptr );
-   D3D12_HEAP_PROPERTIES props;
-   mHandle->GetHeapProperties( &props, nullptr );
+
    mHandle->SetName( L"Buffer" );
 
    return true;
@@ -235,13 +234,13 @@ void Buffer::UpdateData( const void* data, size_t size, size_t offset, CommandLi
       if(commandList == nullptr) {
          CommandList list;
          list.TransitionBarrier( *this, eState::CopyDest );
-         list.Handle()->CopyBufferRegion( Handle().Get(), offset, uploadBuffer.Handle().Get(), 0, size );
+         list.CopyBufferRegion( uploadBuffer, offset, *this, 0, size );
          list.TransitionBarrier( *this, eState::Common );
 
          Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
       } else {
          commandList->TransitionBarrier( *this, eState::CopyDest );
-         commandList->Handle()->CopyBufferRegion( Handle().Get(), offset, uploadBuffer.Handle().Get(), 0, size );
+         commandList->CopyBufferRegion( uploadBuffer, offset, *this, 0, size );
          commandList->TransitionBarrier( *this, eState::Common );
       }
    }
@@ -374,6 +373,19 @@ Texture2::Texture2(
    eAllocationType          allocationType )
    : Texture( handle, eType::Texture2D, bindingFlags, width, height, arraySize, mipLevels, format, allocationType ) {}
 
+S<Texture2> Texture2::Create(
+   eBindingFlag bindingFlags,
+   uint width,
+   uint height,
+   uint arraySize,
+   uint mipLevels,
+   eTextureFormat format,
+   eAllocationType allocationType )
+{
+   S<Texture2> res( new Texture2(bindingFlags, width, height, arraySize, mipLevels, format, allocationType));
+   res->Init();
+   return res;
+}
 
 void Texture2::Load( Texture2& tex, fs::path path )
 {
@@ -390,9 +402,8 @@ void Texture2::Load( Texture2& tex, fs::path path )
 void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList )
 {
    uint64_t uploadBufferSize = GetRequiredIntermediateSize( mHandle.Get(), 0, mMipLevels );
-   Buffer uploadBuffer(uploadBufferSize, eBindingFlag::None, Buffer::eBufferUsage::Upload, eAllocationType::Temporary);
-   uploadBuffer.Init();
-   uploadBuffer.UploadData( data, size, offset );
+   S<Buffer> uploadBuffer = Buffer::Create(uploadBufferSize, eBindingFlag::None, Buffer::eBufferUsage::Upload, eAllocationType::Temporary);
+   uploadBuffer->UploadData( data, size, offset );
 
    size_t pixelSize = GetTextureFormatStride( mFormat ) / 8u;
    D3D12_SUBRESOURCE_DATA textureData = {
@@ -404,12 +415,12 @@ void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandL
    if(commandList == nullptr) {
       CommandList list(eQueueType::Copy);
       list.TransitionBarrier( *this, eState::CopyDest );
-      UpdateSubresources( list.Handle().Get(), Handle().Get(), uploadBuffer.Handle().Get(), 
+      UpdateSubresources( list.Handle().Get(), Handle().Get(), uploadBuffer->Handle().Get(), 
          0, 0, mMipLevels, &textureData);
       Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );      
    } else {
       commandList->TransitionBarrier( *this, eState::CopyDest );
-      UpdateSubresources( commandList->Handle().Get(), Handle().Get(), uploadBuffer.Handle().Get(), 
+      UpdateSubresources( commandList->Handle().Get(), Handle().Get(), uploadBuffer->Handle().Get(), 
          0, 0, mMipLevels, &textureData);
    }
 }

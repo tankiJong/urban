@@ -50,7 +50,7 @@ bool Application::runFrame()
 
 void Application::_init()
 {
-   Window::Get().Init( {1000, 1000}, "hello" );
+   Window::Get().Init( { uint(1000.f * 1.77f), 1000 }, "hello" );
 
    Window::Get().Subscribe( [this]( uint msg, size_t wparam, size_t lparam )
    {

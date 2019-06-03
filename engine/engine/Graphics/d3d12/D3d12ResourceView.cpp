@@ -124,8 +124,8 @@ RenderTargetView::RenderTargetView( W<const Texture> tex, uint mipLevel, uint fi
 
    if(ptr) {
       mFormat = ptr->Format();
-      InitD3d12Rtv( &desc, *ptr, mipLevel, firstArraySlice, arraySize );
       resHandle = ptr->Handle();
+      InitD3d12Rtv( &desc, *ptr, mipLevel, firstArraySlice, arraySize );
    } else {
       desc.Format        = DXGI_FORMAT_R8G8B8A8_UNORM;
       desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
@@ -147,8 +147,8 @@ ShaderResourceView::ShaderResourceView(
 
    if(ptr) {
       mFormat = ptr->Format();
-      InitD3d12TextureSrv( &desc, ptr->Type(), ptr->Format(), depthOrArraySize, firstArraySlice, mostDetailedMip,
-                           mipCount );
+      InitD3d12TextureSrv( &desc, ptr->Type(), ptr->Format(), depthOrArraySize, 
+                           firstArraySlice, mostDetailedMip, mipCount );
       restHandle = ptr->Handle();
    } else {
       desc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -170,13 +170,37 @@ ConstantBufferView::ConstantBufferView( W<const Buffer> res )
    resource_handle_t               resHandle = nullptr;
 
    if(ptr) {
-      desc.BufferLocation = ptr->GpuStartAddress();
-      desc.SizeInBytes    = (uint)ptr->Size();
       resHandle           = ptr->Handle();
+      desc.SizeInBytes    = (uint)ptr->Size();
+      desc.BufferLocation = ptr->GpuStartAddress();
    }
 
    Descriptors descriptors = Device::Get().GetCpuDescriptorHeap( eDescriptorType::Cbv )->Allocate( 1 );
    mHandle.reset( new Descriptors( std::move( descriptors ) ) );
 
    Device::Get().NativeDevice()->CreateConstantBufferView( &desc, mHandle->GetCpuHandle( 0 ) );
+}
+
+DepthStencilView::DepthStencilView( W<const Texture> tex, uint mipLevel, uint firstArraySlice )
+   : ResourceView<S<Descriptors>>( tex, 1, firstArraySlice, mipLevel, 1, eDescriptorType::Dsv )
+{
+   S<const Texture> ptr = tex.lock();
+
+   D3D12_DEPTH_STENCIL_VIEW_DESC desc      = {};
+   resource_handle_t             resHandle = nullptr;
+
+   if(ptr) {
+      resHandle               = ptr->Handle();
+      desc.Format             = ToDXGIFormat( ptr->Format() );
+      desc.ViewDimension      = D3D12_DSV_DIMENSION_TEXTURE2D;
+      desc.Texture2D.MipSlice = mipLevel;
+   } else {
+      desc.Format        = DXGI_FORMAT_D24_UNORM_S8_UINT;
+      desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+   }
+
+   Descriptors descriptors = Device::Get().GetCpuDescriptorHeap( eDescriptorType::Dsv )->Allocate( 1 );
+   mHandle.reset( new Descriptors( std::move( descriptors ) ) );
+
+   Device::Get().NativeDevice()->CreateDepthStencilView( resHandle.Get(), &desc, mHandle->GetCpuHandle( 0 ) );
 }

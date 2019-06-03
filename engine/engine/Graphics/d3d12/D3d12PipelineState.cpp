@@ -6,6 +6,7 @@
 #include "engine/platform/win.hpp"
 #include "engine/graphics/ResourceView.hpp"
 #include "engine/graphics/Resource.hpp"
+#include "engine/graphics/model/vertex.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -116,16 +117,72 @@ void SetD3d12RasterizerState( D3D12_RASTERIZER_DESC* desc, const RenderState::Ra
 
 void SetD3d12InputLayout( D3D12_INPUT_LAYOUT_DESC* desc, const InputLayout* il )
 {
-   desc->NumElements = 1;
-   D3D12_INPUT_ELEMENT_DESC* ele = new D3D12_INPUT_ELEMENT_DESC[1];
-   ele->SemanticName = "POSITION";
-   ele->SemanticIndex = 0;
-   ele->Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-   ele->InputSlot = 0;
-   ele->AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-   ele->InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-   ele->InstanceDataStepRate = 0;
-   desc->pInputElementDescs = ele;
+   ASSERT_DIE( sizeof(vertex_t) == 72 );
+   // float3 position;
+   // float2 uv;
+   // float4 color;
+   // float3 normal;
+   // float3 tangent;
+   // float3 bitangent;
+   static D3D12_INPUT_ELEMENT_DESC eles [] = {
+      {
+         "POSITION",
+         0,
+         DXGI_FORMAT_R32G32B32_FLOAT,
+         0,
+         offsetof( vertex_t, position ),
+         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+         0
+      },
+      {
+         "UV",
+         0,
+         DXGI_FORMAT_R32G32_FLOAT,
+         0,
+         offsetof( vertex_t, uv ),
+         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+         0
+      },
+      {
+         "COLOR",
+         0,
+         DXGI_FORMAT_R32G32B32A32_FLOAT,
+         0,
+         offsetof( vertex_t, color ),
+         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+         0
+      },
+      {
+         "NORMAL",
+         0,
+         DXGI_FORMAT_R32G32B32_FLOAT,
+         0,
+         offsetof( vertex_t, normal ),
+         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+         0
+      },
+      {
+         "TANGENT",
+         0,
+         DXGI_FORMAT_R32G32B32_FLOAT,
+         0,
+         offsetof( vertex_t, tangent ),
+         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+         0
+      },
+      {
+         "BITANGENT",
+         0,
+         DXGI_FORMAT_R32G32B32_FLOAT,
+         0,
+         offsetof( vertex_t, bitangent ),
+         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+         0
+      },
+   };
+
+   desc->NumElements = _countof(eles);
+   desc->pInputElementDescs = eles;
 };
 
 D3D12_PRIMITIVE_TOPOLOGY_TYPE ToD3d12TopologyType(eTopology tp)
@@ -234,8 +291,6 @@ bool GraphicsState::Finalize()
    }
 
    assert_win( Device::Get().NativeDevice()->CreateGraphicsPipelineState( &desc, IID_PPV_ARGS( &mHandle ) ) );
-
-   delete[] desc.InputLayout.pInputElementDescs;
 
    return true;
 }

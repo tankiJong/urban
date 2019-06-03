@@ -19,6 +19,8 @@
 #include "engine/graphics/program/ResourceBinding.hpp"
 #include "engine/graphics/ConstantBuffer.hpp"
 #include "engine/framework/Camera.hpp"
+#include "engine/graphics/model/Mesh.hpp"
+#include "engine/graphics/model/PrimBuilder.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -136,14 +138,14 @@ protected:
    S<Texture2> mGroundTexture;
    S<ConstantBuffer> mCameraBuffer;
    Camera mCamera;
+   Mesh mTriangle;
 };
 
 void GameApplication::OnInit()
 {
    mGroundTexture.reset( new Texture2() );
    Texture2::Load( *mGroundTexture, "Ground-Texture-(gray20).png" );
-   mCameraBuffer.reset( new ConstantBuffer( sizeof( camera_t ) ) );
-   mCameraBuffer->Init();
+   mCameraBuffer = ConstantBuffer::CreateFor<camera_t>();
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
 }
 
@@ -163,6 +165,19 @@ void GameApplication::OnUpdate()
 
    camera_t data = mCamera.ComputeCameraBlock();
    mCameraBuffer->SetData( &data, sizeof(camera_t));
+
+   PrimBuilder pb;
+
+   pb.Begin( eTopology::Triangle, false );
+   pb.Uv( {0, 0 } );
+   pb.Vertex3( {0, 0, 0 } );
+   pb.Uv( {0, 1 } );
+   pb.Vertex3( {1, 0, 0 } );
+   pb.Uv( {1, 0 } );
+   pb.Vertex3( {0, 1, 0 } );
+   pb.End();
+
+   mTriangle = pb.CreateMesh(eAllocationType::Temporary, true); 
 }
 
 void GameApplication::OnRender() const
@@ -192,7 +207,6 @@ void GameApplication::OnRender() const
 
    CommandList list;
 
-
    list.SetName( L"Draw CommandList" );
    mCameraBuffer->UploadGpu(&list);
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
@@ -200,7 +214,7 @@ void GameApplication::OnRender() const
    list.TransitionBarrier( *mGroundTexture, Resource::eState::ShaderResource );
    list.SetGraphicsPipelineState( *gs );
    list.BindResources( *binding );
-   list.Draw( 0, 3 );
+   list.DrawMesh( mTriangle );
 
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
 

@@ -1,42 +1,45 @@
 ﻿#pragma once
 
 #include "engine/pch.h"
+
 class Application {
-  enum eRunStatus {
-    APP_CREATED,
-    APP_RUNNING,
-    APP_QUITTING,
-  };
+   enum eRunStatus {
+      APP_CREATED,
+      APP_RUNNING,
+      APP_QUITTING,
+   };
+
 public:
-  virtual ~Application() = default;
 
-  virtual void OnInit() {}
+   virtual ~Application() = default;
 
-  virtual void OnStartFrame() {}
+   virtual void OnInit() {}
 
-  virtual void OnInput() {}
+   virtual void OnStartFrame() {}
 
-  virtual void OnUpdate() {}
-  virtual void PostUpdate() {}
+   virtual void OnInput() {}
 
-  virtual void OnRender() const {}
+   virtual void OnUpdate() {}
+   virtual void PostUpdate() {}
 
-  virtual void OnGui() {}
-  virtual void OnQuit() {}
+   virtual void OnRender() const {}
 
-  virtual void OnEndFrame() {}
+   virtual void OnGui() {}
+   virtual void OnQuit() {}
 
-  virtual void OnDestroy() {}
+   virtual void OnEndFrame() {}
 
-  bool runFrame();
+   virtual void OnDestroy() {}
+
+   bool runFrame();
 protected:
 
 private:
-  void _init();
-  void _destroy();
-  void _update();
-  void _input();
+   void _init();
+   void _destroy();
+   void _update();
+   void _input();
 
-  void __stdcall windowProc(uint wmMessageCode, size_t wParam, size_t lParam);
-  eRunStatus mRunStatus = APP_CREATED;
+   void __stdcall windowProc( uint wmMessageCode, size_t wParam, size_t lParam );
+   eRunStatus     mRunStatus = APP_CREATED;
 };

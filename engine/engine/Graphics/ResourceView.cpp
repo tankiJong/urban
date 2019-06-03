@@ -33,6 +33,9 @@ RenderTargetView* RenderTargetView::NullView()
    return sNullView.get();
 }
 
+DepthStencilView::DepthStencilView()
+   : DepthStencilView( W<const Texture>() ){}
+
 ShaderResourceView::ShaderResourceView()
    : ShaderResourceView( W<const Texture>() ) {}
 

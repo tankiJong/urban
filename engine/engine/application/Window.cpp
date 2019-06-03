@@ -221,10 +221,9 @@ void Window::AttachDevice( const S<Device>& device )
       mBackBuffers[i] = S<Texture2>(
          new Texture2(res, eBindingFlag::RenderTarget | eBindingFlag::ShaderResource, 
                       mBufferSize.x, mBufferSize.y, 1, 1, eTextureFormat::RGBA8Unorm));
-      mDepthBuffers[i] = S<Texture2>(
-         new Texture2(eBindingFlag::DepthStencil | eBindingFlag::ShaderResource, 
-                      mBufferSize.x, mBufferSize.y, 1, 1, eTextureFormat::D24Unorm_S8));
-      mDepthBuffers[i]->Init();
+      mDepthBuffers[i] = Texture2::Create(
+                      eBindingFlag::DepthStencil | eBindingFlag::ShaderResource, 
+                      mBufferSize.x, mBufferSize.y, 1, 1, eTextureFormat::D24Unorm_S8Uint);
    }
 
    mCurrentBackBufferIndex = mWindowData->swapChain->GetCurrentBackBufferIndex();

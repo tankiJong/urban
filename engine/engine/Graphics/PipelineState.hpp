@@ -30,7 +30,7 @@ public:
    void SetDepthStencilTarget(const DepthStencilView* dsv);
 
    const RenderTargetView* GetRenderTarget(uint index) const { return mRenderTargets[index]; }
-
+   const DepthStencilView* GetDepthStencilTarget() const { return mDepthStencilTarget; }
    const Desc& Describe() const { return mDesc; }
 
 protected:
@@ -92,7 +92,7 @@ public:
    eTopology GetTopology() const { return mTopology; }
    void      SetTopology( eTopology topology ) { mTopology = topology; mIsDirty = true; }
 
-   RenderState GetRenderState() const { return mRenderState; }
+   const RenderState& GetRenderState() const { return mRenderState; }
    void        SetRenderState( const RenderState& renderState ) { mRenderState = renderState; mIsDirty = true; }
 
    FrameBuffer& GetFrameBuffer() { return mFrameBuffer; mIsDirty = true; }

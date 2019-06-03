@@ -4,8 +4,7 @@ struct VSInput {
    float2 uv: UV;
    float4 color: COLOR;
    float3 normal: NORMAL;
-   float3 tangent: TANGENT;
-   float3 bitangent: BITANGENT;
+   float4 tangent: TANGENT;
 };
 
 struct PSInput {

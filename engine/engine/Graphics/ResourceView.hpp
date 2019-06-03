@@ -90,7 +90,9 @@ public:
    DepthStencilView(W<const Texture> tex, uint mipLevel = 0, uint firstArraySlice = 0);
    DepthStencilView();
 
-   eTextureFormat Format() { return mFormat; }
+   eTextureFormat Format() const { return mFormat; }
+
+   static DepthStencilView* NullView();
 protected:
    eTextureFormat mFormat = eTextureFormat::D24Unorm_S8Uint;
    static S<DepthStencilView> sNullView;

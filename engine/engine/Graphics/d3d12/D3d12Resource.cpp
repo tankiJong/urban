@@ -318,7 +318,7 @@ bool Texture::Init()
    return result;
 }
 
-RenderTargetView* Texture::Rtv( uint mip, uint firstArraySlice, uint arraySize ) const
+const RenderTargetView* Texture::Rtv( uint mip, uint firstArraySlice, uint arraySize ) const
 {
    ViewInfo viewInfo{ arraySize, firstArraySlice, mip, 1, eDescriptorType::Rtv };
 
@@ -335,7 +335,7 @@ RenderTargetView* Texture::Rtv( uint mip, uint firstArraySlice, uint arraySize )
    return kv->second.get();
 }
 
-ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArraySlice, uint depthOrArraySize ) const
+const ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArraySlice, uint depthOrArraySize ) const
 {
    ViewInfo viewInfo{ depthOrArraySize, firstArraySlice, mip, mipCount, eDescriptorType::Srv };
 
@@ -343,6 +343,23 @@ ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArraySlice,
    if(kv == mSrvs.end() && is_all_set( mBindingFlags, eBindingFlag::ShaderResource )) {
       S<ShaderResourceView> view( new ShaderResourceView{ shared_from_this(), mip, mipCount, firstArraySlice, depthOrArraySize } );
       auto                  result = mSrvs.emplace( viewInfo, view );
+
+      ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
+
+      return view.get();
+   }
+
+   return kv->second.get();
+}
+
+const DepthStencilView* Texture::Dsv( uint mip, uint firstArraySlice ) const
+{
+   ViewInfo viewInfo{ 1, firstArraySlice, mip, 1, eDescriptorType::Dsv };
+
+   auto kv = mDsvs.find( viewInfo );
+   if(kv == mDsvs.end() && is_all_set( mBindingFlags, eBindingFlag::DepthStencil )) {
+      S<DepthStencilView> view( new DepthStencilView{ shared_from_this(), mip, firstArraySlice } );
+      auto                result = mDsvs.emplace( viewInfo, view );
 
       ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
 

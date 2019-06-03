@@ -44,6 +44,7 @@ public:
    void DrawMesh(const Mesh& mesh);
 
    void ClearRenderTarget(Texture2& tex, const rgba& color);
+   void ClearDepthStencilTarget( const DepthStencilView* dsv, bool clearDepth = true, bool clearStencil = true, float depth = 1.f, uint8_t stencil = 0);
    void Draw(uint start, uint count);
    void DrawIndexed(uint vertStart, uint idxStart, uint count);
    void DrawInstanced(uint startVert, uint startIns, uint vertCount, uint insCount);

@@ -147,7 +147,10 @@ void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
       rtvs[i] = rtv->Handle()->GetCpuHandle( 0 );
    }
 
-   mHandle->OMSetRenderTargets( kMaxRenderTargetSupport, rtvs, false, nullptr );
+   D3D12_CPU_DESCRIPTOR_HANDLE dsv = fb.GetDepthStencilTarget()->Handle()->GetCpuHandle( 0 );
+   mHandle->OMSetRenderTargets( kMaxRenderTargetSupport, rtvs, 
+                                false, &dsv );
+   
    // # blend factor
 }
 
@@ -221,6 +224,24 @@ void CommandList::ClearRenderTarget( Texture2& tex, const rgba& color )
    rect.bottom = tex.Height();
 
    mHandle->ClearRenderTargetView( tex.Rtv()->Handle()->GetCpuHandle( 0 ), c, 1, &rect );
+}
+
+void CommandList::ClearDepthStencilTarget(
+   const DepthStencilView* dsv,
+   bool clearDepth,
+   bool clearStencil,
+   float depth,
+   uint8_t stencil )
+{
+   uint flag = clearDepth ? D3D12_CLEAR_FLAG_DEPTH : 0;
+   flag |= clearStencil ? D3D12_CLEAR_FLAG_STENCIL : 0;
+
+   if(flag == 0) return;
+
+   S<const Resource> res = dsv->GetResource();
+   TransitionBarrier( *res, Resource::eState::DepthStencil );
+   mHandle->ClearDepthStencilView( dsv->Handle()->GetCpuHandle( 0 ), D3D12_CLEAR_FLAGS(flag), depth, stencil, 0, nullptr );
+   mHasCommandPending = true;
 }
 
 void CommandList::Draw( uint start, uint count )

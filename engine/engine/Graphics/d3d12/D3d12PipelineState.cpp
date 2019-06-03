@@ -97,7 +97,38 @@ void SetD3d12BlendState(D3D12_BLEND_DESC* desc, const RenderState::BlendState& b
 
 void SetD3d12DepthStencilState(D3D12_DEPTH_STENCIL_DESC* desc, const RenderState::DepthStencilState& ds)
 {
-   desc->DepthEnable = false;
+   desc->DepthEnable = TRUE;
+   desc->StencilEnable = false;
+   desc->DepthWriteMask = ds.writeDepth ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+
+   switch(ds.depthFunc) {
+   case eDepthFunc::Never: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_NEVER;
+      break;
+   case eDepthFunc::Always: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+      break;
+   case eDepthFunc::Less: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+      break;
+   case eDepthFunc::LessEqual: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+      break;
+   case eDepthFunc::Greater: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_GREATER;
+      break;
+   case eDepthFunc::GreaterEqual: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+      break;
+   case eDepthFunc::Equal: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_EQUAL;
+      break;
+   case eDepthFunc::NotEqual: 
+      desc->DepthFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL;
+      break;
+   default: 
+      BAD_CODE_PATH();
+   }
 } 
 
 void SetD3d12RasterizerState( D3D12_RASTERIZER_DESC* desc, const RenderState::RasterizerState& rs )
@@ -117,13 +148,11 @@ void SetD3d12RasterizerState( D3D12_RASTERIZER_DESC* desc, const RenderState::Ra
 
 void SetD3d12InputLayout( D3D12_INPUT_LAYOUT_DESC* desc, const InputLayout* il )
 {
-   ASSERT_DIE( sizeof(vertex_t) == 72 );
    // float3 position;
    // float2 uv;
    // float4 color;
    // float3 normal;
-   // float3 tangent;
-   // float3 bitangent;
+   // float4 tangent;
    static D3D12_INPUT_ELEMENT_DESC eles [] = {
       {
          "POSITION",
@@ -170,15 +199,6 @@ void SetD3d12InputLayout( D3D12_INPUT_LAYOUT_DESC* desc, const InputLayout* il )
          D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
          0
       },
-      {
-         "BITANGENT",
-         0,
-         DXGI_FORMAT_R32G32B32_FLOAT,
-         0,
-         offsetof( vertex_t, bitangent ),
-         D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-         0
-      },
    };
 
    desc->NumElements = _countof(eles);
@@ -220,6 +240,15 @@ void FrameBuffer::SetRenderTarget( uint index, const RenderTargetView* rtv )
    }
    mDesc.renderTargets[index] = rtv->Format();
    mRenderTargets[index] = rtv;
+}
+
+void FrameBuffer::SetDepthStencilTarget( const DepthStencilView* dsv )
+{
+   if(dsv == nullptr) {
+      dsv = DepthStencilView::NullView();
+   }
+   mDesc.depthStencilTarget = dsv->Format();
+   mDepthStencilTarget = dsv;
 }
 
 FrameBuffer::FrameBuffer()

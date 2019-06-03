@@ -132,6 +132,17 @@ enum class eBlendLogicOp: uint {
 
 };
 
+enum class eDepthFunc: uint {
+   Never,
+   Always,
+   Less,
+   LessEqual,
+   Greater,
+   GreaterEqual,
+   Equal,
+   NotEqual,
+};
+
 struct RenderState {
    struct BlendState {
       bool independent = false;
@@ -156,12 +167,17 @@ struct RenderState {
 
    struct RasterizerState { } rasterizer;
 
-   struct DepthStencilState { } depthStencil;
+   struct DepthStencilState {
+      eDepthFunc depthFunc = eDepthFunc::Always;
+      bool       writeDepth = true;
+   } depthStencil;
 };
 
 enum class eTopology: uint {
    Unknown = UINT32_MAX,
    Triangle = 0u,
+   Point,
+   Line,
 };
 
 bool IsDepthFormat( eTextureFormat format );

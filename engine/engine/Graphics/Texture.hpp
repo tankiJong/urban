@@ -9,7 +9,6 @@
 
 class Texture: public Resource, public inherit_shared_from_this<Resource, Texture> {
 public:
-
    Texture( const Texture& other ) = delete;
 
    Texture( Texture&& other ) noexcept
@@ -58,12 +57,14 @@ public:
 
    virtual bool                Init() override;
    virtual void                UpdateData( const void* data, size_t size, size_t offset = 0, CommandList* commandList = nullptr) override;
-   virtual RenderTargetView*   Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
-   virtual ShaderResourceView* Srv(
+   virtual const RenderTargetView*   Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const override;
+   virtual const ShaderResourceView* Srv(
       uint mip              = 0,
       uint mipCount         = kMaxPossible,
       uint firstArraySlice  = 0,
       uint depthOrArraySize = kMaxPossible ) const override;
+   virtual const DepthStencilView* Dsv( uint mip = 0, uint firstArraySlice = 0 ) const override;
+
 protected:
 
    Texture(
@@ -97,6 +98,7 @@ protected:
 
    mutable std::unordered_map<ViewInfo, S<RenderTargetView>>   mRtvs;
    mutable std::unordered_map<ViewInfo, S<ShaderResourceView>> mSrvs;
+   mutable std::unordered_map<ViewInfo, S<DepthStencilView>>   mDsvs;
 };
 
 class Texture2 final: public Texture, public inherit_shared_from_this<Texture, Texture2> {

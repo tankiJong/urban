@@ -17,25 +17,27 @@ public:
    PrimBuilder& Uv(const float2& uv) { mCurrentVertex.uv = uv; return *this;};
    PrimBuilder& Color(const rgba& color) { mCurrentVertex.color = color; return *this; };
    PrimBuilder& Normal(const float3& normal) { mCurrentVertex.normal = normal; return *this; };
-   PrimBuilder& Tangent(const float3& tangent) { mCurrentVertex.tangent = tangent; return *this; };
-   PrimBuilder& Bitangent(const float3& bitangent) { mCurrentVertex.bitangent = bitangent; return *this; };
+   PrimBuilder& Tangent(const float3& tangent, float fsign = 1.f) { mCurrentVertex.tangent = { tangent, 1.f }; return *this; };
 
-   mesh_index_t Vertex3(const float3& position);
+   mesh_index_t Vertex3( const float3& position );
 
-   PrimBuilder& Line(const float3& from, const float3& to);
+   PrimBuilder& Line( const float3& from, const float3& to );
 
    PrimBuilder& Line();
    PrimBuilder& Triangle();
    PrimBuilder& Quad();
    PrimBuilder& Sphere();
 
-   PrimBuilder& Line(mesh_index_t a, mesh_index_t b);
-   PrimBuilder& Triangle(mesh_index_t a, mesh_index_t b, mesh_index_t c);
-   PrimBuilder& Quad(mesh_index_t a, mesh_index_t b, mesh_index_t c, mesh_index_t d);
+   PrimBuilder& Line( mesh_index_t a, mesh_index_t b );
+   PrimBuilder& Triangle( mesh_index_t a, mesh_index_t b, mesh_index_t c );
+   PrimBuilder& Quad( mesh_index_t a, mesh_index_t b, mesh_index_t c, mesh_index_t d );
 
-   PrimBuilder& Sphere(const float3& position, float size, uint xLevel = 10u, uint yLevel = 10u);  
+   PrimBuilder& Quad( const float3& a, const float3& b, const float3& c, const float3& d );
+   PrimBuilder& Cube( const float3& bottomLeft, const float3& dimension, 
+                      const float3& right = float3::X, const float3& up = float3::Y, const float3& forward = float3::Z );
+   PrimBuilder& Sphere( const float3& position, float size, uint xLevel = 10u, uint yLevel = 10u );
 
-   Mesh CreateMesh(eAllocationType type, bool syncGpu) const;
+   Mesh CreateMesh( eAllocationType type, bool syncGpu ) const;
 protected:
    vertex_t mCurrentVertex = {};
    std::vector<vertex_t> mVertices;

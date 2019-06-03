@@ -87,14 +87,16 @@ public:
    bool   IsStateGlobal() const { return mState.global; }
 
    void                      SetGlobalState( eState state ) const;
-   virtual RenderTargetView* Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const 
+   virtual const RenderTargetView* Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const 
       { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( arraySize ); return nullptr; }
 
-   virtual ShaderResourceView* Srv( uint mip = 0, uint mipCount = kMaxPossible, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible ) const 
+   virtual const ShaderResourceView* Srv( uint mip = 0, uint mipCount = kMaxPossible, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible ) const 
       { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( mipCount ); UNUSED( depthOrArraySize ); return nullptr; }
 
    virtual const ConstantBufferView* Cbv() const { return nullptr; };
 
+   virtual const DepthStencilView* Dsv( uint mip = 0, uint firstArraySlice = 0 ) const 
+      { UNUSED(mip); UNUSED(firstArraySlice); return nullptr; }
    virtual bool Init() = 0;
 
    // The data is not promised to be updated immediately, it only schedule the commands on the copy queue

@@ -40,7 +40,7 @@ const ResourceBinding::Flattened& ResourceBinding::GetFlattened() const
    return mFlattenedBindings;
 }
 
-void ResourceBinding::SetSrv( ShaderResourceView* srv, uint registerIndex, uint registerSpace )
+void ResourceBinding::SetSrv( const ShaderResourceView* srv, uint registerIndex, uint registerSpace )
 {
    if(mIsDirty) RegenerateFlattened();
 

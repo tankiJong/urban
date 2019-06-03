@@ -12,6 +12,7 @@
 S<RenderTargetView> RenderTargetView::sNullView = nullptr;
 S<ShaderResourceView> ShaderResourceView::sNullView = nullptr;
 S<ConstantBufferView> ConstantBufferView::sNullView = nullptr;
+S<DepthStencilView> DepthStencilView::sNullView = nullptr;
 
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function /////////////////////
@@ -35,6 +36,14 @@ RenderTargetView* RenderTargetView::NullView()
 
 DepthStencilView::DepthStencilView()
    : DepthStencilView( W<const Texture>() ){}
+
+DepthStencilView* DepthStencilView::NullView()
+{
+   if(!sNullView) {
+      sNullView = S<DepthStencilView>(new DepthStencilView());
+   }
+   return sNullView.get();
+}
 
 ShaderResourceView::ShaderResourceView()
    : ShaderResourceView( W<const Texture>() ) {}

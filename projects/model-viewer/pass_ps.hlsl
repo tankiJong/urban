@@ -15,5 +15,5 @@ SamplerState gSampler : register(s0);
 [RootSignature(RootSig)]
 float4 main(PSInput input) : SV_TARGET
 {
-	return gTex.Sample(gSampler, input.color.xy);
+	return input.color * gTex.Sample(gSampler, input.color.xy);
 }

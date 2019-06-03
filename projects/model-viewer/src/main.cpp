@@ -160,7 +160,7 @@ void GameApplication::OnUpdate()
 
    deg = deg + dt * 360.f;
 
-   float3 position = {cosf( deg * D2R) * 5.f, 0, sinf( deg * D2R ) * 5.f };
+   float3 position = {cosf( deg * D2R) * 5.f, 2, sinf( deg * D2R ) * 5.f };
    mCamera.LookAt( position, float3::Zero );
 
    camera_t data = mCamera.ComputeCameraBlock();
@@ -169,12 +169,7 @@ void GameApplication::OnUpdate()
    PrimBuilder pb;
 
    pb.Begin( eTopology::Triangle, false );
-   pb.Uv( {0, 0 } );
-   pb.Vertex3( {0, 0, 0 } );
-   pb.Uv( {0, 1 } );
-   pb.Vertex3( {1, 0, 0 } );
-   pb.Uv( {1, 0 } );
-   pb.Vertex3( {0, 1, 0 } );
+   pb.Cube( float3::One * -.5f, float3::One );
    pb.End();
 
    mTriangle = pb.CreateMesh(eAllocationType::Temporary, true); 
@@ -200,10 +195,13 @@ void GameApplication::OnRender() const
       gs = new GraphicsState();
       gs->SetProgram( prog );
       gs->SetTopology( eTopology::Triangle );
+      RenderState rs = gs->GetRenderState();
+      rs.depthStencil.depthFunc = eDepthFunc::Less;
+      gs->SetRenderState( rs );
    }
 
    gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
-
+   gs->GetFrameBuffer().SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
 
    CommandList list;
 
@@ -211,6 +209,7 @@ void GameApplication::OnRender() const
    mCameraBuffer->UploadGpu(&list);
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
    list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
+   list.ClearDepthStencilTarget(Window::Get().DepthBuffer().Dsv(), true, true, 1.f, 0u);
    list.TransitionBarrier( *mGroundTexture, Resource::eState::ShaderResource );
    list.SetGraphicsPipelineState( *gs );
    list.BindResources( *binding );

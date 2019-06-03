@@ -9,8 +9,7 @@ struct vertex_t {
    float2 uv;
    float4 color;
    float3 normal;
-   float3 tangent;
-   float3 bitangent;
+   float4 tangent;
 };
 #pragma pack (pop)
 

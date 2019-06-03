@@ -21,7 +21,7 @@ public:
    virtual void UpdateData(const void* data, size_t size, size_t offset = 0, CommandList* commandList = nullptr) override;
    size_t Size() const { return mSize; };
 
-   const ConstantBufferView* Cbv() const override;;
+   virtual const ConstantBufferView* Cbv() const override;;
 
    static S<Buffer> Create(
       size_t          size,

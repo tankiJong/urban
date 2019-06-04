@@ -18,7 +18,7 @@ public:
    size_t Size() const { return mData.Size(); }
    size_t Stride() const;
 
-   static void Load( Image& image, fs::path path );
+   static void Load( S<Image> tex, const Blob& binary );
 protected:
    uint2 mDimension;
    eTextureFormat mFormat;

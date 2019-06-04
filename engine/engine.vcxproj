@@ -26,6 +26,7 @@
     <ClCompile Include="engine\async\event\EventTarget.cpp" />
     <ClCompile Include="engine\async\event\Observable.cpp" />
     <ClCompile Include="engine\core\any_func.cpp" />
+    <ClCompile Include="engine\core\Asset.cpp" />
     <ClCompile Include="engine\core\Blob.cpp" />
     <ClCompile Include="engine\core\closure.cpp" />
     <ClCompile Include="engine\core\Image.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="engine\async\event\EventTarget.hpp" />
     <ClInclude Include="engine\async\event\Observable.hpp" />
     <ClInclude Include="engine\core\any_func.hpp" />
+    <ClInclude Include="engine\core\Asset.hpp" />
     <ClInclude Include="engine\core\Blob.hpp" />
     <ClInclude Include="engine\core\closure.hpp" />
     <ClInclude Include="engine\core\Image.hpp" />

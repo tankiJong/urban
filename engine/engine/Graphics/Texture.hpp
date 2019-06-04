@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "ResourceView.hpp"
 #include "engine/file/utils.hpp"
+#include "engine/core/Asset.hpp"
 
 class Texture: public Resource, public inherit_shared_from_this<Resource, Texture> {
 public:
@@ -102,6 +103,7 @@ protected:
 };
 
 class Texture2 final: public Texture, public inherit_shared_from_this<Texture, Texture2> {
+   friend bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary );
 public:
    Texture2( const Texture2& other ) = delete;
 
@@ -133,8 +135,6 @@ public:
       eTextureFormat  format,
       eAllocationType allocationType = eAllocationType::General );
 
-   static void Load( Texture2& tex, fs::path path );
-
    Texture2(
       const resource_handle_t& handle,
       eBindingFlag             bindingFlags,
@@ -156,3 +156,5 @@ protected:
       eAllocationType allocationType = eAllocationType::General );
 
 };
+
+bool Asset<Texture2>::Load( S<Texture2>& tex, const Blob& binary );

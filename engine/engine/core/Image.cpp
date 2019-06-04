@@ -44,15 +44,12 @@ size_t Image::Stride() const
    return GetTextureFormatStride( mFormat );
 }
 
-void Image::Load( Image& image, fs::path path )
+void Image::Load(  S<Image> img, const Blob& binary )
 {
-   image.~Image();
-
    int w,h;
    int channelCount;
-   ASSERT_DIE( fs::exists( path ) );
-   unsigned char* imageData = stbi_load(path.generic_string().c_str(), &w, &h, &channelCount, 4);
-   new (&image)Image(w, h, eTextureFormat::RGBA8Unorm, imageData, w * h * 4);
+   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary.Data(), binary.Size(), &w, &h, &channelCount, 4);
+   img.reset(new Image(w, h, eTextureFormat::RGBA8Unorm, imageData, w * h * 4));
    stbi_image_free( imageData );
 }
 

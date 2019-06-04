@@ -108,6 +108,7 @@
     <ClInclude Include="engine\graphics\model\Mesh.hpp" />
     <ClInclude Include="engine\graphics\model\vertex.hpp" />
     <ClInclude Include="engine\graphics\model\PrimBuilder.hpp" />
+    <ClInclude Include="engine\core\Asset.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -193,5 +194,6 @@
     <ClCompile Include="engine\graphics\model\Mesh.cpp" />
     <ClCompile Include="engine\graphics\model\vertex.cpp" />
     <ClCompile Include="engine\graphics\model\PrimBuilder.cpp" />
+    <ClCompile Include="engine\core\Asset.cpp" />
   </ItemGroup>
 </Project>

@@ -78,7 +78,7 @@ int SystemDialogue_YesNoCancel( const std::string& messageTitle, const std::stri
 		FatalError( __FILE__,  __FUNCTION__, __LINE__, "Assert '"#condition" - "#msg"' failed", conditionText );			\
 	}																								\
 }
-#define ASSERT_DIE( condition ) ASSERT_DIE_M( condition, "/")
+#define ASSERT_DIE( condition ) ASSERT_DIE_M( condition, "")
 
 //-----------------------------------------------------------------------------------------------
 // ASSERT_RECOVERABLE
@@ -91,14 +91,15 @@ int SystemDialogue_YesNoCancel( const std::string& messageTitle, const std::stri
 //	- Triggers a debug breakpoint (if appropriate development suite is present)
 //	- Continues execution
 //
-#define ASSERT_RECOVERABLE( condition )										\
+#define ASSERT_RECOVERABLE_M( condition, msg )										\
 {																									\
 	if( !(condition) )																				\
 	{																								\
 		const char* conditionText = #condition;														\
-		RecoverableWarning( __FILE__,  __FUNCTION__, __LINE__, "Assert '"#condition"' failed", conditionText );	\
+		RecoverableWarning( __FILE__,  __FUNCTION__, __LINE__, "Assert '"#condition" - "#msg"' failed", conditionText );	\
 	}																								\
 }
+#define ASSERT_RECOVERABLE( condition ) ASSERT_RECOVERABLE_M( condition, "" )	
 
 #define ASSERT_RETURN(condition, rtn) { bool re = condition; if(!re) { ASSERT_RECOVERABLE(false, "ASSERT failed"); return rtn; } }
 

@@ -11,6 +11,7 @@
 #include "engine/graphics/CommandList.hpp"
 #include "engine/graphics/CommandQueue.hpp"
 #include "engine/platform/win.hpp"
+#include "stb/stb_image.h"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -302,6 +303,12 @@ bool Texture::Init()
       clearValue.Format = desc.Format;
       if(is_any_set( mBindingFlags, eBindingFlag::DepthStencil )) {
          clearValue.DepthStencil.Depth = 1.f;
+         clearValue.DepthStencil.Stencil = 0;
+      } else {
+         clearValue.Color[0] = 0.f;
+         clearValue.Color[1] = 0.f;
+         clearValue.Color[2] = 0.f;
+         clearValue.Color[3] = 0.f;
       }
       pClearVal = & clearValue;
    }
@@ -404,18 +411,6 @@ S<Texture2> Texture2::Create(
    return res;
 }
 
-void Texture2::Load( Texture2& tex, fs::path path )
-{
-
-   Image image;
-   Image::Load( image, path );
-
-   tex = Texture2(eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, image.Dimension().x, image.Dimension().y,
-                      1, 1, image.Format(), eAllocationType::Persistent);
-   tex.Init();
-   tex.UpdateData( image.Data(), image.Size() );
-}
-
 void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList )
 {
    uint64_t uploadBufferSize = GetRequiredIntermediateSize( mHandle.Get(), 0, mMipLevels );
@@ -445,4 +440,19 @@ void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandL
 uint64_t Resource::GpuStartAddress() const
 {
    return mHandle->GetGPUVirtualAddress();
+}
+
+
+bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary )
+{
+   int w,h;
+   int channelCount;
+   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary.Data(), binary.Size(), &w, &h, &channelCount, 4);
+   
+   res.reset( new Texture2( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
+                            1, 1, eTextureFormat::RGBA8Unorm, eAllocationType::Persistent ) );
+   res->Init();
+   res->UpdateData( imageData, w * h * 4 );
+
+   return true;
 }

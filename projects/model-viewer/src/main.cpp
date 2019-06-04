@@ -135,7 +135,7 @@ public:
    void OnUpdate() override;
    void OnRender() const override;
 protected:
-   S<Texture2> mGroundTexture;
+   S<const Texture2> mGroundTexture;
    S<ConstantBuffer> mCameraBuffer;
    Camera mCamera;
    Mesh mTriangle;
@@ -144,7 +144,8 @@ protected:
 void GameApplication::OnInit()
 {
    mGroundTexture.reset( new Texture2() );
-   Texture2::Load( *mGroundTexture, "Ground-Texture-(gray20).png" );
+   Asset<Texture2>::LoadAndRegister( "Ground-Texture-(gray20).png", true );
+   mGroundTexture = Asset<Texture2>::Get( "Ground-Texture-(gray20).png" );
    mCameraBuffer = ConstantBuffer::CreateFor<camera_t>();
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
 }
@@ -158,7 +159,7 @@ void GameApplication::OnUpdate()
 
    float dt = currentTime - prevTime;
 
-   deg = deg + dt * 360.f;
+   deg = deg + dt * 180.f;
 
    float3 position = {cosf( deg * D2R) * 5.f, 2, sinf( deg * D2R ) * 5.f };
    mCamera.LookAt( position, float3::Zero );

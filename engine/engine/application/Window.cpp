@@ -19,7 +19,7 @@ struct WindowData {
 //////////////////////////// Static ////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-Window* gWindow;
+static Window* gWindow;
 
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function /////////////////////
@@ -167,14 +167,34 @@ void Window::SwapBuffer()
    mainQueue->Signal( *mFrameFence );
    mWindowData->swapChain->Present( 1, 0 );
 
-
-   printf( "frame %d rendered\n", mCurrentFrameCount );
-
    mCurrentBackBufferIndex = ( mCurrentBackBufferIndex + 1 ) % kFrameCount;
    mCurrentFrameCount++;
 
    mDevice->ResetAllCommandBuffer();
    mDevice->ExecuteDeferredRelease();
+}
+
+float2 Window::GetClientCenter() const
+{
+  RECT client;
+  HWND hwnd = (HWND)Window::Get().mHandle; // Get your windows HWND
+  ::GetClientRect(hwnd, &client);
+
+  return {
+    float(client.left + client.right) / 2.f,
+    float(client.top + client.bottom) / 2.f
+  };
+}
+
+int2 Window::ScreenToClient( int2 pixelPosition ) const
+{
+  POINT desktopPos;
+  desktopPos.x = pixelPosition.x;
+  desktopPos.y = pixelPosition.y;
+
+  ::ScreenToClient((HWND)mHandle, &desktopPos);
+  
+  return { desktopPos.x, desktopPos.y };
 }
 
 Window& Window::Get()

@@ -9,23 +9,37 @@ using keycode_t = unsigned char;
 class Input {
 public:
    static constexpr uint kNumKey = 256;
+
+   Input();
+
    bool IsKeyDown(keycode_t key) const;
    bool IsKeyUp(keycode_t key) const;
    bool IsKeyJustDown(keycode_t key) const;
    bool IsKeyJustUp(keycode_t key) const;
 
+   float2 GetMouseDeltaPosition(bool normalized = false) const;
+   float2 GetMouseClientPosition(bool normalized = false) const;
+
+   void SetMouseScreenPosition(float2 position);
+
    void BeforeFrame();
    void AfterFrame();
+
    static Input& Get();
 
 protected:
+   void OnKeyDown(keycode_t key);
+   void OnKeyUp(keycode_t keyCode);
+
    struct KeyState {
-      bool is_down = false;
-	   bool just_pressed = false;
-	   bool just_released = false;
+      bool isDown = false;
+	   bool justPressed = false;
+	   bool justReleased = false;
    };
    KeyState mKeyStates[kNumKey];
-   float2   mMousePosition;
+   float2   mMousePosition = {};
+   float2   mDeltaMousePosition = {};
+   bool     mMouseLocked = false;
 };
 
 

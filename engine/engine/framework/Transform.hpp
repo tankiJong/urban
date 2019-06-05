@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "engine/math/primitives.hpp"
+
 struct transform_t {
    float3 position = { 0, 0, 0 };
    euler  rotation = { 0, 0, 0 };

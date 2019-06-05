@@ -21,7 +21,8 @@ public:
    void Init( uint2 pixelSize, std::string_view name);
    void SwapBuffer();
 
-   uint CurrentBackBufferIndex() const { return mCurrentBackBufferIndex; };
+   uint CurrentBackBufferIndex() const { return mCurrentBackBufferIndex; }
+   float2 GetClientCenter() const;
    uint CurrentFrameCount() const { return mCurrentFrameCount; }
    uint2 WindowSize() const { return mWindowSize; }
    uint2 BackBufferSize() const { return mBufferSize; }
@@ -33,6 +34,8 @@ public:
    WindowData* NativeData() const { return mWindowData; }
    void AttachDevice(const S<Device>& device);
 
+   void* Handle() const { return mHandle; }
+   int2 ScreenToClient( int2 pixelPosition ) const;
    static Window& Get();
 protected:
    

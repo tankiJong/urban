@@ -20,7 +20,8 @@
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Static ////////////////////////////
 ////////////////////////////////////////////////////////////////
-const D3D12_HEAP_PROPERTIES kDefaultHeapProps =
+
+static const D3D12_HEAP_PROPERTIES kDefaultHeapProps =
 {
    D3D12_HEAP_TYPE_DEFAULT,
    D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
@@ -29,7 +30,7 @@ const D3D12_HEAP_PROPERTIES kDefaultHeapProps =
    0
 };
 
-const D3D12_HEAP_PROPERTIES kUploadHeapProps =
+static const D3D12_HEAP_PROPERTIES kUploadHeapProps =
 {
    D3D12_HEAP_TYPE_UPLOAD,
    D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
@@ -38,7 +39,7 @@ const D3D12_HEAP_PROPERTIES kUploadHeapProps =
    0,
 };
 
-const D3D12_HEAP_PROPERTIES kReadbackHeapProps =
+static const D3D12_HEAP_PROPERTIES kReadbackHeapProps =
 {
    D3D12_HEAP_TYPE_READBACK,
    D3D12_CPU_PAGE_PROPERTY_UNKNOWN,

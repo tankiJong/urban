@@ -180,6 +180,34 @@ PrimBuilder& PrimBuilder::Cube(
    return *this;
 }
 
+PrimBuilder& PrimBuilder::Sphere( const float3& center, float size, uint xLevel, uint yLevel )
+{
+   float dTheta = 2 * M_PI / (float)xLevel;
+   float dPhi   = M_PI / (float)yLevel;
+
+   uint start = mVertices.size();
+
+   for(uint    j = 0; j <= yLevel; j++) {
+      for(uint i = 0; i <= xLevel; i++) {
+         float  phi = dPhi * (float)j - M_PI_2, theta = dTheta * (float)i;
+         float3 pos = Spherical( size, theta * R2D, phi * R2D ) + center;
+         Uv( { theta / (M_PI * 2.f), (phi + M_PI_2) / M_PI } );
+         Normal( pos - center );
+         Tangent( { -sinf( theta ), 0, cosf( theta ) }, 1 );
+         Vertex3( pos );
+      }
+   }
+
+   for(uint    j = 0; j < yLevel; j++) {
+      for(uint i = 0; i < xLevel; i++) {
+         uint current = start + j * (xLevel + 1) + i;
+         Quad( current, current + 1, current + xLevel + 1 + 1, current + xLevel + 1 );
+      }
+   }
+
+   return *this;
+}
+
 Mesh PrimBuilder::CreateMesh( eAllocationType type, bool syncGpu ) const {
    CommandList list(eQueueType::Copy);
 
@@ -190,9 +218,8 @@ Mesh PrimBuilder::CreateMesh( eAllocationType type, bool syncGpu ) const {
    S<StructuredBuffer> ibo = nullptr;
 
    if(mDrawInstr.useIndices) {
-      UNIMPLEMENTED();
       ibo = StructuredBuffer::Create(sizeof(mesh_index_t), mIndices.size(), eBindingFlag::IndexBuffer, type);
-      ibo->SetCache( 0, mIndices.data(), mVertices.size() );
+      ibo->SetCache( 0, mIndices.data(), mIndices.size() );
       ibo->UploadGpu( &list );
    }
 

@@ -42,6 +42,21 @@ void transform_t::SetFromMatrix(const mat44& transform)
    scale = { transform.i.xyz().Len(), transform.j.xyz().Len(), transform.k.xyz().Len() };
 }
 
+float3 Transform::X() const
+{
+   return (LocalToWorld() * float4(float3::X, 0.f)).xyz();
+}
+
+float3 Transform::Y() const
+{
+   return (LocalToWorld() * float4(float3::Y, 0.f)).xyz();
+}
+
+float3 Transform::Z() const
+{
+   return (LocalToWorld() * float4(float3::Z, 0.f)).xyz();
+}
+
 mat44 Transform::LocalToWorld() const
 {
    return WorldMatrix() * mLocalTransform.LocalToWorld();

@@ -21,6 +21,9 @@
 #include "engine/framework/Camera.hpp"
 #include "engine/graphics/model/Mesh.hpp"
 #include "engine/graphics/model/PrimBuilder.hpp"
+#include "engine/core/Time.hpp"
+#include "engine/application/Input.hpp"
+#include "../MvCamera.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -108,25 +111,6 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 }
 
 //-----------------------------------------------------------------------------------------------
-double InitializeTime( LARGE_INTEGER& out_initialTime )
-{
-	LARGE_INTEGER countsPerSecond;
-	QueryPerformanceFrequency( &countsPerSecond );
-	QueryPerformanceCounter( &out_initialTime );
-	return( 1.0 / static_cast< double >( countsPerSecond.QuadPart ) );
-}
-
-double GetCurrentTimeSeconds()
-{
-   static LARGE_INTEGER initialTime;
-	static double secondsPerCount = InitializeTime( initialTime );
-	LARGE_INTEGER currentCount;
-	QueryPerformanceCounter( &currentCount );
-	LONGLONG elapsedCountsSinceInitialTime = currentCount.QuadPart - initialTime.QuadPart;
-
-	double currentSeconds = static_cast< double >( elapsedCountsSinceInitialTime ) * secondsPerCount;
-	return currentSeconds;
-};
 
 
 class GameApplication final: public Application {
@@ -137,7 +121,7 @@ public:
 protected:
    S<const Texture2> mGroundTexture;
    S<ConstantBuffer> mCameraBuffer;
-   Camera mCamera;
+   MvCamera mCamera;
    Mesh mTriangle;
 };
 
@@ -152,25 +136,16 @@ void GameApplication::OnInit()
 
 void GameApplication::OnUpdate()
 {
-   static double prevTime = GetCurrentTimeSeconds(), currentTime = GetCurrentTimeSeconds();
-   static float deg = 0;
-   prevTime = currentTime;
-   currentTime = GetCurrentTimeSeconds();
-
-   float dt = currentTime - prevTime;
-
-   deg = deg + dt * 180.f;
-
-   float3 position = {cosf( deg * D2R) * 5.f, 2, sinf( deg * D2R ) * 5.f };
-   mCamera.LookAt( position, float3::Zero );
+   mCamera.OnUpdate();
 
    camera_t data = mCamera.ComputeCameraBlock();
    mCameraBuffer->SetData( &data, sizeof(camera_t));
 
    PrimBuilder pb;
 
-   pb.Begin( eTopology::Triangle, false );
-   pb.Cube( float3::One * -.5f, float3::One );
+   pb.Begin( eTopology::Triangle, true );
+   // pb.Cube( float3::One * -.5f, float3::One );
+   pb.Sphere(float3::Zero, 1.f, 30, 30);
    pb.End();
 
    mTriangle = pb.CreateMesh(eAllocationType::Temporary, true); 

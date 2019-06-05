@@ -188,6 +188,8 @@ void CommandList::DrawMesh( const Mesh& mesh )
    D3D12_VERTEX_BUFFER_VIEW vb = {};
 
    const StructuredBuffer* vbo = mesh.GetVertexBuffer();
+
+   TransitionBarrier( *vbo, Resource::eState::VertexBuffer );
    ASSERT_DIE( vbo != nullptr );
    vb.BufferLocation = vbo->Handle()->GetGPUVirtualAddress();
    vb.StrideInBytes  = (UINT)vbo->GetStride();
@@ -204,6 +206,8 @@ void CommandList::DrawMesh( const Mesh& mesh )
       mHandle->IASetIndexBuffer( &ib );
 
       DrawIndexed( 0, mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );
+      TransitionBarrier( *ibo, Resource::eState::IndexBuffer );
+
    } else {
       mHandle->IASetIndexBuffer( nullptr );
       Draw( mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );

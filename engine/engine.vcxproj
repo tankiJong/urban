@@ -31,6 +31,7 @@
     <ClCompile Include="engine\core\closure.cpp" />
     <ClCompile Include="engine\core\Image.cpp" />
     <ClCompile Include="engine\core\string.cpp" />
+    <ClCompile Include="engine\core\Time.cpp" />
     <ClCompile Include="engine\core\util.cpp" />
     <ClCompile Include="engine\core\vary.cpp" />
     <ClCompile Include="engine\debug\assert.cpp" />
@@ -100,6 +101,7 @@
     <ClInclude Include="engine\core\closure.hpp" />
     <ClInclude Include="engine\core\Image.hpp" />
     <ClInclude Include="engine\core\string.hpp" />
+    <ClInclude Include="engine\core\Time.hpp" />
     <ClInclude Include="engine\core\traits.hpp" />
     <ClInclude Include="engine\core\util.hpp" />
     <ClInclude Include="engine\core\vary.hpp" />

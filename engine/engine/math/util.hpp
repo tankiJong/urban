@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "engine/pch.h"
 #include <cmath>
+#include "primitives.hpp"
 
 #define M_PI	      3.14159265358979323846f
 #define M_PI_2	      1.57079632679489661923f
@@ -31,4 +31,14 @@ template<class T>
 const T& max(const T& a, const T& b)
 {
     return (b < a) ? a : b;
+}
+
+inline float3 Spherical(float r, float thetaDeg, float phiDeg) {
+  float phi = phiDeg * D2R, theta = thetaDeg * D2R;
+
+  return {
+    r*cosf(phi)*cosf(theta),
+    r*sinf(phi),
+    r*cosf(phi)*sinf(theta),
+  };
 }

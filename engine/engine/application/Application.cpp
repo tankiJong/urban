@@ -3,6 +3,8 @@
 #include "Window.hpp"
 #include "engine/platform/win.hpp"
 #include "engine/graphics/Device.hpp"
+#include "engine/core/Time.hpp"
+#include "Input.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -67,6 +69,9 @@ void Application::_destroy() { OnDestroy(); }
 void Application::_update()
 {
    runMessagePump();
+
+   Clock::Main().Forward();
+
    OnStartFrame();
 
    _input();
@@ -80,6 +85,8 @@ void Application::_update()
    Window::Get().SwapBuffer();
 
    OnEndFrame();
+
+   Input::Get().AfterFrame();
 }
 
 void Application::_input() {}

@@ -23,9 +23,9 @@ public:
    euler  Rotation() const;
    float3 Scale() const;
 
-   const float3& LocalPosition() const;
-   const euler&  LocalRotation() const;
-   const float3& LocalScale() const;
+   const float3& LocalPosition() const { return mLocalTransform.position; };
+   const euler&  LocalRotation() const { return mLocalTransform.rotation; };
+   const float3& LocalScale() const { return mLocalTransform.scale; };
 
    mat44 LocalToWorld() const;
    mat44 WorldToLocal() const;

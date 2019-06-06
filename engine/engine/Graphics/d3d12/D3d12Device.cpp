@@ -118,5 +118,6 @@ bool Device::RhiInit(Window& window)
    mGpuDescriptorHeap[1]->Init();
 
    mCommandListCompletion = new Fence();
+   SET_NAME(*mCommandListCompletion);
    return true;
 }

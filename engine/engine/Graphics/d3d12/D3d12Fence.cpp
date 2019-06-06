@@ -28,9 +28,14 @@ Fence::Fence()
 
 void Fence::Wait()
 {
+   Wait(mExpectValue);
+}
+
+void Fence::Wait( uint64_t val )
+{
    uint64_t gpuVal = GpuCurrentValue();
-   if(gpuVal != mExpectValue) {
-      assert_win( mHandle->SetEventOnCompletion( mExpectValue, mEventHandle ) );
+   if(gpuVal != val) {
+      assert_win( mHandle->SetEventOnCompletion( val, mEventHandle ) );
       WaitForSingleObject( mEventHandle, INFINITE );
    }
 }

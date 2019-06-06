@@ -156,22 +156,20 @@ void Window::SwapBuffer()
 {
    S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
 
-   mFrameFence->Wait();
-
-   CommandList list;
-   list.SetName( L"End CommandList" );
-   list.TransitionBarrier( BackBuffer(), Resource::eState::Present );
-   mainQueue->IssueCommandList( list );
-
    mFrameFence->IncreaseExpectedValue( );
    mainQueue->Signal( *mFrameFence );
+
+   mFrameFence->Wait();
+
    mWindowData->swapChain->Present( 1, 0 );
 
    mCurrentBackBufferIndex = ( mCurrentBackBufferIndex + 1 ) % kFrameCount;
    mCurrentFrameCount++;
 
+
    mDevice->ResetAllCommandBuffer();
    mDevice->ExecuteDeferredRelease();
+
 }
 
 float2 Window::GetClientCenter() const
@@ -249,6 +247,9 @@ void Window::AttachDevice( const S<Device>& device )
    mCurrentBackBufferIndex = mWindowData->swapChain->GetCurrentBackBufferIndex();
 
    mFrameFence = new Fence();
+   SET_NAME(*mFrameFence);
+
+   mFrameFence->IncreaseExpectedValue();
 
    S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
    mainQueue->Signal( *mFrameFence );

@@ -37,6 +37,8 @@ protected:
    HandleT mHandle;
 };
 
+#define SET_NAME(res) (res).SetName(L#res);
+
 enum class eCommandType: uint {
    Empty    = 0u,
    Copy     = BIT_FLAG( 0 ),

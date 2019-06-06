@@ -25,6 +25,8 @@ public:
              GPU wait is achieved by `CommandQueue::Wait`
     */
    void Wait();
+
+   void Wait(uint64_t val);
   
    /**
     * \brief signal new value on from Cpu side, this will increase the value by one.

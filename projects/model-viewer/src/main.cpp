@@ -24,6 +24,7 @@
 #include "engine/core/Time.hpp"
 #include "engine/application/Input.hpp"
 #include "../MvCamera.hpp"
+#include "engine/gui/ImGui.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -110,8 +111,86 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
-//-----------------------------------------------------------------------------------------------
+#include <windows.h>
+#include <dxcapi.h>
 
+#pragma comment(lib, "dxcompiler.lib")
+Blob CompileShader(fs::path path)
+{
+   path = "projects/model-viewer" / path;
+   Blob src = fs::Read( path );
+   ID3DBlobPtr result, err;
+   HRESULT re = D3DCompile( src.Data(), src.Size(), path.generic_string().c_str(), nullptr, nullptr, "main", "ps_5_1", 0, 0, &result, &err);
+   if(SUCCEEDED( re )) {
+      return Blob{result->GetBufferPointer(), result->GetBufferSize()};
+   } else {
+      wprintf( L"%*s", (int)err->GetBufferSize() / 2, (LPCWSTR)err->GetBufferPointer() );
+      return Blob{};
+   }
+   // IDxcLibrary*      pLibrary;
+   // IDxcBlobEncoding* pSource;
+   // DxcCreateInstance( CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void **)&pLibrary );
+   // pLibrary->CreateBlobFromFile( path.wstring().c_str(), CP_NONE, &pSource );
+   //
+   // LPCWSTR       ppArgs[] = { L"/Zi", L"/nologo" }; // debug info
+   // IDxcCompiler* pCompiler;
+   // DxcCreateInstance( CLSID_DxcCompiler, __uuidof(IDxcCompiler), (void **)&pCompiler );
+   //
+   // IDxcOperationResult* pResult;
+   //
+   // pCompiler->Compile(
+   //                    pSource,          // program text
+   //                    path.wstring().c_str(),   // file name, mostly for error messages
+   //                    L"main",          // entry point function
+   //                    L"ps_6_1",        // target profile
+   //                    ppArgs,           // compilation arguments
+   //                    _countof( ppArgs ), // number of compilation arguments
+   //                    nullptr, 0,       // name/value defines and their count
+   //                    nullptr,          // handler for #include directives
+   //                    &pResult );
+   //
+   // HRESULT hrCompilation;
+   // pResult->GetStatus( &hrCompilation );
+   //
+   // if(SUCCEEDED( hrCompilation )) {
+   //    IDxcBlob* blob;
+   //    pResult->GetResult( &blob );
+   //
+   //       
+   //    IDxcContainerReflection* pReflection;
+   //    DxcCreateInstance( CLSID_DxcContainerReflection, __uuidof(IDxcContainerReflection), (void **)&pReflection );
+   //    pReflection->Load( blob );
+   //    pReflection->FindFirstPartKind( hlsl:: )
+   //    
+   //    // Save to a file, disassemble and print, store somewhere ...
+   //    pResult->Release();
+   //
+   //    return Blob(blob->GetBufferPointer(), blob->GetBufferSize());
+   // } else {
+   //    IDxcBlobEncoding *pPrintBlob, *pPrintBlob16;
+   //    pResult->GetErrorBuffer( &pPrintBlob );
+   //    // We can use the library to get our preferred encoding.
+   //    pLibrary->GetBlobAsUtf16( pPrintBlob, &pPrintBlob16 );
+   //    wprintf( L"%*s", (int)pPrintBlob16->GetBufferSize() / 2, (LPCWSTR)pPrintBlob16->GetBufferPointer() );
+   //    pPrintBlob->Release();
+   //    pPrintBlob16->Release();
+   //
+   //    return Blob();
+   // }
+}
+
+Blob Compil1eShader(fs::path path)
+{
+   path = "temp/model-viewer_x64_Debug/target/CompiledShader/bin" / path;
+   path.replace_extension("cso");
+
+   return fs::Read( path );
+}
+
+
+
+
+//-----------------------------------------------------------------------------------------------
 
 class GameApplication final: public Application {
 public:
@@ -123,15 +202,17 @@ protected:
    S<ConstantBuffer> mCameraBuffer;
    MvCamera mCamera;
    Mesh mTriangle;
+   Blob mPixelShader;
 };
 
 void GameApplication::OnInit()
 {
    mGroundTexture.reset( new Texture2() );
-   Asset<Texture2>::LoadAndRegister( "Ground-Texture-(gray20).png", true );
-   mGroundTexture = Asset<Texture2>::Get( "Ground-Texture-(gray20).png" );
+   Asset<Texture2>::LoadAndRegister( "engine/resource/Ground-Texture-(gray20).png", true );
+   mGroundTexture = Asset<Texture2>::Get( "engine/resource/Ground-Texture-(gray20).png" );
    mCameraBuffer = ConstantBuffer::CreateFor<camera_t>();
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
+   mPixelShader = CompileShader( "pass_ps.hlsl" );
 }
 
 void GameApplication::OnUpdate()
@@ -143,16 +224,26 @@ void GameApplication::OnUpdate()
 
    PrimBuilder pb;
 
+   static Transform transform;
+   ig::Gizmos( mCamera, transform, ig::OP::TRANSLATE );
+
    pb.Begin( eTopology::Triangle, true );
    // pb.Cube( float3::One * -.5f, float3::One );
-   pb.Sphere(float3::Zero, 1.f, 30, 30);
+   pb.Sphere(transform.Position(), 1.f, 30, 30);
    pb.End();
 
-   mTriangle = pb.CreateMesh(eAllocationType::Temporary, true); 
+   mTriangle = pb.CreateMesh(eAllocationType::Temporary, true);
+
+   HANDLE handle = FindFirstChangeNotificationA("projects/model-viewer", false, FILE_NOTIFY_CHANGE_LAST_WRITE);
+   if(handle != INVALID_HANDLE_VALUE) {
+      mPixelShader = CompileShader( "pass_ps.hlsl" );
+   }
 }
 
 void GameApplication::OnRender() const
 {
+   bool open = true;
+   ig::ShowDemoWindow( &open );
    static Program* prog = nullptr;
    static GraphicsState* gs = nullptr;
    static ResourceBinding* binding = nullptr;
@@ -160,21 +251,24 @@ void GameApplication::OnRender() const
       prog = new Program();
 
       prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
-      prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
       prog->Finalize();
       binding = new ResourceBinding(prog);
       binding->SetSrv(mGroundTexture->Srv(), 0);
       binding->SetCbv(mCameraBuffer->Cbv(), 0);
    }
 
+   prog->GetStage( eShaderType::Pixel ).SetBinary( mPixelShader.Data(), mPixelShader.Size() );
+   // prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
+   
    if(gs == nullptr) {
       gs = new GraphicsState();
-      gs->SetProgram( prog );
       gs->SetTopology( eTopology::Triangle );
       RenderState rs = gs->GetRenderState();
       rs.depthStencil.depthFunc = eDepthFunc::Less;
       gs->SetRenderState( rs );
    }
+   
+   gs->SetProgram( prog );
 
    gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
    gs->GetFrameBuffer().SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );

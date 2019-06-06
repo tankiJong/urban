@@ -4,6 +4,7 @@
 #include "engine/platform/win.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/core/Time.hpp"
+#include "engine/gui/ImGui.hpp"
 #include "Input.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -60,15 +61,20 @@ void Application::_init()
    } );
 
    Device::Init( Window::Get() );
-
+   ig::Startup();
    OnInit();
 }
 
-void Application::_destroy() { OnDestroy(); }
+void Application::_destroy()
+{
+   ig::Shutdown();
+   OnDestroy();
+}
 
 void Application::_update()
 {
    runMessagePump();
+   ig::BeginFrame();
 
    Clock::Main().Forward();
 
@@ -81,11 +87,12 @@ void Application::_update()
 
    OnRender();
    OnGui();
+   ig::RenderFrame();
 
    Window::Get().SwapBuffer();
 
    OnEndFrame();
-
+   ig::EndFrame();
    Input::Get().AfterFrame();
 }
 

@@ -205,8 +205,8 @@ void CommandList::DrawMesh( const Mesh& mesh )
       ib.Format                  = DXGI_FORMAT_R32_UINT;
       mHandle->IASetIndexBuffer( &ib );
 
-      DrawIndexed( 0, mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );
       TransitionBarrier( *ibo, Resource::eState::IndexBuffer );
+      DrawIndexed( 0, mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );
 
    } else {
       mHandle->IASetIndexBuffer( nullptr );

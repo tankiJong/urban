@@ -57,6 +57,24 @@ float3 Transform::Z() const
    return (LocalToWorld() * float4(float3::Z, 0.f)).xyz();
 }
 
+float3 Transform::Position() const
+{
+   return (WorldMatrix() * float4(LocalPosition(), 1.f)).xyz();
+}
+euler Transform::Rotation() const
+{
+   return LocalToWorld().Euler();
+}
+float3 Transform::Scale() const
+{
+   mat44 model = LocalToWorld();
+   return {
+      model.X().xyz().Len(),
+      model.Y().xyz().Len(),
+      model.Z().xyz().Len()
+   };
+}
+
 mat44 Transform::LocalToWorld() const
 {
    return WorldMatrix() * mLocalTransform.LocalToWorld();

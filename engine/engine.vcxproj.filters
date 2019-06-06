@@ -110,6 +110,16 @@
     <ClInclude Include="engine\graphics\model\PrimBuilder.hpp" />
     <ClInclude Include="engine\core\Asset.hpp" />
     <ClInclude Include="engine\core\Time.hpp" />
+    <ClInclude Include="engine\gui\ImGui.hpp" />
+    <ClInclude Include="external\imgui\imconfig.h" />
+    <ClInclude Include="external\imgui\imgui.h" />
+    <ClInclude Include="external\imgui\imgui_internal.h" />
+    <ClInclude Include="external\imgui\imstb_rectpack.h" />
+    <ClInclude Include="external\imgui\imstb_textedit.h" />
+    <ClInclude Include="external\imgui\imstb_truetype.h" />
+    <ClInclude Include="external\imgui\examples\imgui_impl_dx12.h" />
+    <ClInclude Include="external\imgui\examples\imgui_impl_win32.h" />
+    <ClInclude Include="external\imgui\ImGuizmo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -197,5 +207,13 @@
     <ClCompile Include="engine\graphics\model\PrimBuilder.cpp" />
     <ClCompile Include="engine\core\Asset.cpp" />
     <ClCompile Include="engine\core\Time.cpp" />
+    <ClCompile Include="engine\gui\ImGui.cpp" />
+    <ClCompile Include="external\imgui\imgui.cpp" />
+    <ClCompile Include="external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="external\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="external\imgui\examples\imgui_impl_dx12.cpp" />
+    <ClCompile Include="external\imgui\examples\imgui_impl_win32.cpp" />
+    <ClCompile Include="external\imgui\ImGuizmo.cpp" />
   </ItemGroup>
 </Project>

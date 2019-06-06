@@ -33,6 +33,7 @@ public:
    PrimBuilder& Quad( mesh_index_t a, mesh_index_t b, mesh_index_t c, mesh_index_t d );
 
    PrimBuilder& Quad( const float3& a, const float3& b, const float3& c, const float3& d );
+   PrimBuilder& Quad( const float3& bottomLeft, const float2& size, const float3& xDir = float3::X, const float3& yDir = float3::Y );
    PrimBuilder& Cube( const float3& bottomLeft, const float3& dimension, 
                       const float3& right = float3::X, const float3& up = float3::Y, const float3& forward = float3::Z );
    PrimBuilder& Sphere( const float3& center, float size, uint xLevel = 10u, uint yLevel = 10u );

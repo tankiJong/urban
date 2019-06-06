@@ -7,7 +7,7 @@ public:
 
 protected:
    float3 mOrbitCenter = {};
-   float  mTheta = 0;
+   float  mTheta = -90;
    float  mPhi = 0;
    float  mRadius = 2.f;
 };

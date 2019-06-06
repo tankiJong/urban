@@ -201,7 +201,8 @@ protected:
    S<const Texture2> mGroundTexture;
    S<ConstantBuffer> mCameraBuffer;
    MvCamera mCamera;
-   Mesh mTriangle;
+   Mesh mFloor;
+   Mesh mSphere;
    Blob mPixelShader;
 };
 
@@ -225,14 +226,21 @@ void GameApplication::OnUpdate()
    PrimBuilder pb;
 
    static Transform transform;
+
    ig::Gizmos( mCamera, transform, ig::OP::TRANSLATE );
 
    pb.Begin( eTopology::Triangle, true );
-   // pb.Cube( float3::One * -.5f, float3::One );
+   pb.Quad({-12.5f, 0, -12.5f}, float2{25.f}, float3::X, float3::Z);
+   // pb.Sphere(transform.Position(), 1.f, 30, 30);
+   pb.End();
+
+   mFloor = pb.CreateMesh(eAllocationType::Temporary, false);
+
+   pb.Begin( eTopology::Triangle, true );
    pb.Sphere(transform.Position(), 1.f, 30, 30);
    pb.End();
 
-   mTriangle = pb.CreateMesh(eAllocationType::Temporary, true);
+   mSphere = pb.CreateMesh(eAllocationType::Temporary, false);
 
    HANDLE handle = FindFirstChangeNotificationA("projects/model-viewer", false, FILE_NOTIFY_CHANGE_LAST_WRITE);
    if(handle != INVALID_HANDLE_VALUE) {
@@ -242,8 +250,6 @@ void GameApplication::OnUpdate()
 
 void GameApplication::OnRender() const
 {
-   bool open = true;
-   ig::ShowDemoWindow( &open );
    static Program* prog = nullptr;
    static GraphicsState* gs = nullptr;
    static ResourceBinding* binding = nullptr;
@@ -283,7 +289,8 @@ void GameApplication::OnRender() const
    list.TransitionBarrier( *mGroundTexture, Resource::eState::ShaderResource );
    list.SetGraphicsPipelineState( *gs );
    list.BindResources( *binding );
-   list.DrawMesh( mTriangle );
+   list.DrawMesh( mFloor );
+   list.DrawMesh( mSphere );
 
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
 

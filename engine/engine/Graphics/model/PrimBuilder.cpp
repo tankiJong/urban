@@ -47,6 +47,7 @@ mesh_index_t PrimBuilder::Vertex3( const float3& position )
    ASSERT_DIE( mIsRecording );
    mCurrentVertex.position = position;
    mVertices.push_back( mCurrentVertex );
+   return mVertices.size() - 1u;
 }
 
 PrimBuilder& PrimBuilder::Triangle( mesh_index_t a, mesh_index_t b, mesh_index_t c )
@@ -117,34 +118,42 @@ PrimBuilder& PrimBuilder::Quad( const float3& a, const float3& b, const float3& 
 
    if(mDrawInstr.useIndices) {
       uint start =
-         Uv( { 0, 0 } )
+         Uv( { 0, 1 } )
          .Vertex3( a );
 
-      Uv( { 1, 0 } )
-         .Vertex3( b );
       Uv( { 1, 1 } )
+         .Vertex3( b );
+      Uv( { 1, 0 } )
          .Vertex3( c );
-      Uv( { 0, 1 } )
+      Uv( { 0, 0 } )
          .Vertex3( d );
 
       Quad( start + 0, start + 1, start + 2, start + 3 );
    } else {
-      Uv( { 0, 0 } )
+      Uv( { 0, 1 } )
          .Vertex3( a );
-      Uv( { 1, 0 } )
-         .Vertex3( b );
       Uv( { 1, 1 } )
+         .Vertex3( b );
+      Uv( { 1, 0 } )
          .Vertex3( c );
 
-      Uv( { 0, 0 } )
-         .Vertex3( a );
-      Uv( { 1, 1 } )
-         .Vertex3( c );
       Uv( { 0, 1 } )
+         .Vertex3( a );
+      Uv( { 1, 0 } )
+         .Vertex3( c );
+      Uv( { 0, 0 } )
          .Vertex3( d );
    }
 
    return *this;
+}
+
+PrimBuilder& PrimBuilder::Quad( const float3& bottomLeft, const float2& size, const float3& xDir, const float3& yDir )
+{
+   return Quad(bottomLeft, 
+               bottomLeft + xDir * size.x, 
+               bottomLeft + xDir * size.x + yDir * size.y,
+               bottomLeft + yDir * size.y);
 }
 
 PrimBuilder& PrimBuilder::Cube(
@@ -212,15 +221,19 @@ Mesh PrimBuilder::CreateMesh( eAllocationType type, bool syncGpu ) const {
    CommandList list(eQueueType::Copy);
 
    S<StructuredBuffer> vbo = StructuredBuffer::Create(sizeof(vertex_t), mVertices.size(), eBindingFlag::VertexBuffer, type);
+
+   vbo->SetName( L"vbo" );
    vbo->SetCache( 0, mVertices.data(), mVertices.size() );
    vbo->UploadGpu( &list );
-
+   list.TransitionBarrier( *vbo, Resource::eState::Common );
    S<StructuredBuffer> ibo = nullptr;
 
    if(mDrawInstr.useIndices) {
       ibo = StructuredBuffer::Create(sizeof(mesh_index_t), mIndices.size(), eBindingFlag::IndexBuffer, type);
+      ibo->SetName( L"ibo" );
       ibo->SetCache( 0, mIndices.data(), mIndices.size() );
       ibo->UploadGpu( &list );
+      list.TransitionBarrier( *ibo, Resource::eState::Common );
    }
 
    S<CommandQueue> queue = Device::Get().GetMainQueue( eQueueType::Copy );
@@ -229,7 +242,6 @@ Mesh PrimBuilder::CreateMesh( eAllocationType type, bool syncGpu ) const {
    if(syncGpu) {
       Fence fence;
       fence.IncreaseExpectedValue();
-
       queue->Signal( fence );
 
       Device::Get().GetMainQueue( eQueueType::Compute )->Wait( fence );

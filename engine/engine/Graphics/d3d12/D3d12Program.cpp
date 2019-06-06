@@ -68,7 +68,7 @@ void initRootSignature(rootsignature_t& handle, const std::vector<BindingLayout:
    // provide a default static sampler to pixel shader
    D3D12_STATIC_SAMPLER_DESC linearSampler = {};
    {
-      linearSampler.Filter           = D3D12_FILTER_MIN_MAG_MIP_POINT;
+      linearSampler.Filter           = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
       linearSampler.AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
       linearSampler.AddressV         = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
       linearSampler.AddressW         = D3D12_TEXTURE_ADDRESS_MODE_WRAP;

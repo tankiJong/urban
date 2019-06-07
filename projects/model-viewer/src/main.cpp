@@ -111,21 +111,22 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
-#include <windows.h>
-#include <dxcapi.h>
-
-#pragma comment(lib, "dxcompiler.lib")
-Blob CompileShader(fs::path path)
+// #include <windows.h>
+// #include <dxcapi.h>
+//
+// #pragma comment(lib, "dxcompiler.lib")
+bool CompileShader(fs::path path, Blob& blob)
 {
    path = "projects/model-viewer" / path;
    Blob src = fs::Read( path );
    ID3DBlobPtr result, err;
    HRESULT re = D3DCompile( src.Data(), src.Size(), path.generic_string().c_str(), nullptr, nullptr, "main", "ps_5_1", 0, 0, &result, &err);
    if(SUCCEEDED( re )) {
-      return Blob{result->GetBufferPointer(), result->GetBufferSize()};
+      blob = Blob{result->GetBufferPointer(), result->GetBufferSize()};
+      return true;
    } else {
       wprintf( L"%*s", (int)err->GetBufferSize() / 2, (LPCWSTR)err->GetBufferPointer() );
-      return Blob{};
+      return false;
    }
    // IDxcLibrary*      pLibrary;
    // IDxcBlobEncoding* pSource;
@@ -188,6 +189,10 @@ Blob Compil1eShader(fs::path path)
 }
 
 
+struct light_t {
+   float4 position;
+   float4 intensity;
+};
 
 
 //-----------------------------------------------------------------------------------------------
@@ -200,6 +205,7 @@ public:
 protected:
    S<const Texture2> mGroundTexture;
    S<ConstantBuffer> mCameraBuffer;
+   S<ConstantBuffer> mLightBuffer;
    MvCamera mCamera;
    Mesh mFloor;
    Mesh mSphere;
@@ -212,40 +218,46 @@ void GameApplication::OnInit()
    Asset<Texture2>::LoadAndRegister( "engine/resource/Ground-Texture-(gray20).png", true );
    mGroundTexture = Asset<Texture2>::Get( "engine/resource/Ground-Texture-(gray20).png" );
    mCameraBuffer = ConstantBuffer::CreateFor<camera_t>();
+   mLightBuffer = ConstantBuffer::CreateFor<light_t>();
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
-   mPixelShader = CompileShader( "pass_ps.hlsl" );
+   CompileShader( "pass_ps.hlsl", mPixelShader );
 }
 
 void GameApplication::OnUpdate()
 {
-   mCamera.OnUpdate();
-
-   camera_t data = mCamera.ComputeCameraBlock();
-   mCameraBuffer->SetData( &data, sizeof(camera_t));
 
    PrimBuilder pb;
-
-   static Transform transform;
-
-   ig::Gizmos( mCamera, transform, ig::OP::TRANSLATE );
 
    pb.Begin( eTopology::Triangle, true );
    pb.Quad({-12.5f, 0, -12.5f}, float2{25.f}, float3::X, float3::Z);
    // pb.Sphere(transform.Position(), 1.f, 30, 30);
    pb.End();
-
    mFloor = pb.CreateMesh(eAllocationType::Temporary, false);
 
    pb.Begin( eTopology::Triangle, true );
-   pb.Sphere(transform.Position(), 1.f, 30, 30);
+   pb.Sphere(float3{0, 3, 0}, 1.f, 100, 100);
    pb.End();
-
    mSphere = pb.CreateMesh(eAllocationType::Temporary, false);
 
    HANDLE handle = FindFirstChangeNotificationA("projects/model-viewer", false, FILE_NOTIFY_CHANGE_LAST_WRITE);
    if(handle != INVALID_HANDLE_VALUE) {
-      mPixelShader = CompileShader( "pass_ps.hlsl" );
+      CompileShader( "pass_ps.hlsl", mPixelShader );
    }
+
+   mCamera.OnUpdate();
+
+   camera_t data = mCamera.ComputeCameraBlock();
+   mCameraBuffer->SetData( &data, sizeof(camera_t));
+
+   static Transform transform;
+   ig::Gizmos( mCamera, transform, ig::OP::TRANSLATE );
+
+   light_t light = {
+      float4{transform.Position(), 1.f},
+      float4{float3::One * 3.f, 1.f},
+   };
+
+   mLightBuffer->SetData( &light, sizeof(light_t) );
 }
 
 void GameApplication::OnRender() const
@@ -261,6 +273,7 @@ void GameApplication::OnRender() const
       binding = new ResourceBinding(prog);
       binding->SetSrv(mGroundTexture->Srv(), 0);
       binding->SetCbv(mCameraBuffer->Cbv(), 0);
+      binding->SetCbv(mLightBuffer->Cbv(), 1);
    }
 
    prog->GetStage( eShaderType::Pixel ).SetBinary( mPixelShader.Data(), mPixelShader.Size() );
@@ -283,6 +296,7 @@ void GameApplication::OnRender() const
 
    list.SetName( L"Draw CommandList" );
    mCameraBuffer->UploadGpu(&list);
+   mLightBuffer->UploadGpu( &list );
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
    list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
    list.ClearDepthStencilTarget(Window::Get().DepthBuffer().Dsv(), true, true, 1.f, 0u);

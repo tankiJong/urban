@@ -101,6 +101,7 @@ void InitD3d12TextureSrv( D3D12_SHADER_RESOURCE_VIEW_DESC* desc, Resource::eType
         desc->TextureCube.MostDetailedMip = mostDetailedMip;
         desc->ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
       }
+      break;
    case Resource::eType::Texture2DMultisample:
    default: 
       BAD_CODE_PATH();
@@ -110,6 +111,37 @@ void InitD3d12TextureSrv( D3D12_SHADER_RESOURCE_VIEW_DESC* desc, Resource::eType
 
 };
 
+void InitD3d12TextureUav( D3D12_UNORDERED_ACCESS_VIEW_DESC* desc, Resource::eType type,
+                          eTextureFormat format, uint32_t depthOrArraySize, uint32_t firstArraySlice,  uint32_t mostDetailedMip )
+{
+   *desc        = {};
+   desc->Format = ToDXGIFormat( format );
+
+   switch(type) {
+      break;
+   case Resource::eType::Texture2D: 
+   case Resource::eType::TextureCube:
+      if(depthOrArraySize > 1) {
+         desc->ViewDimension                  = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+         desc->Texture2DArray.MipSlice        = mostDetailedMip;
+         desc->Texture2DArray.ArraySize       = depthOrArraySize;
+         desc->Texture2DArray.FirstArraySlice = firstArraySlice;
+         desc->Texture2DArray.PlaneSlice      = 0;
+      } else {
+         desc->ViewDimension        = D3D12_UAV_DIMENSION_TEXTURE2D;
+         desc->Texture2D.MipSlice   = mostDetailedMip;
+         desc->Texture2D.PlaneSlice = 0;
+      }
+      break;
+   case Resource::eType::Texture1D: 
+   case Resource::eType::Buffer:
+   case Resource::eType::Texture3D:
+   case Resource::eType::Unknown:
+   case Resource::eType::Texture2DMultisample:
+   default:
+   BAD_CODE_PATH();
+   }
+};
 
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
@@ -203,4 +235,35 @@ DepthStencilView::DepthStencilView( W<const Texture> tex, uint mipLevel, uint fi
    mHandle.reset( new Descriptors( std::move( descriptors ) ) );
 
    Device::Get().NativeDevice()->CreateDepthStencilView( resHandle.Get(), &desc, mHandle->GetCpuHandle( 0 ) );
+}
+
+UnorderedAccessView::UnorderedAccessView(
+   W<const Texture> res,
+   uint32_t         mostDetailedMip,
+   uint32_t         firstArraySlice,
+   uint32_t         depthOrArraySize )
+   : ResourceView<S<Descriptors>>( res, depthOrArraySize, firstArraySlice, mostDetailedMip, 1,
+                                                 eDescriptorType::Uav )
+{
+   S<const Texture> ptr = res.lock();
+
+   D3D12_UNORDERED_ACCESS_VIEW_DESC desc      = {};
+   resource_handle_t                resHandle = nullptr;
+
+   if(ptr) {
+      resHandle = ptr->Handle();
+      InitD3d12TextureUav( &desc, ptr->Type(), ptr->Format(), depthOrArraySize,
+                           firstArraySlice, mostDetailedMip );
+   } else {
+      desc               = {};
+      desc.Format        = DXGI_FORMAT_R32_UINT;
+      desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+   }
+
+   Descriptors descriptors = Device::Get().GetCpuDescriptorHeap( eDescriptorType::Uav )->Allocate( 1 );
+   mHandle.reset( new Descriptors( std::move( descriptors ) ) );
+
+   Device::Get().NativeDevice()->CreateUnorderedAccessView(
+                                                           resHandle.Get(), nullptr, &desc,
+                                                           mHandle->GetCpuHandle( 0 ) );
 }

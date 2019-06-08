@@ -200,7 +200,7 @@ PrimBuilder& PrimBuilder::Sphere( const float3& center, float size, uint xLevel,
       for(uint i = 0; i <= xLevel; i++) {
          float  phi = dPhi * (float)j - M_PI_2, theta = dTheta * (float)i;
          float3 pos = Spherical( size, theta * R2D, phi * R2D ) + center;
-         Uv( { theta / (M_PI * 2.f), (phi + M_PI_2) / M_PI } );
+         Uv( { theta / (M_PI * 2.f), 1.f - (phi + M_PI_2) / M_PI } );
          Normal( pos - center );
          Tangent( { -sinf( theta ), 0, cosf( theta ) }, 1 );
          Vertex3( pos );

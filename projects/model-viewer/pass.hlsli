@@ -1,6 +1,6 @@
 #define RootSig \
    "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 1, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 2, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
    "StaticSampler(s0, maxAnisotropy = 8, visibility = SHADER_VISIBILITY_PIXEL)," 
 
 struct VSInput {
@@ -36,4 +36,6 @@ cbuffer cLight: register(b1) {
 }
 
 Texture2D<float4> gTex: register(t0);
+TextureCube gSkyBox : register(t1);
+
 SamplerState gSampler : register(s0);

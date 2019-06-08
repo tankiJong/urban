@@ -11,7 +11,6 @@
 #include "engine/graphics/CommandList.hpp"
 #include "engine/graphics/CommandQueue.hpp"
 #include "engine/platform/win.hpp"
-#include "stb/stb_image.h"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -223,40 +222,6 @@ bool Buffer::Init()
    return true;
 }
 
-void Buffer::UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList )
-{
-   ASSERT_DIE_M( mBufferUsage != eBufferUsage::ReadBack, "Does not support write data to read back buffer" );
-   ASSERT_DIE( size + offset <= mSize );
-   if(mBufferUsage == eBufferUsage::Upload) {
-      UploadData( data, size, offset );
-   } else {
-      Buffer uploadBuffer(size - offset, eBindingFlag::None, eBufferUsage::Upload, eAllocationType::Temporary);
-      uploadBuffer.Init();
-      uploadBuffer.UploadData( data, size, offset );
-      if(commandList == nullptr) {
-         CommandList list;
-         list.TransitionBarrier( *this, eState::CopyDest );
-         list.CopyBufferRegion( uploadBuffer, offset, *this, 0, size );
-         list.TransitionBarrier( *this, eState::Common );
-
-         Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );
-      } else {
-         commandList->TransitionBarrier( *this, eState::CopyDest );
-         commandList->CopyBufferRegion( uploadBuffer, offset, *this, 0, size );
-         commandList->TransitionBarrier( *this, eState::Common );
-      }
-   }
-}
-
-const ConstantBufferView* Buffer::Cbv() const
-{
-   if(!mCbv && is_all_set( mBindingFlags, eBindingFlag::ConstantBuffer )) {
-      mCbv.reset( new ConstantBufferView(shared_from_this()));
-   }
-
-   return mCbv.get();
-}
-
 void Buffer::UploadData( const void* data, size_t size, size_t offset )
 {
    ASSERT_DIE_M( mBufferUsage == eBufferUsage::Upload, "Only upload buffer can upload data");
@@ -326,95 +291,9 @@ bool Texture::Init()
    return result;
 }
 
-const RenderTargetView* Texture::Rtv( uint mip, uint firstArraySlice, uint arraySize ) const
-{
-   ViewInfo viewInfo{ arraySize, firstArraySlice, mip, 1, eDescriptorType::Rtv };
-
-   auto kv = mRtvs.find( viewInfo );
-   if(kv == mRtvs.end() && is_all_set( mBindingFlags, eBindingFlag::RenderTarget )) {
-      S<RenderTargetView> view( new RenderTargetView{ shared_from_this(), mip, firstArraySlice, arraySize } );
-      auto                result = mRtvs.emplace( viewInfo, view );
-
-      ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
-
-      return view.get();
-   }
-
-   return kv->second.get();
-}
-
-const ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArraySlice, uint depthOrArraySize ) const
-{
-   ViewInfo viewInfo{ depthOrArraySize, firstArraySlice, mip, mipCount, eDescriptorType::Srv };
-
-   auto kv = mSrvs.find( viewInfo );
-   if(kv == mSrvs.end() && is_all_set( mBindingFlags, eBindingFlag::ShaderResource )) {
-      S<ShaderResourceView> view( new ShaderResourceView{ shared_from_this(), mip, mipCount, firstArraySlice, depthOrArraySize } );
-      auto                  result = mSrvs.emplace( viewInfo, view );
-
-      ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
-
-      return view.get();
-   }
-
-   return kv->second.get();
-}
-
-const DepthStencilView* Texture::Dsv( uint mip, uint firstArraySlice ) const
-{
-   ViewInfo viewInfo{ 1, firstArraySlice, mip, 1, eDescriptorType::Dsv };
-
-   auto kv = mDsvs.find( viewInfo );
-   if(kv == mDsvs.end() && is_all_set( mBindingFlags, eBindingFlag::DepthStencil )) {
-      S<DepthStencilView> view( new DepthStencilView{ shared_from_this(), mip, firstArraySlice } );
-      auto                result = mDsvs.emplace( viewInfo, view );
-
-      ASSERT_DIE( result.first->second->GetViewInfo() == viewInfo );
-
-      return view.get();
-   }
-
-   return kv->second.get();
-}
-
-Texture2::Texture2(
-   eBindingFlag    bindingFlags,
-   uint            width,
-   uint            height,
-   uint            arraySize,
-   uint            mipLevels,
-   eTextureFormat  format,
-   eAllocationType allocationType)
-   : Texture( eType::Texture2D, bindingFlags, width, height, arraySize, mipLevels, format, allocationType ) {}
-
-Texture2::Texture2(
-   const resource_handle_t& handle,
-   eBindingFlag             bindingFlags,
-   uint                     width,
-   uint                     height,
-   uint                     arraySize,
-   uint                     mipLevels,
-   eTextureFormat           format,
-   eAllocationType          allocationType )
-   : Texture( handle, eType::Texture2D, bindingFlags, width, height, arraySize, mipLevels, format, allocationType ) {}
-
-S<Texture2> Texture2::Create(
-   eBindingFlag bindingFlags,
-   uint width,
-   uint height,
-   uint arraySize,
-   uint mipLevels,
-   eTextureFormat format,
-   eAllocationType allocationType )
-{
-   S<Texture2> res( new Texture2(bindingFlags, width, height, arraySize, mipLevels, format, allocationType));
-   res->Init();
-   return res;
-}
-
 void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandList* commandList )
 {
-   uint64_t uploadBufferSize = GetRequiredIntermediateSize( mHandle.Get(), 0, mMipLevels );
+   uint64_t uploadBufferSize = GetRequiredIntermediateSize( mHandle.Get(), 0, 1 );
    S<Buffer> uploadBuffer = Buffer::Create(uploadBufferSize, eBindingFlag::None, Buffer::eBufferUsage::Upload, eAllocationType::Temporary);
    uploadBuffer->UploadData( data, size, offset );
 
@@ -429,31 +308,16 @@ void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandL
       CommandList list(eQueueType::Copy);
       list.TransitionBarrier( *this, eState::CopyDest );
       UpdateSubresources( list.Handle().Get(), Handle().Get(), uploadBuffer->Handle().Get(), 
-         0, 0, mMipLevels, &textureData);
+         0, 0, 1, &textureData);
       Device::Get().GetMainQueue( eQueueType::Copy )->IssueCommandList( list );      
    } else {
       commandList->TransitionBarrier( *this, eState::CopyDest );
       UpdateSubresources( commandList->Handle().Get(), Handle().Get(), uploadBuffer->Handle().Get(), 
-         0, 0, mMipLevels, &textureData);
+         0, 0, 1, &textureData);
    }
 }
 
 uint64_t Resource::GpuStartAddress() const
 {
    return mHandle->GetGPUVirtualAddress();
-}
-
-
-bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary )
-{
-   int w,h;
-   int channelCount;
-   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary.Data(), binary.Size(), &w, &h, &channelCount, 4);
-   
-   res.reset( new Texture2( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
-                            1, 1, eTextureFormat::RGBA8Unorm, eAllocationType::Persistent ) );
-   res->Init();
-   res->UpdateData( imageData, w * h * 4 );
-
-   return true;
 }

@@ -7,7 +7,7 @@
 #include "engine/graphics/ResourceView.hpp"
 #include "engine/graphics/Resource.hpp"
 #include "engine/graphics/model/vertex.hpp"
-
+#include "engine/graphics/shaders/equirect2cube_cs.h"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -268,18 +268,24 @@ bool ComputeState::Finalize()
 {
    if(!mIsDirty) return false;
 
-   D3D12_COMPUTE_PIPELINE_STATE_DESC desc;
+   D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
 
    const Shader& cs = GetProgram()->GetStage( eShaderType::Compute );
 
    desc.CS.BytecodeLength  = cs.GetSize();
    desc.CS.pShaderBytecode = cs.GetDataPtr();
-   desc.pRootSignature     = nullptr;
+   desc.pRootSignature     = mProgram->Handle().Get();
+   desc.NodeMask = 0;
+   desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+   desc.CachedPSO = {};
 
    if(mHandle != nullptr) {
       Device::Get().RelaseObject( mHandle );
    }
-   assert_win( Device::Get().NativeDevice()->CreateComputePipelineState( &desc, IID_PPV_ARGS( &mHandle ) ) );
+
+   device_handle_t device = Device::Get().NativeDevice();
+
+   assert_win( device->CreateComputePipelineState( &desc, IID_PPV_ARGS( &mHandle )) );
 
    mIsDirty = false;
    return true;
@@ -314,6 +320,7 @@ bool GraphicsState::Finalize()
    desc.PrimitiveTopologyType = ToD3d12TopologyType( mTopology );
    desc.SampleDesc.Count = 1;
    desc.SampleMask = UINT_MAX;
+   desc.CachedPSO = {};
 
    if(mHandle != nullptr) {
       Device::Get().RelaseObject( mHandle );

@@ -216,4 +216,7 @@
     <ClCompile Include="external\imgui\examples\imgui_impl_win32.cpp" />
     <ClCompile Include="external\imgui\ImGuizmo.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="engine\graphics\shaders\equirect2cube_cs.hlsl" />
+  </ItemGroup>
 </Project>

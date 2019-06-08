@@ -13,6 +13,7 @@ S<RenderTargetView> RenderTargetView::sNullView = nullptr;
 S<ShaderResourceView> ShaderResourceView::sNullView = nullptr;
 S<ConstantBufferView> ConstantBufferView::sNullView = nullptr;
 S<DepthStencilView> DepthStencilView::sNullView = nullptr;
+S<UnorderedAccessView> UnorderedAccessView::sNullView = nullptr;
 
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function /////////////////////
@@ -63,6 +64,17 @@ ConstantBufferView* ConstantBufferView::NullView()
 {
    if(!sNullView) {
       sNullView = S<ConstantBufferView>( new ConstantBufferView() );
+   }
+
+   return sNullView.get();
+}
+
+UnorderedAccessView::UnorderedAccessView(): UnorderedAccessView( W<const Texture>() ) {}
+
+UnorderedAccessView* UnorderedAccessView::NullView()
+{
+   if(!sNullView) {
+      sNullView = S<UnorderedAccessView>( new UnorderedAccessView() );
    }
 
    return sNullView.get();

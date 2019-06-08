@@ -48,7 +48,7 @@ namespace std {
   };
 }
 
-template<typename H>
+template< typename H >
 class ResourceView {
 public:
    static constexpr uint kMaxPossible = -1;
@@ -56,19 +56,25 @@ public:
 
    virtual ~ResourceView() = default;
 
-   const ViewInfo& GetViewInfo() const { return mViewInfo; }
+   const ViewInfo&   GetViewInfo() const { return mViewInfo; }
    S<const Resource> GetResource() const { return mResource.lock(); }
-   const H& Handle() const { return mHandle; }
+   const H&          Handle() const { return mHandle; }
 
-   ResourceView(W<const Resource> res, uint depthOrArraySize, uint firstArraySlice, uint mostDetailedMip, uint mipCount, eDescriptorType type)
+   ResourceView(
+      W<const Resource> res,
+      uint              depthOrArraySize,
+      uint              firstArraySlice,
+      uint              mostDetailedMip,
+      uint              mipCount,
+      eDescriptorType   type )
       : mViewInfo{ depthOrArraySize, firstArraySlice, mostDetailedMip, mipCount, type }
-      , mResource( res ) {}
+    , mResource( res ) {}
 
 protected:
 
-   ViewInfo mViewInfo;
+   ViewInfo          mViewInfo;
    W<const Resource> mResource;
-   H mHandle = H{};
+   H                 mHandle = H{};
 };
 
 
@@ -100,13 +106,19 @@ protected:
 
 class ShaderResourceView: public ResourceView<S<Descriptors>> {
 public:
-   ShaderResourceView(W<const Texture> res, uint mostDetailedMip = 0, uint mipCount = kMaxPossible, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible);
+   ShaderResourceView(
+      W<const Texture> res,
+      uint             mostDetailedMip  = 0,
+      uint             mipCount         = kMaxPossible,
+      uint             firstArraySlice  = 0,
+      uint             depthOrArraySize = kMaxPossible );
    ShaderResourceView();
 
-   eTextureFormat Format() const { return mFormat; }
+   eTextureFormat             Format() const { return mFormat; }
    static ShaderResourceView* NullView();
+
 protected:
-   eTextureFormat mFormat = eTextureFormat::Unknown;
+   eTextureFormat               mFormat = eTextureFormat::Unknown;
    static S<ShaderResourceView> sNullView;
 };
 
@@ -119,4 +131,20 @@ public:
 
 protected:
    static S<ConstantBufferView> sNullView;
+};
+
+class UnorderedAccessView: public ResourceView<S<Descriptors>> {
+public:
+   UnorderedAccessView(
+      W<const Texture> res,
+      uint32_t         mostDetailedMip  = 0,
+      uint32_t         firstArraySlice  = 0,
+      uint32_t         depthOrArraySize = kMaxPossible );
+   UnorderedAccessView();
+
+   static UnorderedAccessView* NullView();
+
+protected:
+
+   static S<UnorderedAccessView> sNullView;
 };

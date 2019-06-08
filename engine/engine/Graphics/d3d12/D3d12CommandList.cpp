@@ -97,6 +97,7 @@ void CommandList::SetComputePipelineState( ComputeState& pps )
    ASSERT_DIE( mRequireCommandQueueType == eQueueType::Compute || mRequireCommandQueueType == eQueueType::Direct );
    pps.Finalize();
    mHandle->SetPipelineState( pps.Handle().Get() );
+   mHandle->SetComputeRootSignature( pps.GetProgram()->Handle().Get() );
 }
 
 void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
@@ -179,6 +180,12 @@ void CommandList::CopyBufferRegion( Buffer& from, size_t fromOffset, Buffer& to,
    mHasCommandPending = true;
    mHandle->CopyBufferRegion( to.Handle().Get(), toOffset, from.Handle().Get(), 
                               fromOffset, byteCount );
+}
+
+void CommandList::Dispatch( uint groupx, uint groupy, uint groupz )
+{
+   mHasCommandPending = true;
+   mHandle->Dispatch( groupx, groupy, groupz );
 }
 
 void CommandList::DrawMesh( const Mesh& mesh )
@@ -287,7 +294,8 @@ void CommandList::BindResources( const ResourceBinding& bindings, bool forComput
    uint tableIndex = 0;
    if(forCompute) {
       for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
-         mHandle->SetComputeRootDescriptorTable( tableIndex, descriptors.GetGpuHandle( i ) );
+         auto d = descriptors.GetGpuHandle( i );
+         mHandle->SetComputeRootDescriptorTable( tableIndex, d );
          ++tableIndex;
       }
    } else {

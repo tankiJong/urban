@@ -7,6 +7,7 @@ class RenderTargetView;
 class DepthStencilView;
 class ShaderResourceView;
 class ConstantBufferView;
+class UnorderedAccessView;
 class CommandList;
 
 class Resource: public WithHandle<resource_handle_t>, public std::enable_shared_from_this<Resource> {
@@ -97,6 +98,10 @@ public:
 
    virtual const DepthStencilView* Dsv( uint mip = 0, uint firstArraySlice = 0 ) const 
       { UNUSED(mip); UNUSED(firstArraySlice); return nullptr; }
+
+   virtual const UnorderedAccessView* Uav( uint mip = 0, uint firstArraySlice = 0, uint depthOrArraySize = kMaxPossible ) const
+      { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( depthOrArraySize ); return nullptr; }
+
    virtual bool Init() = 0;
 
    // The data is not promised to be updated immediately, it only schedule the commands on the copy queue

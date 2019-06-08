@@ -204,6 +204,7 @@ public:
    void OnRender() const override;
 protected:
    S<const Texture2> mGroundTexture;
+   S<const Texture2> mSkyBox;
    S<ConstantBuffer> mCameraBuffer;
    S<ConstantBuffer> mLightBuffer;
    MvCamera mCamera;
@@ -215,8 +216,10 @@ protected:
 void GameApplication::OnInit()
 {
    mGroundTexture.reset( new Texture2() );
-   Asset<Texture2>::LoadAndRegister( "engine/resource/Ground-Texture-(gray20).png", true );
-   mGroundTexture = Asset<Texture2>::Get( "engine/resource/Ground-Texture-(gray20).png" );
+   Asset<Texture2>::LoadAndRegister( "engine/resource/CalibrationCard.jpg", true );
+   Asset<TextureCube>::LoadAndRegister( "engine/resource/environment_0.hdr", true );
+   mGroundTexture = Asset<Texture2>::Get( "engine/resource/CalibrationCard.jpg" );
+   mSkyBox = Asset<TextureCube>::Get( "engine/resource/environment_0.hdr" );
    mCameraBuffer = ConstantBuffer::CreateFor<camera_t>();
    mLightBuffer = ConstantBuffer::CreateFor<light_t>();
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
@@ -272,6 +275,7 @@ void GameApplication::OnRender() const
       prog->Finalize();
       binding = new ResourceBinding(prog);
       binding->SetSrv(mGroundTexture->Srv(), 0);
+      binding->SetSrv( mSkyBox->Srv(), 1 );
       binding->SetCbv(mCameraBuffer->Cbv(), 0);
       binding->SetCbv(mLightBuffer->Cbv(), 1);
    }
@@ -298,7 +302,8 @@ void GameApplication::OnRender() const
    mCameraBuffer->UploadGpu(&list);
    mLightBuffer->UploadGpu( &list );
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
-   list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
+   // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
+   list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{0.f, 0.f, 0.f, 1.f} );
    list.ClearDepthStencilTarget(Window::Get().DepthBuffer().Dsv(), true, true, 1.f, 0u);
    list.TransitionBarrier( *mGroundTexture, Resource::eState::ShaderResource );
    list.SetGraphicsPipelineState( *gs );

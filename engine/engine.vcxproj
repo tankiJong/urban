@@ -195,6 +195,18 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\stb\stb_image.h" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="engine\graphics\shaders\equirect2cube_cs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">6.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.1</ShaderModel>
+    </FxCompile>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{922BF2A2-0D2A-428B-B451-FB20F895E84D}</ProjectGuid>
@@ -291,6 +303,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <FxCompile>
+      <ShaderModel>6.1</ShaderModel>
+      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
+      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
+      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
+      <VariableName>g%(Filename)</VariableName>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -312,6 +332,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <FxCompile>
+      <ShaderModel>6.1</ShaderModel>
+      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
+      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
+      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
+      <VariableName>g%(Filename)</VariableName>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -337,6 +365,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <FxCompile>
+      <ShaderModel>6.1</ShaderModel>
+      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
+      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
+      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
+      <VariableName>g%(Filename)</VariableName>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -362,6 +398,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <FxCompile>
+      <ShaderModel>6.1</ShaderModel>
+      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
+      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
+      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
+      <VariableName>g%(Filename)</VariableName>
+    </FxCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

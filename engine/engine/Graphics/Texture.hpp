@@ -64,8 +64,13 @@ public:
       uint mipCount         = kMaxPossible,
       uint firstArraySlice  = 0,
       uint depthOrArraySize = kMaxPossible ) const override;
+   virtual const UnorderedAccessView* Uav(
+      uint mip              = 0,
+      uint firstArraySlice  = 0,
+      uint depthOrArraySize = kMaxPossible ) const override;
    virtual const DepthStencilView* Dsv( uint mip = 0, uint firstArraySlice = 0 ) const override;
 
+   static uint MaxMipCount(Resource::eType type, uint width, uint height, uint depthOrArraySize);
 protected:
 
    Texture(
@@ -74,8 +79,8 @@ protected:
       uint            width,
       uint            height,
       uint            depthOrArraySize,
-      uint            mipLevels,
       eTextureFormat  format,
+      bool            hasMipmaps,
       eAllocationType allocationType );
 
    Texture(
@@ -85,7 +90,7 @@ protected:
       uint                     width,
       uint                     height,
       uint                     depthOrArraySize,
-      uint                     mipLevels,
+      uint                     mipmapCount,
       eTextureFormat           format,
       eAllocationType          allocationType );
 
@@ -97,12 +102,13 @@ protected:
 
    eTextureFormat mFormat = eTextureFormat::RGBA8Unorm;
 
-   mutable std::unordered_map<ViewInfo, S<RenderTargetView>>   mRtvs;
-   mutable std::unordered_map<ViewInfo, S<ShaderResourceView>> mSrvs;
-   mutable std::unordered_map<ViewInfo, S<DepthStencilView>>   mDsvs;
+   mutable std::unordered_map<ViewInfo, S<RenderTargetView>>    mRtvs;
+   mutable std::unordered_map<ViewInfo, S<ShaderResourceView>>  mSrvs;
+   mutable std::unordered_map<ViewInfo, S<DepthStencilView>>    mDsvs;
+   mutable std::unordered_map<ViewInfo, S<UnorderedAccessView>> mUavs;
 };
 
-class Texture2 final: public Texture, public inherit_shared_from_this<Texture, Texture2> {
+class Texture2: public Texture, public inherit_shared_from_this<Texture, Texture2> {
    friend bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary );
 public:
    Texture2( const Texture2& other ) = delete;
@@ -126,24 +132,24 @@ public:
 
    Texture2() = default;
 
-   static S<Texture2> Create(
-      eBindingFlag    bindingFlags,
-      uint            width,
-      uint            height,
-      uint            arraySize,
-      uint            mipLevels,
-      eTextureFormat  format,
-      eAllocationType allocationType = eAllocationType::General );
-
    Texture2(
       const resource_handle_t& handle,
       eBindingFlag             bindingFlags,
       uint                     width,
       uint                     height,
       uint                     arraySize,
-      uint                     mipLevels,
+      uint                     mipCount,
       eTextureFormat           format,
       eAllocationType          allocationType = eAllocationType::General );
+
+   static S<Texture2> Create(
+      eBindingFlag    bindingFlags,
+      uint            width,
+      uint            height,
+      uint            arraySize,
+      eTextureFormat  format,
+      bool            hasMipmaps = false,
+      eAllocationType allocationType = eAllocationType::General );
 
 protected:
    Texture2(
@@ -151,10 +157,54 @@ protected:
       uint            width,
       uint            height,
       uint            arraySize,
-      uint            mipLevels,
       eTextureFormat  format,
+      bool            hasMipmaps = false,
       eAllocationType allocationType = eAllocationType::General );
 
 };
 
 bool Asset<Texture2>::Load( S<Texture2>& tex, const Blob& binary );
+
+class TextureCube final: public Texture2, public inherit_shared_from_this<Texture2, TextureCube> {
+   friend bool Asset<TextureCube>::Load( S<TextureCube>& tex, const Blob& binary );
+public:
+
+   TextureCube() = default;
+
+   using inherit_shared_from_this<Texture2, TextureCube>::shared_from_this;
+
+   TextureCube(
+      const resource_handle_t& handle,
+      eBindingFlag             bindingFlags,
+      uint                     width,
+      uint                     height,
+      uint                     mipCount,
+      eTextureFormat           format,
+      eAllocationType          allocationType = eAllocationType::General )
+      : Texture2( handle, bindingFlags, width, height, 1, mipCount, format, allocationType )
+   {
+      mType = eType::TextureCube;
+   }
+
+   static S<TextureCube> Create(
+      eBindingFlag    bindingFlags,
+      uint            width,
+      uint            height,
+      eTextureFormat  format,
+      bool            hasMipmaps     = false,
+      eAllocationType allocationType = eAllocationType::General );
+
+protected:
+
+   TextureCube(
+      eBindingFlag    bindingFlags,
+      uint            width,
+      uint            height,
+      eTextureFormat  format,
+      bool            hasMipmaps     = false,
+      eAllocationType allocationType = eAllocationType::General )
+      : Texture2( bindingFlags, width, height, 1, format, hasMipmaps, allocationType ) { mType = eType::TextureCube; }
+
+};
+
+bool Asset<TextureCube>::Load( S<TextureCube>& tex, const Blob& binary );

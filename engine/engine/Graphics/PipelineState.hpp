@@ -49,8 +49,6 @@ protected:
 //------------------- PipelineState -------------------//
 class PipelineState: public WithHandle<pipelinestate_t> {
 public:
-   ePipelineType GetType() const { return mType; }
-   void          SetType( ePipelineType type ) { mType = type; mIsDirty = true; }
 
    const Program* GetProgram() const { return mProgram; }
    void           SetProgram( const Program* program ) { mProgram = program; mIsDirty = true; }
@@ -63,6 +61,8 @@ public:
    virtual ~PipelineState();
 protected:
    PipelineState( ePipelineType type ): mType( type ) {}
+   ePipelineType GetType() const { return mType; }
+   void          SetType( ePipelineType type ) { mType = type; mIsDirty = true; }
    ePipelineType  mType    = ePipelineType::Unknown;
    const Program* mProgram = nullptr;
    bool mIsDirty = true;

@@ -120,6 +120,7 @@
     <ClInclude Include="external\imgui\examples\imgui_impl_dx12.h" />
     <ClInclude Include="external\imgui\examples\imgui_impl_win32.h" />
     <ClInclude Include="external\imgui\ImGuizmo.h" />
+    <ClInclude Include="engine\graphics\Sampler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -215,8 +216,12 @@
     <ClCompile Include="external\imgui\examples\imgui_impl_dx12.cpp" />
     <ClCompile Include="external\imgui\examples\imgui_impl_win32.cpp" />
     <ClCompile Include="external\imgui\ImGuizmo.cpp" />
+    <ClCompile Include="engine\graphics\Sampler.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Sampler.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="engine\graphics\shaders\equirect2cube_cs.hlsl" />
+    <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl" />
+    <FxCompile Include="engine\graphics\shaders\Blit_cs.hlsl" />
+    <FxCompile Include="engine\graphics\shaders\BlitArray_cs.hlsl" />
   </ItemGroup>
 </Project>

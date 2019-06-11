@@ -7,12 +7,12 @@
 template< typename HandleT >
 class WithHandle {
 public:
-   WithHandle( const WithHandle& other ) = delete;
+   WithHandle( const WithHandle& other ) = default;
 
    WithHandle( WithHandle&& other ) noexcept
       : mHandle( std::move(other.mHandle) ) {}
 
-   WithHandle& operator=( const WithHandle& other ) = delete;
+   WithHandle& operator=( const WithHandle& other ) = default;
 
    WithHandle& operator=( WithHandle&& other ) noexcept
    {
@@ -83,6 +83,7 @@ enum class eTextureFormatType {
 
 enum class eTextureFormat: uint {
    Unknown = 0u,
+   RGBA8UnormS,
    RGBA8Unorm,
    RGBA8Uint,
    RG8Unorm,
@@ -185,3 +186,4 @@ enum class eTopology: uint {
 
 bool IsDepthFormat( eTextureFormat format );
 size_t GetTextureFormatStride(eTextureFormat format);
+bool IsSRGBFormat(eTextureFormat format);

@@ -2,6 +2,7 @@
 
 #include "Resource.hpp"
 #include "Fence.hpp"
+#include "program/ResourceBinding.hpp"
 
 class Mesh;
 class GraphicsState;
@@ -18,7 +19,7 @@ class DescriptorPool;
 
 class CommandList: public WithHandle<command_list_t>  {
 public:
-   CommandList(eQueueType type = eQueueType::Direct);
+   CommandList(eQueueType type);
    ~CommandList();
    void Flush(bool wait = false);
    void Reset();
@@ -39,6 +40,7 @@ public:
 
    // compute ------------------------------------------------------------//
    void Dispatch(uint groupx, uint groupy, uint groupz);
+   void Blit(const ShaderResourceView& src, const UnorderedAccessView& dst, const float2& srcScale = float2::One, const float2& dstUniOffset = float2::Zero);
 
    // graphics ------------------------------------------------------------//
    void DrawMesh(const Mesh& mesh);
@@ -51,6 +53,9 @@ public:
    void DrawIndirect(Buffer& args, uint count = 1, uint offset = 0);
 
 protected:
+   void SubresourceBarrier( const Texture& tex, Resource::eState state, const ViewInfo* viewInfo );
+   void GlobalBarrier( const Resource& res, Resource::eState state );
+   
    void SetupDescriptorPools(size_t viewCount, size_t samplerCount);
    void CleanupDescriptorPools();
    bool mHasCommandPending = false;

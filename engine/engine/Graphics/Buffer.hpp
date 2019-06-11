@@ -22,7 +22,7 @@ public:
    size_t Size() const { return mSize; };
 
    virtual const ConstantBufferView* Cbv() const override;;
-
+   eBufferUsage BufferUsage() const { return mBufferUsage; }
    static S<Buffer> Create(
       size_t          size,
       eBindingFlag    bindingFlags,

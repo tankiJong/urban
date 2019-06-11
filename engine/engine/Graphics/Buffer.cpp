@@ -44,7 +44,7 @@ void Buffer::UpdateData( const void* data, size_t size, size_t offset, CommandLi
       uploadBuffer.Init();
       uploadBuffer.UploadData( data, size, offset );
       if(commandList == nullptr) {
-         CommandList list;
+         CommandList list(eQueueType::Copy);
          list.TransitionBarrier( *this, eState::CopyDest );
          list.CopyBufferRegion( uploadBuffer, offset, *this, 0, size );
          list.TransitionBarrier( *this, eState::Common );

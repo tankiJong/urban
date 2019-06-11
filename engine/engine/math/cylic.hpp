@@ -6,6 +6,8 @@ struct cyclic {
 
    UintType value = UintType(0);
 
+   cyclic& operator++() { ++value; return *this; };
+   cyclic  operator++(int) { value++; return *this; };
    constexpr cyclic() = default;
    constexpr cyclic(UintType v): value(v) {}
    operator UintType() const { return value; }

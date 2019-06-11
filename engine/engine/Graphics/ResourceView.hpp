@@ -8,6 +8,7 @@ class Texture;
 class Buffer;
 
 struct ViewInfo {
+
    uint depthOrArraySize;
    uint firstArraySlice;
    uint mostDetailedMip;

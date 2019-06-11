@@ -11,32 +11,46 @@ class UnorderedAccessView;
 class CommandList;
 
 class Resource: public WithHandle<resource_handle_t>, public std::enable_shared_from_this<Resource> {
+   friend class CommandList;
 public:
-   Resource( const Resource& other ) = delete;
+   Resource( const Resource& other )
+      : WithHandle<resource_handle_t>( other )
+    , mType( other.mType )
+    , mBindingFlags( other.mBindingFlags )
+    , mAllocationType( other.mAllocationType )
+    , mIsAlias( true ) {}
 
    Resource( Resource&& other ) noexcept
       : WithHandle<resource_handle_t>( std::move(other) )
-    , std::enable_shared_from_this<Resource>( std::move(other) )
     , mType( other.mType )
     , mBindingFlags( other.mBindingFlags )
-    , mAllocationType( other.mAllocationType ) {}
+    , mAllocationType( other.mAllocationType )
+    , mIsAlias( other.mIsAlias ) {}
 
-   Resource& operator=( const Resource& other ) = delete;
+   Resource& operator=( const Resource& other )
+   {
+      if(this == &other)
+         return *this;
+      WithHandle<resource_handle_t>::operator =( other );
+      mType           = other.mType;
+      mBindingFlags   = other.mBindingFlags;
+      mAllocationType = other.mAllocationType;
+      mIsAlias        = true;
+      return *this;
+   }
 
    Resource& operator=( Resource&& other ) noexcept
    {
       if(this == &other)
          return *this;
+      WithHandle<resource_handle_t>::operator =( std::move( other ) );
       mType           = other.mType;
       mBindingFlags   = other.mBindingFlags;
       mAllocationType = other.mAllocationType;
-      WithHandle<resource_handle_t>::operator=( std::move( other ) );
-      std::enable_shared_from_this<Resource>::operator=( std::move( other ) );
+      mIsAlias        = other.mIsAlias;
       return *this;
    }
 
-private:
-   friend class CommandList;
 public:
    /** Resource types. Notice there are no array types. Array are controlled using the array size parameter on texture creation.
    */
@@ -86,8 +100,12 @@ public:
 
    eState GlobalState() const { return mState.globalState; }
    bool   IsStateGlobal() const { return mState.global; }
+   void   SetGlobalState( eState state ) const;
 
-   void                      SetGlobalState( eState state ) const;
+   uint   SubresourceIndex( uint arraySlice, uint mipLevel ) const { return mipLevel + arraySlice * mipLevel; }
+   eState SubresourceState( uint arraySlice, uint mip ) const;
+   void   SetSubresourceState( uint arraySlice, uint32_t mipLevel, eState newState ) const;
+
    virtual const RenderTargetView* Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const 
       { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( arraySize ); return nullptr; }
 
@@ -129,5 +147,5 @@ protected:
    eType           mType           = eType::Unknown;
    eBindingFlag    mBindingFlags   = eBindingFlag::None;
    eAllocationType mAllocationType = eAllocationType::General;
-
+   bool            mIsAlias        = false;
 };

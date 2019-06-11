@@ -5,7 +5,7 @@
 #include "PipelineState.hpp"
 #include "program/Program.hpp"
 
-#include "engine/graphics/shaders/equirect2cube_cs.h"
+#include "engine/graphics/shaders/Equirect2Cube_cs.h"
 #include "program/ResourceBinding.hpp"
 #include "Device.hpp"
 #include "CommandQueue.hpp"
@@ -59,6 +59,13 @@ Texture::Texture(
    , mMipLevels( mipmapCount )
    , mFormat( format ) {}
 
+void Texture::InvalidateViews()
+{
+   mRtvs.clear();
+   mSrvs.clear();
+   mDsvs.clear();
+   mUavs.clear();
+}
 
 Texture2::Texture2(
    eBindingFlag    bindingFlags,
@@ -95,6 +102,50 @@ S<Texture2> Texture2::Create(
    return res;
 }
 
+void Texture2::GenerateMipmaps( CommandList* list )
+{
+   if(mMipLevels == 1) return;
+
+   if(list != nullptr) {
+      for(uint i = 0; i < mMipLevels - 1; i++) {
+         const ShaderResourceView* srcSrv = Srv(i, 1);
+         const UnorderedAccessView* dstUav = Uav(i + 1);
+         list->Blit( *srcSrv, *dstUav, .5 );
+      }
+   } else {
+      CommandList commandList(eQueueType::Compute);
+      for(uint i = 0; i < mMipLevels - 1; i++) {
+         const ShaderResourceView* srcSrv = Srv(i, 1);
+         const UnorderedAccessView* dstUav = Uav(i + 1);
+         list->Blit( *srcSrv, *dstUav, .5 );
+      }
+      Device::Get().GetMainQueue( eQueueType::Compute )->IssueCommandList( commandList );
+   }
+}
+
+void TextureCube::GenerateMipmaps( CommandList* list )
+{
+   if(mMipLevels == 1) return;
+
+   S<Texture2> alias( new Texture2( *this ) );
+
+   if(list != nullptr) {
+      for(uint i = 0; i < mMipLevels - 1; i++) {
+         const ShaderResourceView*  srcSrv = alias->Srv( i, 1 );
+         const UnorderedAccessView* dstUav = alias->Uav( i + 1 );
+         list->Blit( *srcSrv, *dstUav, .5 );
+      }
+   } else {
+      CommandList commandList( eQueueType::Compute );
+      for(uint i = 0; i < mMipLevels - 1; i++) {
+         const ShaderResourceView*  srcSrv = alias->Srv( i, 1 );
+         const UnorderedAccessView* dstUav = alias->Uav( i + 1);
+         list->Blit( *srcSrv, *dstUav, .5 );
+      }
+      Device::Get().GetMainQueue( eQueueType::Compute )->IssueCommandList( commandList );
+   }
+}
+
 S<TextureCube> TextureCube::Create(
    eBindingFlag bindingFlags,
    uint width,
@@ -128,6 +179,14 @@ const RenderTargetView* Texture::Rtv( uint mip, uint firstArraySlice, uint array
 
 const ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArraySlice, uint depthOrArraySize ) const
 {
+   if(mipCount == kMaxPossible) {
+      mipCount = MipCount();
+   }
+
+   if(depthOrArraySize == kMaxPossible) {
+      depthOrArraySize = ArraySize();
+   }
+
    ViewInfo viewInfo{ depthOrArraySize, firstArraySlice, mip, mipCount, eDescriptorType::Srv };
 
    auto kv = mSrvs.find( viewInfo );
@@ -145,6 +204,9 @@ const ShaderResourceView* Texture::Srv( uint mip, uint mipCount, uint firstArray
 
 const UnorderedAccessView* Texture::Uav( uint mip, uint firstArraySlice, uint depthOrArraySize ) const
 {
+   if(depthOrArraySize == kMaxPossible) {
+      depthOrArraySize = ArraySize();
+   }
    ViewInfo viewInfo{ depthOrArraySize, firstArraySlice, mip, 1, eDescriptorType::Uav };
 
    auto kv = mUavs.find( viewInfo );
@@ -210,9 +272,13 @@ bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary )
    unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary.Data(), binary.Size(), &w, &h, &channelCount, 4);
    
    res.reset( new Texture2( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
-                            1, eTextureFormat::RGBA8Unorm, true, eAllocationType::Persistent ) );
+                            1, eTextureFormat::RGBA8UnormS, true, eAllocationType::Persistent ) );
    res->Init();
-   res->UpdateData( imageData, w * h * 4 );
+
+   CommandList list(eQueueType::Compute);
+   res->UpdateData( imageData, w * h * 4, 0, &list );
+   res->GenerateMipmaps( &list );
+   list.Flush();
 
    stbi_image_free( imageData );
    return true;
@@ -248,7 +314,7 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const Blob& binary )
       unsigned char* imageData = stbi_load_from_memory( (const stbi_uc*)binary.Data(), binary.Size(), &w, &h,
                                                         &channelCount, 4 );
       tex = Texture2::Create( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
-                              1, eTextureFormat::RGBA8Unorm, true, eAllocationType::Temporary );
+                              1, eTextureFormat::RGBA32Float, true, eAllocationType::Temporary );
       tex->Init();
       tex->UpdateData( imageData, w * h * 4, 0, &list );
       stbi_image_free( imageData );
@@ -257,23 +323,30 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const Blob& binary )
    res = TextureCube::Create( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, 1024, 1024,
                               eTextureFormat::RGBA16Float, true, eAllocationType::Persistent );
 
-   Program prog;
-   prog.GetStage( eShaderType::Compute ).SetBinary( gequirect2cube_cs, sizeof(gequirect2cube_cs) );
-   prog.Finalize();
+   { // Load in Cube map
+      Program prog;
+      prog.GetStage( eShaderType::Compute ).SetBinary( gEquirect2Cube_cs, sizeof(gEquirect2Cube_cs) );
+      prog.Finalize();
 
-   ResourceBinding bindings( &prog );
-   bindings.SetSrv( tex->Srv(), 0 );
-   bindings.SetUav( res->Uav(), 0 );
+      S<Texture2> cubeMapAlias( new Texture2(*res));
+      const UnorderedAccessView* uav = cubeMapAlias->Uav();
 
-   ComputeState pps;
-   pps.SetProgram( &prog );
+      ResourceBinding bindings( &prog );
+      bindings.SetSrv( tex->Srv(), 0 );
+      bindings.SetUav( uav, 0 );
 
-   list.SetComputePipelineState( pps );
-   list.BindResources( bindings, true );
-   list.TransitionBarrier( *tex, Resource::eState::NonPixelShader );
-   list.TransitionBarrier( *res, Resource::eState::UnorderedAccess );
-   list.Dispatch( w / 32, h / 32, 6 );
-   list.TransitionBarrier( *res, Resource::eState::Common );
+      ComputeState pps;
+      pps.SetProgram( &prog );
+
+      list.SetComputePipelineState( pps );
+      list.BindResources( bindings, true );
+      list.TransitionBarrier( *tex, Resource::eState::NonPixelShader );
+      list.TransitionBarrier( *cubeMapAlias, Resource::eState::UnorderedAccess,  &uav->GetViewInfo());
+      list.Dispatch( w / 32, h / 32, 6 );
+      list.TransitionBarrier( *tex, Resource::eState::Common );
+      list.TransitionBarrier( *cubeMapAlias, Resource::eState::Common,  &uav->GetViewInfo());
+      res->GenerateMipmaps( &list );
+   }
 
    Device::Get().GetMainQueue( eQueueType::Compute )->IssueCommandList( list );
 

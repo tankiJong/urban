@@ -3,6 +3,7 @@
 #include "engine/graphics/Device.hpp"
 #include "Program.hpp"
 #include <numeric>
+#include "engine/graphics/Sampler.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -67,6 +68,15 @@ void ResourceBinding::SetUav( const UnorderedAccessView* uav, uint registerIndex
    b.location = uav->Handle()->GetCpuHandle( 0 );
 }
 
+void ResourceBinding::SetSampler( const Sampler* sampler, uint registerIndex, uint registerSpace )
+{
+   if(mIsDirty) RegenerateFlattened();
+
+   auto& b    = FindBindingItem( eDescriptorType::Sampler, registerIndex, registerSpace );
+   b.type     = eDescriptorType::Sampler;
+   b.location = sampler->GetCpuHandle();
+}
+
 ResourceBinding::BindingItem& ResourceBinding::FindBindingItem( eDescriptorType type, uint registerIndex, uint registerSpace )
 {
    for(auto& item: mFlattenedBindings) {
@@ -128,6 +138,8 @@ void ResourceBinding::RegenerateFlattened() const
             handle = UnorderedAccessView::NullView()->Handle()->GetCpuHandle( 0 );
             break;
          case eDescriptorType::Sampler:
+            handle = Sampler::Nearest()->GetCpuHandle();
+            break;
          case eDescriptorType::Rtv:
          case eDescriptorType::Dsv:
          case eDescriptorType::None:

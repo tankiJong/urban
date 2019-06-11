@@ -56,6 +56,7 @@ using descriptor_gpu_handle_t = D3D12_GPU_DESCRIPTOR_HANDLE;
 enum class eTextureFormat: unsigned;
 
 DXGI_FORMAT ToDXGIFormat( eTextureFormat format );
+DXGI_FORMAT ToDXGIDataFormat( eTextureFormat format );
 DXGI_FORMAT ToDXGITypelessFromDepthFormat(eTextureFormat format);
 D3D12_DESCRIPTOR_HEAP_TYPE ToD3d12HeapType( eDescriptorType types );
 

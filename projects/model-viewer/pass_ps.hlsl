@@ -36,7 +36,7 @@ cbuffer cLight: register(b1) {
 }
 
 Texture2D<float4> gTex: register(t0);
-TextureCube gSkyBox : register(t1);
+TextureCube gEnvIrradiance : register(t1);
 
 SamplerState gSampler : register(s0);
 
@@ -101,14 +101,19 @@ static const float gamma     = 2.2;
 static const float exposure  = 1.0;
 static const float pureWhite = 1.0;
 
+
 [RootSignature(RootSig)]
 float4 main(PSInput input) : SV_TARGET
 { 
    input.norm = normalize(input.norm);
    // return float4(input.norm * .5f + .5f, 1.f);
-   float3 albedo = gTex.SampleLevel(gSampler, input.uv, 0).xyz;
-   // return float4(albedo, 1.f);
-   albedo = pow(albedo, gamma);
+
+   // https://docs.microsoft.com/en-us/windows/desktop/direct3ddxgi/converting-data-color-space
+   // be aware that in d3d12 in case the SRV format is SRGB format, the driver will load in the pixel in linear space and do the gamma 2.2 correction 
+   // float3 albedo = gTex.Sample(gSampler, input.uv).xyz;
+   float3 albedo = float3(1.f, .03f, 0.f);
+
+   // return float4(pow(albedo, 1.f/gamma), 1.f);
    // albedo *= float3(1.f, .03f, 0.f);
    float metalic = .0f;
    float roughness = .0f;
@@ -125,8 +130,14 @@ float4 main(PSInput input) : SV_TARGET
 
    float3 specular = SpecularBRDF(F0, l, v, input.norm, roughness);
 
-   float3 color = (specular + diffuse) * light.intensity.xyz * 20 * saturate(dot(input.norm, l)) 
-                 * LightFalloff(light.position.xyz, input.world, 100.f);
+   float3 color = (specular + diffuse) * light.intensity.xyz * 10 * saturate(dot(input.norm, l)) 
+                 * LightFalloff(light.position.xyz, input.world, 30.f);
+
+   float3 sky = gEnvIrradiance.SampleLevel(gSampler, input.norm, 0).xyz;
+
+   float3 kd1 = lerp(float3(1, 1, 1) - F(F0, v, input.norm), float3(0, 0, 0), metalic);
+
+   color += sky * albedo * kd1;
    // color = (specular );
 	// Reinhard tonemapping operator.
 	// see: "Photographic Tone Reproduction for Digital Images", eq. 4
@@ -135,10 +146,9 @@ float4 main(PSInput input) : SV_TARGET
 
 	// Scale color by ratio of average luminances.
 	float3 mappedColor = (mappedLuminance / luminance) * color;
-
-   float3 sky = .05f * gSkyBox.SampleLevel(gSampler, input.norm, 0).xyz;
-
-   mappedColor += sky;
-	// Gamma correction.
-	return float4(pow(mappedColor, 1.0/gamma), 1.0);
+	
+   // Gamma correction.
+   // In my case, the render target share the exact format as the texture, so I have to do gamma correction here
+   // Optionally, it's possible to create a rtv with desired sRGB format so that the API will do it for you
+   return float4(pow(mappedColor, 1.f / gamma), 1.0);
 }

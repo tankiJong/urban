@@ -2,6 +2,7 @@
 #include "BindingLayout.hpp"
 #include "engine/graphics/ResourceView.hpp"
 
+class Sampler;
 class Program;
 
 class ResourceBinding {
@@ -37,6 +38,7 @@ public:
    void             SetSrv( const ShaderResourceView* srv,  uint registerIndex, uint registerSpace = 0 );
    void             SetCbv( const ConstantBufferView* cbv,  uint registerIndex, uint registerSpace = 0 );
    void             SetUav( const UnorderedAccessView* uav, uint registerIndex, uint registerSpace = 0 );
+   void             SetSampler( const Sampler*     sampler, uint registerIndex, uint registerSpace = 0 );
 
 protected:
 

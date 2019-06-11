@@ -23,7 +23,7 @@ void InitD3d12Rtv(D3D12_RENDER_TARGET_VIEW_DESC* desc, const Texture& tex, uint 
    // uint32_t arrayMultiplier = (tex.Type() == Resource::eType::TextureCube) ? 6 : 1;
 
    arraySize = min( tex.ArraySize() - firstArraySlice, arraySize );
-
+   
    switch(tex.Type()) {
    case Resource::eType::Texture1D: 
       if(tex.ArraySize() > 1) {
@@ -115,7 +115,7 @@ void InitD3d12TextureUav( D3D12_UNORDERED_ACCESS_VIEW_DESC* desc, Resource::eTyp
                           eTextureFormat format, uint32_t depthOrArraySize, uint32_t firstArraySlice,  uint32_t mostDetailedMip )
 {
    *desc        = {};
-   desc->Format = ToDXGIFormat( format );
+   desc->Format = ToDXGIDataFormat( format );
 
    switch(type) {
       break;

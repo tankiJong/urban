@@ -174,6 +174,7 @@ CpuDescriptorHeap::CpuDescriptorHeap( eDescriptorType type, size_t count )
 void DescriptorHeap::ExecuteDeferredRelease( size_t currentValue )
 {
    while(!mPendingRelease.empty() && cyclic(mPendingRelease.front().expectValue) < cyclic(currentValue)) {
+      auto& front = mPendingRelease.front();
       ReleaseDescriptorPool( *mPendingRelease.front().pool );
       delete mPendingRelease.front().pool;
       mPendingRelease.pop();  
@@ -207,6 +208,7 @@ Descriptors& Descriptors::operator=( Descriptors&& other ) noexcept
    mPoolOffsetStart    = other.mPoolOffsetStart;
    mOwner              = other.mOwner;
 
+   other.mNeedToFree = false;
    other.Reset();
 
    return *this;

@@ -1,16 +1,24 @@
 ﻿#include "engine/pch.h"
+#include <algorithm>
 #include "d3d12Util.hpp"
 #include "../CommandQueue.hpp"
 #include "engine/graphics/CommandList.hpp"
-#include "engine/graphics/Fence.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/platform/win.hpp"
 #include "engine/graphics/Texture.hpp"
+#include "engine/graphics/Buffer.hpp"
 #include "engine/graphics/PipelineState.hpp"
 #include "engine/graphics/program/Program.hpp"
 #include "engine/graphics/rgba.hpp"
 #include "engine/graphics/program/ResourceBinding.hpp"
 #include "engine/graphics/model/Mesh.hpp"
+#include "engine/graphics/Sampler.hpp"
+#include "engine/graphics/ConstantBuffer.hpp"
+
+#include "engine/graphics/shaders/Blit_cs.h"
+#include "engine/graphics/shaders/BlitArray_cs.h"
+#include <numeric>
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -46,6 +54,33 @@ D3D12_PRIMITIVE_TOPOLOGY ToD3d12Topology( eTopology tp )
    }
    BAD_CODE_PATH();
    return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+}
+
+static void setTransitionBarrier(const Resource& res, Resource::eState newState, Resource::eState oldState, uint subresourceIndex, ID3D12GraphicsCommandList* cmdList) {
+
+  D3D12_RESOURCE_BARRIER barrier;
+
+  barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  // switch(flag) { 
+  //   case TRANSITION_FULL: 
+  //     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  //   break;
+  //   case TRANSITION_BEGIN:
+  //     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+  //   break;
+  //   case TRANSITION_END: 
+  //     barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+  //   break;
+  // }
+
+  barrier.Transition.pResource = res.Handle().Get();
+  barrier.Transition.StateBefore = ToD3d12ResourceState(oldState);
+  barrier.Transition.StateAfter = ToD3d12ResourceState(newState);
+  barrier.Transition.Subresource = subresourceIndex;
+
+  cmdList->ResourceBarrier(1, &barrier);
+
 }
 
 ////////////////////////////////////////////////////////////////
@@ -157,22 +192,33 @@ void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
 
 void CommandList::TransitionBarrier( const Resource& resource, Resource::eState newState, const ViewInfo* viewInfo )
 {
-   ASSERT_DIE( viewInfo == nullptr );
-   ASSERT_DIE( resource.IsStateGlobal() );
+   // ASSERT_DIE( viewInfo == nullptr );
+   // ASSERT_DIE( resource.IsStateGlobal() );
+   ASSERT_DIE( resource.Type() != Resource::eType::Unknown );
 
-   if(ToD3d12ResourceState( resource.GlobalState() ) == ToD3d12ResourceState( newState ))
-      return;
-   mHasCommandPending = true;
-   D3D12_RESOURCE_BARRIER barrier;
-   barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-   barrier.Transition.StateBefore = ToD3d12ResourceState( resource.GlobalState() );
-   barrier.Transition.StateAfter  = ToD3d12ResourceState( newState );
-   barrier.Transition.pResource   = resource.Handle().Get();
-   barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+   if(resource.Type() == Resource::eType::Buffer) {
+      const Buffer* buffer = dynamic_cast<const Buffer*>(&resource);
+      ASSERT_DIE( buffer != nullptr );
+      if(buffer->BufferUsage() != Buffer::eBufferUsage::Default) return;
+      GlobalBarrier( resource, newState );
+   } else {
+      bool globalBarrier = resource.IsStateGlobal();
+      if(viewInfo != nullptr) {
+         globalBarrier = globalBarrier && viewInfo->firstArraySlice == 0;
+         globalBarrier = globalBarrier && viewInfo->mostDetailedMip == 0;
+         globalBarrier = globalBarrier && viewInfo->mipCount == 0;
+         globalBarrier = globalBarrier && viewInfo->depthOrArraySize == 0;
+      }
 
-   resource.SetGlobalState( newState );
-   mHandle->ResourceBarrier( 1, &barrier );
+      if(globalBarrier) {
+         GlobalBarrier( resource, newState );
+      } else {
+         const Texture* tex = dynamic_cast<const Texture*>(&resource);
+         ASSERT_DIE( tex != nullptr );
+         SubresourceBarrier( *tex, newState, viewInfo );
+      }
+   }
+   
 }
 
 void CommandList::CopyBufferRegion( Buffer& from, size_t fromOffset, Buffer& to, size_t toOffset, size_t byteCount )
@@ -186,6 +232,80 @@ void CommandList::Dispatch( uint groupx, uint groupy, uint groupz )
 {
    mHasCommandPending = true;
    mHandle->Dispatch( groupx, groupy, groupz );
+}
+
+void CommandList::Blit(
+   const ShaderResourceView& src, const UnorderedAccessView& dst,
+   const float2& srcScale, const float2& dstUniOffset )
+{
+   static ComputeState *blitPps = nullptr, *blitArrayPps = nullptr;
+   static Program       blitProgram,        blitArrayProgram;
+   if(blitPps == nullptr) {
+      blitPps = new ComputeState();
+      blitProgram.GetStage( eShaderType::Compute ).SetBinary( gBlit_cs, sizeof(gBlit_cs) );
+      blitProgram.Finalize();
+      blitPps->SetProgram( &blitProgram );
+
+      blitArrayPps = new ComputeState();
+      blitArrayProgram.GetStage( eShaderType::Compute ).SetBinary( gBlitArray_cs, sizeof(gBlitArray_cs) );
+      blitArrayProgram.Finalize();
+      blitArrayPps->SetProgram( &blitArrayProgram );
+   }
+
+   // checks
+
+   auto srcRes = std::dynamic_pointer_cast<const Texture>( src.GetResource() );
+   auto dstRes = std::dynamic_pointer_cast<const Texture>( dst.GetResource() );
+   ASSERT_DIE_M( srcRes != nullptr, "src resource is not valid anymore" );
+   ASSERT_DIE_M( dstRes != nullptr, "dst resource is not valid anymore" );
+
+   auto srcViewInfo = src.GetViewInfo();
+   auto dstViewInfo = dst.GetViewInfo();
+   ASSERT_DIE( srcViewInfo.depthOrArraySize == dstViewInfo.depthOrArraySize );
+
+   // update programs, states
+
+   ComputeState* pps;
+   Program*      prog;
+   uint          arraySize = srcViewInfo.depthOrArraySize;
+
+   if(srcViewInfo.depthOrArraySize == 1) {
+      pps  = blitPps;
+      prog = &blitProgram;
+   } else {
+      pps  = blitArrayPps;
+      prog = &blitArrayProgram;
+   }
+
+   struct cBlit {
+      float2 offset;
+      float2 scale;
+      float  gamma;
+   };
+
+   S<ConstantBuffer> constants = ConstantBuffer::CreateFor<cBlit>( { dstUniOffset, srcScale, IsSRGBFormat( dstRes->Format() ) ? 1.f : 0.f },
+                                                                   eAllocationType::Temporary );
+
+   ResourceBinding bindings( prog );
+   bindings.SetSrv( &src, 0 );
+   bindings.SetUav( &dst, 0 );
+   bindings.SetCbv( constants->Cbv(), 0 );
+   bindings.SetSampler( Sampler::Bilinear(), 1 );
+
+   // setting up and dispatch
+   constants->UploadGpu( this );
+   SetComputePipelineState( *pps );
+   BindResources( bindings, true );
+
+   TransitionBarrier( *srcRes, Resource::eState::NonPixelShader, &srcViewInfo );
+   TransitionBarrier( *dstRes, Resource::eState::UnorderedAccess, &dstViewInfo );
+
+   Dispatch( srcRes->Width( srcViewInfo.mostDetailedMip ) / 16 + 1,
+             srcRes->Height( srcViewInfo.mostDetailedMip ) / 16 + 1,
+             arraySize );
+
+   TransitionBarrier( *srcRes, Resource::eState::Common, &srcViewInfo );
+   TransitionBarrier( *dstRes, Resource::eState::Common, &dstViewInfo );
 }
 
 void CommandList::DrawMesh( const Mesh& mesh )
@@ -269,6 +389,62 @@ void CommandList::DrawIndexed( uint vertStart, uint idxStart, uint count )
    mHandle->DrawIndexedInstanced(count, 1, idxStart, vertStart, 0);
 }
 
+void CommandList::SubresourceBarrier( const Texture& tex, Resource::eState newState, const ViewInfo* viewInfo )
+{
+   ViewInfo fullResInfo;
+
+  bool setGlobal = false;
+
+  if(viewInfo == nullptr) {
+    fullResInfo.depthOrArraySize = tex.ArraySize();
+    fullResInfo.firstArraySlice = 0;
+    fullResInfo.mostDetailedMip = 0;
+    fullResInfo.mipCount = tex.MipCount();
+    viewInfo = &fullResInfo;
+    setGlobal = true;
+  }
+
+  for(uint arraySlice = viewInfo->firstArraySlice; 
+      arraySlice < viewInfo->firstArraySlice + viewInfo->depthOrArraySize; 
+      ++arraySlice) {
+      for(uint mip = viewInfo->mostDetailedMip;
+          mip < viewInfo->mipCount + viewInfo->mostDetailedMip;
+          ++mip) {
+         Resource::eState oldState = tex.SubresourceState( arraySlice, mip );
+
+         if(oldState != newState) {
+            setTransitionBarrier( tex, newState, oldState, tex.SubresourceIndex( arraySlice, mip ),
+                                  Handle().Get() );
+            if(!setGlobal) {
+               tex.SetSubresourceState( arraySlice, mip, newState );
+               // if(flag != TRANSITION_BEGIN) { tex.setSubresourceState( arraySlice, mip, newState ); }
+               // tex.markSubresourceInTransition( arraySlice, mip, flag == TRANSITION_BEGIN );
+            }
+            mHasCommandPending = true;
+         }
+      }
+   }
+
+  if(setGlobal) tex.SetGlobalState(newState);
+}
+
+void CommandList::GlobalBarrier( const Resource& resource, Resource::eState state )
+{
+   if(ToD3d12ResourceState( resource.GlobalState() ) == ToD3d12ResourceState( state )) return;
+
+   mHasCommandPending = true;
+   D3D12_RESOURCE_BARRIER barrier;
+   barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+   barrier.Transition.StateBefore = ToD3d12ResourceState( resource.GlobalState() );
+   barrier.Transition.StateAfter  = ToD3d12ResourceState( state );
+   barrier.Transition.pResource   = resource.Handle().Get();
+   barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+   resource.SetGlobalState( state );
+   mHandle->ResourceBarrier( 1, &barrier );
+}
+
 void CommandList::BindResources( const ResourceBinding& bindings, bool forCompute )
 {
    IndicateDescriptorCount();
@@ -280,27 +456,60 @@ void CommandList::BindResources( const ResourceBinding& bindings, bool forComput
 
    ResourceBinding::Flattened flattened = bindings.GetFlattened();
 
-   Descriptors descriptors = mGpuViewDescriptorPool->Allocate( flattened.size(), false );
+   uint samplerCount = std::accumulate(flattened.begin(), flattened.end(), 0, [](uint a, ResourceBinding::BindingItem& item)
+   {
+      return a + ((item.type == eDescriptorType::Sampler) ? 1U : 0U);
+   });
 
+   Descriptors descriptors = mGpuViewDescriptorPool->Allocate( flattened.size() - samplerCount, false );
+   Descriptors samplerDescriptors = mGpuSamplerDescripPool->Allocate( samplerCount, false );
    const device_handle_t&      device     = Device::Get().NativeDevice();
-   for(uint i = 0; i < flattened.size(); i++) {
-      D3D12_CPU_DESCRIPTOR_HANDLE destHandle = descriptors.GetCpuHandle( i );
-      device->CopyDescriptorsSimple(
-                                    1, destHandle,
-                                    flattened[i].location,
-                                    ToD3d12HeapType( flattened[i].type ) );
+
+   for(uint i = 0, j = 0; size_t(i) + size_t(j) < flattened.size();) {
+      if(flattened[i].type == eDescriptorType::Sampler) {
+         D3D12_CPU_DESCRIPTOR_HANDLE destHandle = samplerDescriptors.GetCpuHandle( j );
+         device->CopyDescriptorsSimple(
+                                       1, destHandle,
+                                       flattened[j+i].location,
+                                       ToD3d12HeapType( flattened[j+i].type ) );
+         j++;
+      } else {
+         D3D12_CPU_DESCRIPTOR_HANDLE destHandle = descriptors.GetCpuHandle( i );
+         device->CopyDescriptorsSimple(
+                                       1, destHandle,
+                                       flattened[j+i].location,
+                                       ToD3d12HeapType( flattened[j+i].type ) );
+         i++;
+      }
    }
 
    uint tableIndex = 0;
    if(forCompute) {
+      uint descriptorOffset = 0, samplerDescriptorOffset = 0;
       for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
-         auto d = descriptors.GetGpuHandle( i );
+         D3D12_GPU_DESCRIPTOR_HANDLE d;
+         if(flattened[i].type != eDescriptorType::Sampler) {
+            d = descriptors.GetGpuHandle( descriptorOffset );
+            descriptorOffset += flattened[i].nextTableOffset;
+         } else {
+            d = samplerDescriptors.GetGpuHandle( descriptorOffset );
+            samplerDescriptorOffset += flattened[i].nextTableOffset;
+         }
          mHandle->SetComputeRootDescriptorTable( tableIndex, d );
          ++tableIndex;
       }
    } else {
+      uint descriptorOffset = 0, samplerDescriptorOffset = 0;
       for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
-         mHandle->SetGraphicsRootDescriptorTable( tableIndex, descriptors.GetGpuHandle( i ) );
+         D3D12_GPU_DESCRIPTOR_HANDLE d;
+         if(flattened[i].type != eDescriptorType::Sampler) {
+            d = descriptors.GetGpuHandle( descriptorOffset );
+            descriptorOffset += flattened[i].nextTableOffset;
+         } else {
+            d = samplerDescriptors.GetGpuHandle( descriptorOffset );
+            samplerDescriptorOffset += flattened[i].nextTableOffset;
+         }
+         mHandle->SetGraphicsRootDescriptorTable( tableIndex, d );
          ++tableIndex;
       }
    }

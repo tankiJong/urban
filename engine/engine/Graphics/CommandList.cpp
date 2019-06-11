@@ -65,4 +65,7 @@ void CommandList::CleanupDescriptorPools()
    mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->DeferredFreeDescriptorPool( mGpuViewDescriptorPool, mCommandListId );
    mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )
           ->DeferredFreeDescriptorPool( mGpuSamplerDescripPool, mCommandListId );
+
+   mGpuViewDescriptorPool = nullptr;
+   mGpuSamplerDescripPool = nullptr;
 }

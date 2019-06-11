@@ -288,6 +288,7 @@ bool Texture::Init()
    bool result = CreateD3d12Resource(mHandle, desc, mAllocationType, kDefaultHeapProps, D3D12_RESOURCE_STATE_COMMON, pClearVal);
    mHandle->SetName( L"Texture" );
 
+   mState.subresourceState.resize( mMipLevels * mDepthOrArraySize, mState.globalState );
    return result;
 }
 

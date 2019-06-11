@@ -26,7 +26,7 @@ float3 GetSampleVector(uint3 ThreadID)
 	   case 0: result = float3(  1.0,   uv.y, -uv.x ); break;
 	   case 1: result = float3( -1.0,   uv.y,  uv.x ); break;
 	   case 2: result = float3(  uv.x,  1.0,  -uv.y ); break;
-	   case 3: result = float3(  uv.x, -1.0,   uv.y );  break;
+	   case 3: result = float3(  uv.x, -1.0,   uv.y ); break;
 	   case 4: result = float3(  uv.x,  uv.y,  1.0  ); break;
 	   case 5: result = float3( -uv.x,  uv.y, -1.0  ); break;
 	}

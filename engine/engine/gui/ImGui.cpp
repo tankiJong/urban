@@ -89,7 +89,7 @@ void ig::BeginFrame()
 
 void ig::RenderFrame()
 {
-   CommandList list;
+   CommandList list(eQueueType::Direct);
    list.SetName( L"ImGui" );
    // SCOPED_GPU_EVENT(*ctx, "ImGui");
    ID3D12DescriptorHeap* heap[] = { imFontDescriptor->OwnerHeap()->Handle().Get() };

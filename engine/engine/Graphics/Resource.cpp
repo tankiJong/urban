@@ -36,7 +36,9 @@ Resource::Resource(
 
 Resource::~Resource()
 {
-   Device::Get().RelaseObject( mHandle );
+   if(!mIsAlias) {
+      Device::Get().RelaseObject( mHandle );
+   }
 }
 
 void  Resource::SetGlobalState(eState state) const
@@ -48,4 +50,19 @@ void  Resource::SetGlobalState(eState state) const
 
    mState.global = true;
    mState.globalState = state;
-};
+}
+
+Resource::eState Resource::SubresourceState( uint arraySlice, uint mip ) const
+{
+   return mState.global ? mState.globalState : mState.subresourceState[SubresourceIndex( arraySlice, mip )];
+}
+
+void Resource::SetSubresourceState( uint arraySlice, uint32_t mipLevel, eState newState ) const
+{
+   if(mState.global) {
+      std::fill( mState.subresourceState.begin(), mState.subresourceState.end(), mState.globalState );
+   }
+   mState.global                  = false;
+   uint index                     = SubresourceIndex( arraySlice, mipLevel );
+   mState.subresourceState[index] = newState;
+}

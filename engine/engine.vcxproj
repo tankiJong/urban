@@ -52,6 +52,7 @@
     <ClCompile Include="engine\graphics\d3d12\D3d12Program.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Resource.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12ResourceView.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12Sampler.cpp" />
     <ClCompile Include="engine\graphics\d3d12\d3d12Util.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3dResourceBinding.cpp" />
     <ClCompile Include="engine\graphics\Descriptor.cpp" />
@@ -67,6 +68,7 @@
     <ClCompile Include="engine\graphics\program\Shader.cpp" />
     <ClCompile Include="engine\graphics\Resource.cpp" />
     <ClCompile Include="engine\graphics\rgba.cpp" />
+    <ClCompile Include="engine\graphics\Sampler.cpp" />
     <ClCompile Include="engine\graphics\StructuredBuffer.cpp" />
     <ClCompile Include="engine\graphics\Texture.cpp" />
     <ClCompile Include="engine\graphics\utils.cpp" />
@@ -173,6 +175,7 @@
     <ClInclude Include="engine\graphics\program\Shader.hpp" />
     <ClInclude Include="engine\graphics\Resource.hpp" />
     <ClInclude Include="engine\graphics\rgba.hpp" />
+    <ClInclude Include="engine\graphics\Sampler.hpp" />
     <ClInclude Include="engine\graphics\StructuredBuffer.hpp" />
     <ClInclude Include="engine\graphics\Texture.hpp" />
     <ClInclude Include="engine\graphics\utils.hpp" />
@@ -196,7 +199,19 @@
     <ClInclude Include="external\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="engine\graphics\shaders\equirect2cube_cs.hlsl">
+    <FxCompile Include="engine\graphics\shaders\BlitArray_cs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="engine\graphics\shaders\Blit_cs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+    </FxCompile>
+    <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.1</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>

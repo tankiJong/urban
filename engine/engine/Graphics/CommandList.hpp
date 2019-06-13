@@ -35,7 +35,7 @@ public:
    // copy ------------------------------------------------------------//
    void TransitionBarrier(const Resource& resource, Resource::eState newState, const ViewInfo* viewInfo = nullptr);
    void UavBarrier(const Resource& resource);
-   void CopyResource(Resource& from, Resource& to);
+   void CopyResource(const Resource& from, Resource& to);
    void CopyBufferRegion(Buffer& from, size_t fromOffset, Buffer& to, size_t toOffset, size_t byteCount = 0);
 
    // compute ------------------------------------------------------------//

@@ -221,6 +221,12 @@ void CommandList::TransitionBarrier( const Resource& resource, Resource::eState 
    
 }
 
+void CommandList::CopyResource( const Resource& from, Resource& to )
+{
+   mHasCommandPending = true;
+   mHandle->CopyResource(to.Handle().Get(), from.Handle().Get());
+}
+
 void CommandList::CopyBufferRegion( Buffer& from, size_t fromOffset, Buffer& to, size_t toOffset, size_t byteCount )
 {
    mHasCommandPending = true;

@@ -2,15 +2,17 @@
 #include "engine/graphics/program/Program.hpp"
 #include "engine/graphics/PipelineState.hpp"
 #include "engine/graphics/CommandList.hpp"
-#include "EnvIrradiance_cs.h"
-#include <pass_vs.h>
-#include <pass_ps.h>
+
 #include "engine/graphics/ConstantBuffer.hpp"
 #include "engine/application/Window.hpp"
 #include "engine/graphics/rgba.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/graphics/CommandQueue.hpp"
 
+#include "EnvIrradiance_cs.h"
+#include <pass_vs.h>
+#include <pass_ps.h>
+#include "EnvSpecularSplitSum_cs.h"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -32,11 +34,10 @@ void Renderer::Init()
    mEnvIrradiance = TextureCube::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
                                          32, 32, eTextureFormat::RGBA16Float, false );
    mEnvSpecular   = TextureCube::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
-                                         1024, 1024, eTextureFormat::RGBA16Float, false );
+                                         1024, 1024, eTextureFormat::RGBA16Float, true );
 
    mSkyBox = Asset<TextureCube>::Get( "engine/resource/environment_0.hdr" );
    mAlbedo = Asset<Texture2>::Get( "engine/resource/CalibrationCard.jpg" );
-   
    PrefilterEnvironment();
 }
 
@@ -47,6 +48,7 @@ void Renderer::PreRender() const
 
 void Renderer::Render( const Mesh& mesh, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
 {
+
    static Program* prog = nullptr;
    static GraphicsState* gs = nullptr;
    static ResourceBinding* binding = nullptr;
@@ -59,6 +61,7 @@ void Renderer::Render( const Mesh& mesh, const S<ConstantBuffer>& camera, const 
       binding = new ResourceBinding(prog);
       binding->SetSrv(mAlbedo->Srv(), 0);
       binding->SetSrv( mEnvIrradiance->Srv(), 1 );
+      binding->SetSrv( mEnvSpecular->Srv(), 2 );
       binding->SetCbv(camera->Cbv(), 0);
       binding->SetCbv(light->Cbv(), 1);
    }
@@ -96,9 +99,15 @@ void Renderer::Render( const Mesh& mesh, const S<ConstantBuffer>& camera, const 
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
 }
 
-void Renderer::PrefilterEnvironment()
+void Renderer::PrefilterEnvironment() const
 {
    CommandList list(eQueueType::Compute);
+
+   list.CopyResource( *mSkyBox, *mEnvSpecular );
+   list.TransitionBarrier( *mSkyBox, Resource::eState::NonPixelShader );
+
+
+   // diffuse
    {
       Program prog;
       prog.GetStage( eShaderType::Compute ).SetBinary( gEnvIrradiance_cs, sizeof(gEnvIrradiance_cs) );
@@ -115,13 +124,52 @@ void Renderer::PrefilterEnvironment()
 
       list.SetComputePipelineState( pps );
       list.BindResources( bindings, true );
-      list.TransitionBarrier( *mSkyBox, Resource::eState::NonPixelShader );
       list.TransitionBarrier( *irradianceAlias, Resource::eState::UnorderedAccess );
 
       list.Dispatch( irradianceAlias->Width() / 32, irradianceAlias->Height() / 32, 6 );
-      list.TransitionBarrier( *mSkyBox, Resource::eState::Common );
       list.TransitionBarrier( *irradianceAlias, Resource::eState::Common );
    }
+
+   // specular
+   {
+      Program prog;
+      prog.GetStage( eShaderType::Compute ).SetBinary( gEnvSpecularSplitSum_cs, sizeof(gEnvSpecularSplitSum_cs) );
+      prog.Finalize();
+
+      ComputeState pps;
+      pps.SetProgram( &prog );
+
+      list.SetComputePipelineState( pps );
+
+      S<Texture2> specularAlias( new Texture2(*mEnvSpecular));
+
+      list.TransitionBarrier( *specularAlias, Resource::eState::UnorderedAccess );
+
+      float deltaRoughness = 1.f / std::max(float(specularAlias->MipCount() - 1.f), 1.f);
+
+      ASSERT_DIE( mSkyBox->Width() == mSkyBox->Height() );
+
+      for(uint level = 1, size = mSkyBox->Width() / 2; level < specularAlias->MipCount(); ++level, size /= 2 ) {
+         uint numGroup = std::max<uint>(1, size / 32);
+
+         float roughness = float(level) * deltaRoughness;
+         S<ConstantBuffer> config = ConstantBuffer::CreateFor<float>( roughness );
+         config->UploadGpu( &list );
+
+         ResourceBinding bindings(&prog);
+         bindings.SetSrv( mSkyBox->Srv(), 0 );
+         bindings.SetUav( specularAlias->Uav(level), 0 );
+         bindings.SetCbv( config->Cbv(), 0 );
+
+         list.BindResources( bindings, true );
+
+         list.Dispatch( numGroup, numGroup, 6 );
+      }
+
+      list.TransitionBarrier( *specularAlias, Resource::eState::Common );
+   }
+
+   list.TransitionBarrier( *mSkyBox, Resource::eState::Common );
 
    Device::Get().GetMainQueue( eQueueType::Compute )->IssueCommandList( list );
 }

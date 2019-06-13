@@ -1,6 +1,6 @@
 #define RootSig \
    "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 2, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 3, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
    "StaticSampler(s0, maxAnisotropy = 8, visibility = SHADER_VISIBILITY_PIXEL)," 
 
 struct VSInput {

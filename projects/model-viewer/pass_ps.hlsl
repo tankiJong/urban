@@ -1,6 +1,6 @@
 #define RootSig \
    "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 2, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 3, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
    "StaticSampler(s0, maxAnisotropy = 8, visibility = SHADER_VISIBILITY_PIXEL)," 
 
 struct VSInput {
@@ -37,6 +37,7 @@ cbuffer cLight: register(b1) {
 
 Texture2D<float4> gTex: register(t0);
 TextureCube gEnvIrradiance : register(t1);
+TextureCube gEnvSpecular : register(t2);
 
 SamplerState gSampler : register(s0);
 
@@ -116,7 +117,7 @@ float4 main(PSInput input) : SV_TARGET
    // return float4(pow(albedo, 1.f/gamma), 1.f);
    // albedo *= float3(1.f, .03f, 0.f);
    float metalic = .0f;
-   float roughness = .0f;
+   float roughness = .1f;
    //albedo = pow(albedo, gamma);
    float3 l = normalize(light.position.xyz - input.world);
    float3 v = normalize(mul(invView, float4(0.f.xxx, 1)).xyz - input.world);
@@ -147,6 +148,12 @@ float4 main(PSInput input) : SV_TARGET
 	// Scale color by ratio of average luminances.
 	float3 mappedColor = (mappedLuminance / luminance) * color;
 	
+   uint specularLevels, _;
+   gEnvSpecular.GetDimensions(0, _, _, specularLevels);
+
+   color = gEnvSpecular.SampleLevel(gSampler, reflect(-v, input.norm), roughness * specularLevels).xyz;
+   return float4(pow(color, 1.f / gamma), 1.0);
+
    // Gamma correction.
    // In my case, the render target share the exact format as the texture, so I have to do gamma correction here
    // Optionally, it's possible to create a rtv with desired sRGB format so that the API will do it for you

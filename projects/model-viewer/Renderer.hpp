@@ -15,7 +15,7 @@ public:
 protected:
 
    void GenerateLUT();
-   void PrefilterEnvironment();
+   void PrefilterEnvironment() const;
    void RenderSkyBox() const;
 
    S<Texture2>    mSplitSumLUT   = nullptr;

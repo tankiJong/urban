@@ -16,7 +16,7 @@ protected:
 
    void GenerateLUT();
    void PrefilterEnvironment() const;
-   void RenderSkyBox() const;
+   void RenderSkyBox(const S<ConstantBuffer>& camera) const;
 
    S<Texture2>    mSplitSumLUT   = nullptr;
    S<const TextureCube> mSkyBox        = nullptr;

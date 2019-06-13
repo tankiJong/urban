@@ -193,6 +193,8 @@ Blob Compil1eShader(fs::path path)
 struct light_t {
    float4 position;
    float4 intensity;
+   float4 albedo;
+   float4 mat;
 };
 
 
@@ -230,13 +232,7 @@ void GameApplication::OnUpdate()
    PrimBuilder pb;
 
    pb.Begin( eTopology::Triangle, true );
-   pb.Quad({-12.5f, 0, -12.5f}, float2{25.f}, float3::X, float3::Z);
-   // pb.Sphere(transform.Position(), 1.f, 30, 30);
-   pb.End();
-   mFloor = pb.CreateMesh(eAllocationType::Temporary, false);
-
-   pb.Begin( eTopology::Triangle, true );
-   pb.Sphere(float3{0, 3, 0}, 1.f, 100, 100);
+   pb.Sphere(float3{0, 0, 0}, 1.f, 100, 100);
    pb.End();
    mSphere = pb.CreateMesh(eAllocationType::Temporary, false);
 
@@ -246,12 +242,26 @@ void GameApplication::OnUpdate()
    mCameraBuffer->SetData( &data, sizeof(camera_t));
 
    static Transform transform;
-   ig::Gizmos( mCamera, transform, ig::OP::TRANSLATE );
 
-   light_t light = {
+   static light_t light = {
       float4{transform.Position(), 1.f},
       float4{float3::One * 3.f, 1.f},
+      float4{0, 0, 0, 0},
    };
+
+   ig::Gizmos( mCamera, transform, ig::OP::TRANSLATE );
+
+   light.position = float4 { transform.Position(), 1.f };
+
+   ig::Begin( "Properties" );
+   {
+      ig::ColorEdit3( "light color", (float*)&light.intensity );
+      ig::DragFloat( "light intensity", (float*)&light.intensity.w, 1, 1, 100);
+      ig::ColorEdit3( "mat - color", (float*)&light.albedo );
+      ig::DragFloat( "mat - Roughness", (float*)&light.mat.x, .01, 0, 1 );
+      ig::DragFloat( "mat - Metallic", (float*)&light.mat.y, .01, 0, 1 );
+   }
+   ig::End();
 
    mLightBuffer->SetData( &light, sizeof(light_t) );
 }

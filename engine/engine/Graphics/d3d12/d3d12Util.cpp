@@ -28,6 +28,7 @@ static const DxgiMapEntry kDxgiFormatMap[] = {
    { eTextureFormat::RGBA8Uint,          DXGI_FORMAT_R8G8B8A8_UINT      , DXGI_FORMAT_R8G8B8A8_UINT           },
    { eTextureFormat::RG8Unorm,           DXGI_FORMAT_R8G8_UNORM         , DXGI_FORMAT_R8G8_UNORM              },
    { eTextureFormat::R8Unorm,            DXGI_FORMAT_R8_UNORM           , DXGI_FORMAT_R8_UNORM                },
+   { eTextureFormat::RG16Float,          DXGI_FORMAT_R16G16_FLOAT ,       DXGI_FORMAT_R16G16_FLOAT            },
    { eTextureFormat::RGBA16Float,        DXGI_FORMAT_R16G16B16A16_FLOAT , DXGI_FORMAT_R16G16B16A16_FLOAT      },
    { eTextureFormat::RGBA32Float,        DXGI_FORMAT_R32G32B32A32_FLOAT , DXGI_FORMAT_R32G32B32A32_FLOAT      },
    { eTextureFormat::D24Unorm_S8Uint,    DXGI_FORMAT_D24_UNORM_S8_UINT  , DXGI_FORMAT_D24_UNORM_S8_UINT       },

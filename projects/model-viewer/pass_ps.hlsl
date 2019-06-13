@@ -1,6 +1,7 @@
 #define RootSig \
    "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 3, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+	"DescriptorTable(CBV(b0, numDescriptors = 2), SRV(t0, numDescriptors = 4, flags = DATA_VOLATILE), visibility = SHADER_VISIBILITY_ALL)," \
+   "DescriptorTable(Sampler(s1, numDescriptors = 1), visibility = SHADER_VISIBILITY_ALL)," \
    "StaticSampler(s0, maxAnisotropy = 8, visibility = SHADER_VISIBILITY_PIXEL)," 
 
 struct VSInput {
@@ -26,9 +27,12 @@ cbuffer cCamera: register(b0) {
    float4x4 invProj;
 };
 
-struct light_t {
+struct light_t
+{
    float4 position;
    float4 intensity;
+   float4 albedo;
+   float4 mat;
 };
 
 cbuffer cLight: register(b1) {
@@ -38,8 +42,10 @@ cbuffer cLight: register(b1) {
 Texture2D<float4> gTex: register(t0);
 TextureCube gEnvIrradiance : register(t1);
 TextureCube gEnvSpecular : register(t2);
+Texture2D<float2> gEnvSpecularLUT : register(t3);
 
 SamplerState gSampler : register(s0);
+SamplerState gSamplerClamp : register(s1);
 
 #define M_PI 3.1415926535f
 
@@ -112,12 +118,12 @@ float4 main(PSInput input) : SV_TARGET
    // https://docs.microsoft.com/en-us/windows/desktop/direct3ddxgi/converting-data-color-space
    // be aware that in d3d12 in case the SRV format is SRGB format, the driver will load in the pixel in linear space and do the gamma 2.2 correction 
    // float3 albedo = gTex.Sample(gSampler, input.uv).xyz;
-   float3 albedo = float3(1.f, .03f, 0.f);
+   float3 albedo = light.albedo;
 
    // return float4(pow(albedo, 1.f/gamma), 1.f);
    // albedo *= float3(1.f, .03f, 0.f);
-   float metalic = .0f;
-   float roughness = .1f;
+   float roughness = light.mat.x;
+   float metalic = light.mat.y;
    //albedo = pow(albedo, gamma);
    float3 l = normalize(light.position.xyz - input.world);
    float3 v = normalize(mul(invView, float4(0.f.xxx, 1)).xyz - input.world);
@@ -131,14 +137,24 @@ float4 main(PSInput input) : SV_TARGET
 
    float3 specular = SpecularBRDF(F0, l, v, input.norm, roughness);
 
-   float3 color = (specular + diffuse) * light.intensity.xyz * 10 * saturate(dot(input.norm, l)) 
+   float3 color = (specular + diffuse) * light.intensity.xyz * light.intensity.w * saturate(dot(input.norm, l))
                  * LightFalloff(light.position.xyz, input.world, 30.f);
 
    float3 sky = gEnvIrradiance.SampleLevel(gSampler, input.norm, 0).xyz;
 
    float3 kd1 = lerp(float3(1, 1, 1) - F(F0, v, input.norm), float3(0, 0, 0), metalic);
 
-   color += sky * albedo * kd1;
+   uint specularLevels, _;
+   gEnvSpecular.GetDimensions(0, _, _, specularLevels);
+
+   float3 prefilteredSpecular = gEnvSpecular.SampleLevel(gSampler, reflect(-v, input.norm), roughness * specularLevels).xyz;
+   float2 envBRDF = gEnvSpecularLUT.Sample(gSamplerClamp, float2(saturate(dot(input.norm, v)), roughness));
+
+   float3 specularIBL = prefilteredSpecular * (F0 * envBRDF.x + envBRDF.y);
+
+   float3 ibl = sky * albedo * kd1 + specularIBL;
+   color += ibl;
+
    // color = (specular );
 	// Reinhard tonemapping operator.
 	// see: "Photographic Tone Reproduction for Digital Images", eq. 4
@@ -148,11 +164,8 @@ float4 main(PSInput input) : SV_TARGET
 	// Scale color by ratio of average luminances.
 	float3 mappedColor = (mappedLuminance / luminance) * color;
 	
-   uint specularLevels, _;
-   gEnvSpecular.GetDimensions(0, _, _, specularLevels);
 
-   color = gEnvSpecular.SampleLevel(gSampler, reflect(-v, input.norm), roughness * specularLevels).xyz;
-   return float4(pow(color, 1.f / gamma), 1.0);
+   // return float4(pow(ibl, 1.f / gamma), 1.0);
 
    // Gamma correction.
    // In my case, the render target share the exact format as the texture, so I have to do gamma correction here

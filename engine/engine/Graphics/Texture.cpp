@@ -265,11 +265,11 @@ uint Texture::MaxMipCount( Resource::eType type, uint width, uint height, uint d
    return len + 1u;
 }
 
-bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary )
+bool Asset<Texture2>::Load( S<Texture2>& res, const void* binary, size_t size )
 {
    int w,h;
    int channelCount;
-   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary.Data(), binary.Size(), &w, &h, &channelCount, 4);
+   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary, size, &w, &h, &channelCount, 4);
    
    res.reset( new Texture2( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
                             1, eTextureFormat::RGBA8UnormS, true, eAllocationType::Persistent ) );
@@ -278,6 +278,7 @@ bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary )
    CommandList list(eQueueType::Compute);
    res->UpdateData( imageData, w * h * 4, 0, &list );
    res->GenerateMipmaps( &list );
+   list.TransitionBarrier( *res, Resource::eState::Common );
    list.Flush();
 
    stbi_image_free( imageData );
@@ -294,15 +295,15 @@ uint64_t next_pow2(uint32_t x) {
 	return x == 1 ? 1 : 1<<(64-__builtin_clz(x-1));
 }
 
-bool Asset<TextureCube>::Load( S<TextureCube>& res, const Blob& binary )
+bool Asset<TextureCube>::Load( S<TextureCube>& res, const void* binary, size_t size )
 {
    CommandList list( eQueueType::Compute );
 
    int         w, h;
    int         channelCount;
    S<Texture2> tex;
-   if(stbi_is_hdr_from_memory( (const stbi_uc*)binary.Data(), binary.Size() )) {
-      float* imageData = stbi_loadf_from_memory( (const stbi_uc*)binary.Data(), binary.Size(), &w, &h, &channelCount,
+   if(stbi_is_hdr_from_memory( (const stbi_uc*)binary, size )) {
+      float* imageData = stbi_loadf_from_memory( (const stbi_uc*)binary, size, &w, &h, &channelCount,
                                                  4 );
 
       tex = Texture2::Create( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
@@ -311,7 +312,7 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const Blob& binary )
       tex->UpdateData( imageData, sizeof( float ) * w * h * 4, 0, &list );
       stbi_image_free( imageData );
    } else {
-      unsigned char* imageData = stbi_load_from_memory( (const stbi_uc*)binary.Data(), binary.Size(), &w, &h,
+      unsigned char* imageData = stbi_load_from_memory( (const stbi_uc*)binary, size, &w, &h,
                                                         &channelCount, 4 );
       tex = Texture2::Create( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
                               1, eTextureFormat::RGBA32Float, true, eAllocationType::Temporary );

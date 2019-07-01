@@ -108,7 +108,7 @@ void CommandList::Reset()
    if(mHandle == nullptr) {
       assert_win( mDevice->NativeDevice()->CreateCommandList( 0,
                     ToD3d12CommandListType( mRequireCommandQueueType ),
-                    mCurrentUsedCommandBuffer->Handle().Get(), nullptr,
+                    mCurrentUsedCommandBuffer->AcquireNext().Get(), nullptr,
                     IID_PPV_ARGS( &mHandle ) ) );
    } else {
       Close();
@@ -143,9 +143,6 @@ void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
 
    const Shader& shader = pps.GetProgram()->GetStage( eShaderType::Vertex );
 
-   ID3DBlob* rootBlob;
-   assert_win( D3DGetBlobPart(shader.GetDataPtr(), shader.GetSize(), D3D_BLOB_ROOT_SIGNATURE, 0, &rootBlob) );
-   
    // # Topology, Rootsignature
    mHandle->SetGraphicsRootSignature( pps.GetProgram()->Handle().Get() );
    mHandle->IASetPrimitiveTopology( ToD3d12Topology( pps.GetTopology() ) );

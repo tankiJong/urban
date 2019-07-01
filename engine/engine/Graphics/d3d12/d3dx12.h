@@ -2842,7 +2842,7 @@ private:
     std::vector<D3D12_STATE_SUBOBJECT> m_SubobjectArray; // Built at the end, copying list contents
 
     std::list<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> 
-            m_RepointedAssociations; // subobject type that contains pointers to other subobjects, 
+            m_RepointedAssociations; // subobject mType that contains pointers to other subobjects, 
                                      // repointed to flattened array
 
     class StringContainer

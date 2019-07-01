@@ -98,6 +98,7 @@ public:
    virtual const DepthStencilView* Dsv( uint mip = 0, uint firstArraySlice = 0 ) const override;
 
    static uint MaxMipCount(Resource::eType type, uint width, uint height, uint depthOrArraySize);
+   virtual void GenerateMipmaps(CommandList* list = nullptr) = 0;
 protected:
 
    Texture(
@@ -121,9 +122,8 @@ protected:
       eTextureFormat           format,
       eAllocationType          allocationType );
 
-   void InvalidateViews();
 
-   virtual void GenerateMipmaps(CommandList* list = nullptr) = 0;
+   void InvalidateViews();
 
    uint mWidth            = 0;
    uint mHeight           = 0;
@@ -139,7 +139,7 @@ protected:
 };
 
 class Texture2: public Texture, public inherit_shared_from_this<Texture, Texture2> {
-   friend bool Asset<Texture2>::Load( S<Texture2>& res, const Blob& binary );
+   friend bool Asset<Texture2>::Load( S<Texture2>& res, const void* binary, size_t size );
 public:
    using inherit_shared_from_this<Texture, Texture2>::shared_from_this;
 
@@ -199,6 +199,7 @@ public:
       return *this;
    }
 
+   virtual void GenerateMipmaps(CommandList* list = nullptr) override;
 protected:
    Texture2(
       eBindingFlag    bindingFlags,
@@ -209,13 +210,12 @@ protected:
       bool            hasMipmaps = false,
       eAllocationType allocationType = eAllocationType::General );
 
-   virtual void GenerateMipmaps(CommandList* list = nullptr) override;
 };
 
-bool Asset<Texture2>::Load( S<Texture2>& tex, const Blob& binary );
+bool Asset<Texture2>::Load( S<Texture2>& tex, const void* binary, size_t size );
 
 class TextureCube final: public Texture, public inherit_shared_from_this<Texture, TextureCube> {
-   friend bool Asset<TextureCube>::Load( S<TextureCube>& tex, const Blob& binary );
+   friend bool Asset<TextureCube>::Load( S<TextureCube>& tex, const void* binary, size_t size );
 public:
    using inherit_shared_from_this<Texture, TextureCube>::shared_from_this;
 
@@ -240,6 +240,7 @@ public:
       bool            hasMipmaps     = false,
       eAllocationType allocationType = eAllocationType::General );
 
+   virtual void GenerateMipmaps(CommandList* list = nullptr) override;
 protected:
 
    TextureCube(
@@ -251,8 +252,7 @@ protected:
       eAllocationType allocationType = eAllocationType::General )
       : Texture( eType::TextureCube, bindingFlags, width, height, 1, format, hasMipmaps, allocationType ) {}
 
-   virtual void GenerateMipmaps(CommandList* list = nullptr) override;
 
 };
 
-bool Asset<TextureCube>::Load( S<TextureCube>& tex, const Blob& binary );
+bool Asset<TextureCube>::Load( S<TextureCube>& tex, const void* binary, size_t size );

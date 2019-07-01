@@ -19,6 +19,7 @@ public:
    static bool LoadAndRegister(fs::path path, bool blocking);
    static bool Register(const S<T>& res, fs::path filePath = "");
    static bool Load(S<T>& res, const Blob& binary);
+   static bool Load(S<T>& res, const void* binary, size_t size);
 protected:
    Asset() = delete;
    static std::map<std::string, AssetInfo<T>, std::less<>> sDatabase;
@@ -27,7 +28,7 @@ protected:
 template<typename T>
 std::map<std::string, AssetInfo<T>, std::less<>> Asset<T>::sDatabase = {};
 
-template< typename T > S<const T> Asset<T>::Get( std::string_view name )
+template< typename T > inline S<const T> Asset<T>::Get( std::string_view name )
 {
    auto kv = sDatabase.find( name );
 
@@ -40,7 +41,7 @@ template< typename T > S<const T> Asset<T>::Get( std::string_view name )
    return kv->second.asset;
 }
 
-template< typename T > bool Asset<T>::LoadAndRegister( fs::path path, bool blocking )
+template< typename T > inline bool Asset<T>::LoadAndRegister( fs::path path, bool blocking )
 {
    Blob b = fs::Read( path );
    S<T> res;
@@ -48,7 +49,7 @@ template< typename T > bool Asset<T>::LoadAndRegister( fs::path path, bool block
    return re1 && Register( res, path );
 }
 
-template< typename T > bool Asset<T>::Register( const S<T>& res, fs::path filePath )
+template< typename T > inline bool Asset<T>::Register( const S<T>& res, fs::path filePath )
 {
    AssetInfo<T> asset;
    asset.asset = res;
@@ -66,4 +67,9 @@ template< typename T > bool Asset<T>::Register( const S<T>& res, fs::path filePa
    sDatabase[filePath.generic_string()] = asset;
 
    return true;
+}
+
+template< typename T > inline bool Asset<T>::Load( S<T>& res, const Blob& binary )
+{
+   return Asset::Load( res, binary.Data(), binary.Size() );
 }

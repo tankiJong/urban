@@ -9,4 +9,5 @@ namespace fs
    using namespace std::filesystem;
 
    Blob Read(const path& filePath);
+   Blob ReadText(const path& filePath);
 }

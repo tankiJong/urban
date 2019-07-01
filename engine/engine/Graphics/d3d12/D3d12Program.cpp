@@ -4,6 +4,10 @@
 #include "engine/graphics/Device.hpp"
 #include "engine/core/string.hpp"
 
+#include <d3dcompiler.h>
+
+
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -43,11 +47,11 @@ void initParamAndRange(D3D12_ROOT_PARAMETER& param, std::vector<D3D12_DESCRIPTOR
 
    for(size_t i = 0; i < rangeCount; i++ ) {
       const auto& r = table[i];
-      range[i].RegisterSpace = r.registerSpace;
-      range[i].BaseShaderRegister = r.baseRegisterIndex;
-      range[i].NumDescriptors = (uint)r.attribs.size();
+      range[i].RegisterSpace = r.RegisterSpace();
+      range[i].BaseShaderRegister = r.BaseRegisterIndex();
+      range[i].NumDescriptors = (uint)r.Attribs().size();
       range[i].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-      range[i].RangeType = ToD3d12RangeType(r.type);
+      range[i].RangeType = ToD3d12RangeType(r.Type());
    }
 }
 
@@ -124,56 +128,60 @@ bool TryMergeLayouts(BindingLayout* inOutLayout, const BindingLayout** layouts, 
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
-
-void Shader::SetupBindingLayout()
-{
-   ID3DBlobPtr rootBlob;
-   assert_win( D3DGetBlobPart( mBinary.Data(),
-                 mBinary.Size(),
-                 D3D_BLOB_ROOT_SIGNATURE, 0, &rootBlob ) );
-
-   MAKE_SMART_COM_PTR( ID3D12RootSignatureDeserializer );
-   ID3D12RootSignatureDeserializerPtr deserializer;
-
-   assert_win( D3D12CreateRootSignatureDeserializer( rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(),
-                 IID_PPV_ARGS( &deserializer ) ) );
-
-   const D3D12_ROOT_SIGNATURE_DESC* rdesc = deserializer->GetRootSignatureDesc();
-
-   auto& layout = mBindingLayout.Data();
-   layout.resize( rdesc->NumParameters );
-
-   size_t total = 0;
-
-   for(uint i = 0; i < rdesc->NumParameters; ++i) {
-      EXPECTS( rdesc->pParameters[i].ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE );
-      const D3D12_ROOT_DESCRIPTOR_TABLE& descriptorTables = rdesc->pParameters[i].DescriptorTable;
-
-      auto& table = layout[i];
-      table.resize( descriptorTables.NumDescriptorRanges );
-
-      for(uint j = 0; j < descriptorTables.NumDescriptorRanges; ++j) {
-         auto& trange            = descriptorTables.pDescriptorRanges[j];
-         auto& range             = table[j];
-         range.baseRegisterIndex = trange.BaseShaderRegister;
-         range.registerSpace     = trange.RegisterSpace;
-         range.type              = ToRangeType( trange.RangeType );
-
-         range.attribs.resize( trange.NumDescriptors );
-         for(uint k = 0; k < trange.NumDescriptors; ++k) {
-            auto& attrib = range.attribs[k];
-            attrib.name  = Stringf( "attr-%u", total );
-            attrib.count = 1;
-         }
-      }
-   }
-}
+//
+// void Shader::SetupBindingLayout()
+// {
+//    ID3DBlobPtr rootBlob;
+//    assert_win( D3DGetBlobPart( mBinary.Data(),
+//                  mBinary.Size(),
+//                  D3D_BLOB_ROOT_SIGNATURE, 0, &rootBlob ) );
+//
+//    MAKE_SMART_COM_PTR( ID3D12RootSignatureDeserializer );
+//    ID3D12RootSignatureDeserializerPtr deserializer;
+//
+//    assert_win( D3D12CreateRootSignatureDeserializer( rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(),
+//                  IID_PPV_ARGS( &deserializer ) ) );
+//
+//    const D3D12_ROOT_SIGNATURE_DESC* rdesc = deserializer->GetRootSignatureDesc();
+//
+//    auto& layout = mBindingLayout.Data();
+//    layout.resize( rdesc->NumParameters );
+//
+//    size_t total = 0;
+//
+//    for(uint i = 0; i < rdesc->NumParameters; ++i) {
+//       EXPECTS( rdesc->pParameters[i].ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE );
+//       const D3D12_ROOT_DESCRIPTOR_TABLE& descriptorTables = rdesc->pParameters[i].DescriptorTable;
+//
+//       auto& table = layout[i];
+//       table.resize( descriptorTables.NumDescriptorRanges );
+//
+//       for(uint j = 0; j < descriptorTables.NumDescriptorRanges; ++j) {
+//          auto& trange            = descriptorTables.pDescriptorRanges[j];
+//          auto& range             = table[j];
+//          range.mBaseRegisterIndex = trange.BaseShaderRegister;
+//          range.mRegisterSpace     = trange.RegisterSpace;
+//          range.mType              = ToRangeType( trange.RangeType );
+//
+//          range.mAttribs.resize( trange.NumDescriptors );
+//          for(uint k = 0; k < trange.NumDescriptors; ++k) {
+//             auto& attrib = range.mAttribs[k];
+//             attrib.name  = Stringf( "attr-%u", total );
+//             attrib.count = 1;
+//          }
+//       }
+//    }
+// }
 
 void Program::Finalize()
 {
    if(mIsReady) return;
 
    bool re = false;
+
+   // try to merge shader reflection
+   UNIMPLEMENTED();
+
    // resolve mLayout
    if(GetStage( eShaderType::Compute ).Valid()) {
       const BindingLayout* layouts[] = {

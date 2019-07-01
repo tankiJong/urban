@@ -83,12 +83,12 @@ ResourceBinding::BindingItem& ResourceBinding::FindBindingItem( eDescriptorType 
       if(item.type == type && item.registerIndex == registerIndex && item.registerSpace == registerSpace) {
          auto& range = mProgram->GetBindingLayout().Data()[item.rootIndex][item.rangeIndex];
 
-         // same type
-         ASSERT_DIE( range.type == type );
+         // same mType
+         ASSERT_DIE( range.Type() == type );
          // same space
-         ASSERT_DIE( range.registerSpace == registerSpace );
+         ASSERT_DIE( range.RegisterSpace() == registerSpace );
          // In range
-         ASSERT_DIE( range.baseRegisterIndex <= registerIndex && range.attribs.size() + range.baseRegisterIndex >= registerIndex );
+         ASSERT_DIE( range.BaseRegisterIndex() <= registerIndex && range.Attribs().size() + range.BaseRegisterIndex() >= registerIndex );
 
          return item;
       }
@@ -109,7 +109,7 @@ void ResourceBinding::RegenerateFlattened() const
                    {
                       std::vector<size_t> rangeSize;
                       std::transform( t.begin(), t.end(), std::back_inserter( rangeSize ),
-                                      []( const BindingLayout::range& r ) { return r.attribs.size(); } );
+                                      []( const BindingLayout::range& r ) { return r.Attribs().size(); } );
 
                       return rangeSize;
                    } );
@@ -127,7 +127,7 @@ void ResourceBinding::RegenerateFlattened() const
          const BindingLayout::range& range = layout[i][j];
 
          descriptor_cpu_handle_t handle;
-         switch(range.type) {
+         switch(range.Type()) {
          case eDescriptorType::Srv: 
             handle = ShaderResourceView::NullView()->Handle()->GetCpuHandle( 0 );
             break;
@@ -151,9 +151,9 @@ void ResourceBinding::RegenerateFlattened() const
              --rangeOffset, ++registerIndexOffset) {
             mFlattenedBindings.push_back( {
                handle,
-               range.type,
-               range.baseRegisterIndex + (uint)registerIndexOffset,
-               range.registerSpace,
+               range.Type(),
+               range.BaseRegisterIndex() + (uint)registerIndexOffset,
+               range.RegisterSpace(),
                (uint)i,
                (uint)j,
                (uint)offset,

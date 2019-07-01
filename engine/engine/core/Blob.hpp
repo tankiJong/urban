@@ -17,7 +17,8 @@ public:
     , mDataSize( 0 )
     , mBufferSize( 0 ) {}
 
-   Blob( Blob& b ) = delete;
+   Blob( const Blob& b ): Blob(b.mBuffer, b.mBufferSize) {}
+
    Blob( Blob&& source ) noexcept;
 
    ~Blob();
@@ -31,6 +32,7 @@ public:
    operator bool() const { return Valid(); }
 
    Blob& operator=( Blob&& other ) noexcept;
+   Blob& operator=(const Blob& other);
 
    template< typename T >
    T* As();

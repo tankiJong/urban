@@ -39,3 +39,24 @@ Blob fs::Read( const path& filePath )
       return b;
    } else { return Blob(); }
 }
+
+Blob fs::ReadText( const path& filePath )
+{
+   ASSERT_DIE( is_regular_file(filePath) );
+
+   std::ifstream file( filePath.c_str(), std::ios::ate );
+
+   std::streamsize size = file.tellg();
+
+   if(size == -1) { return Blob(); }
+   file.seekg( 0, std::ios::beg );
+
+   char* buffer = new char[(uint)size + 1];
+
+   if(file.read( buffer, size )) {
+      buffer[size] = 0;
+      Blob b( buffer, (uint)size );
+      delete[] buffer;
+      return b;
+   } else { return Blob(); }
+}

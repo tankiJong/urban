@@ -34,11 +34,7 @@ Blob::Blob( Blob&& source ) noexcept
 
 Blob Blob::Clone() const
 {
-   void* block = malloc( mDataSize );
-
-   memcpy( block, mBuffer, mDataSize );
-
-   return Blob( block, mDataSize );
+   return Blob( mBuffer, mDataSize );
 }
 
 void Blob::Set( const void* data, size_t size, size_t offset )
@@ -68,5 +64,11 @@ Blob& Blob::operator=( Blob&& other ) noexcept
    other.mBuffer     = malloc( 0 );
    other.mDataSize   = 0;
    other.mBufferSize = 0;
+   return *this;
+}
+
+Blob& Blob::operator=( const Blob& other )
+{
+   Set( other.Data(), other.Size(), 0 );
    return *this;
 }

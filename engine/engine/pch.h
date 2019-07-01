@@ -9,11 +9,13 @@
 
 #include <string_view>
 #include <vector>
+#include <map>
 #include "engine/core/traits.hpp"
 #include "engine/core/util.hpp"
 #include "engine/math/util.hpp"
 #include "engine/math/primitives.hpp"
 #include "engine/debug/assert.hpp"
+#include "engine/core/span.hpp"
 #include "engine/core/Asset.hpp"
 
 // add headers that you want to pre-compile here

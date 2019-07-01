@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="external\build.props" />
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -59,13 +52,20 @@
     <ClCompile Include="engine\graphics\Device.cpp" />
     <ClCompile Include="engine\graphics\Fence.cpp" />
     <ClCompile Include="engine\graphics\model\Mesh.cpp" />
+    <ClCompile Include="engine\graphics\model\Model.cpp" />
+    <ClCompile Include="engine\graphics\model\ModelImporter.cpp" />
     <ClCompile Include="engine\graphics\model\PrimBuilder.cpp" />
     <ClCompile Include="engine\graphics\model\vertex.cpp" />
     <ClCompile Include="engine\graphics\PipelineState.cpp" />
     <ClCompile Include="engine\graphics\program\BindingLayout.cpp" />
+    <ClCompile Include="engine\graphics\program\Material.cpp" />
+    <ClCompile Include="engine\graphics\program\MaterialGraph.cpp" />
     <ClCompile Include="engine\graphics\program\Program.cpp" />
     <ClCompile Include="engine\graphics\program\ResourceBinding.cpp" />
     <ClCompile Include="engine\graphics\program\Shader.cpp" />
+    <ClCompile Include="engine\graphics\program\ShaderCompiler.cpp" />
+    <ClCompile Include="engine\graphics\program\ShaderReflection.cpp" />
+    <ClCompile Include="engine\graphics\program\ShaderSource.cpp" />
     <ClCompile Include="engine\graphics\Resource.cpp" />
     <ClCompile Include="engine\graphics\rgba.cpp" />
     <ClCompile Include="engine\graphics\Sampler.cpp" />
@@ -78,57 +78,39 @@
     <ClCompile Include="engine\math\primitives.cpp" />
     <ClCompile Include="engine\math\util.cpp" />
     <ClCompile Include="engine\pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\application\Window.cpp" />
     <ClCompile Include="external\imgui\examples\imgui_impl_dx12.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\imgui\examples\imgui_impl_win32.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\imgui\imgui.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\imgui\ImGuizmo.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\imgui\imgui_demo.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\imgui\imgui_draw.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\imgui\imgui_widgets.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="external\stb\stb_image.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -145,6 +127,7 @@
     <ClInclude Include="engine\core\Blob.hpp" />
     <ClInclude Include="engine\core\closure.hpp" />
     <ClInclude Include="engine\core\Image.hpp" />
+    <ClInclude Include="engine\core\span.hpp" />
     <ClInclude Include="engine\core\string.hpp" />
     <ClInclude Include="engine\core\Time.hpp" />
     <ClInclude Include="engine\core\traits.hpp" />
@@ -166,13 +149,20 @@
     <ClInclude Include="engine\graphics\d3d12\d3d12Util.hpp" />
     <ClInclude Include="engine\graphics\Fence.hpp" />
     <ClInclude Include="engine\graphics\model\Mesh.hpp" />
+    <ClInclude Include="engine\graphics\model\Model.hpp" />
+    <ClInclude Include="engine\graphics\model\ModelImporter.hpp" />
     <ClInclude Include="engine\graphics\model\PrimBuilder.hpp" />
     <ClInclude Include="engine\graphics\model\vertex.hpp" />
     <ClInclude Include="engine\graphics\PipelineState.hpp" />
     <ClInclude Include="engine\graphics\program\BindingLayout.hpp" />
+    <ClInclude Include="engine\graphics\program\Material.hpp" />
+    <ClInclude Include="engine\graphics\program\MaterialGraph.hpp" />
     <ClInclude Include="engine\graphics\program\Program.hpp" />
     <ClInclude Include="engine\graphics\program\ResourceBinding.hpp" />
     <ClInclude Include="engine\graphics\program\Shader.hpp" />
+    <ClInclude Include="engine\graphics\program\ShaderCompiler.hpp" />
+    <ClInclude Include="engine\graphics\program\ShaderReflection.hpp" />
+    <ClInclude Include="engine\graphics\program\ShaderSource.hpp" />
     <ClInclude Include="engine\graphics\Resource.hpp" />
     <ClInclude Include="engine\graphics\rgba.hpp" />
     <ClInclude Include="engine\graphics\Sampler.hpp" />
@@ -187,6 +177,81 @@
     <ClInclude Include="engine\pch.h" />
     <ClInclude Include="engine\application\Window.hpp" />
     <ClInclude Include="engine\platform\win.hpp" />
+    <ClInclude Include="external\assimp\ai_assert.h" />
+    <ClInclude Include="external\assimp\anim.h" />
+    <ClInclude Include="external\assimp\BaseImporter.h" />
+    <ClInclude Include="external\assimp\Bitmap.h" />
+    <ClInclude Include="external\assimp\BlobIOSystem.h" />
+    <ClInclude Include="external\assimp\ByteSwapper.h" />
+    <ClInclude Include="external\assimp\camera.h" />
+    <ClInclude Include="external\assimp\cexport.h" />
+    <ClInclude Include="external\assimp\cfileio.h" />
+    <ClInclude Include="external\assimp\cimport.h" />
+    <ClInclude Include="external\assimp\color4.h" />
+    <ClInclude Include="external\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="external\assimp\Compiler\pstdint.h" />
+    <ClInclude Include="external\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="external\assimp\config.h" />
+    <ClInclude Include="external\assimp\CreateAnimMesh.h" />
+    <ClInclude Include="external\assimp\DefaultIOStream.h" />
+    <ClInclude Include="external\assimp\DefaultIOSystem.h" />
+    <ClInclude Include="external\assimp\DefaultLogger.hpp" />
+    <ClInclude Include="external\assimp\Defines.h" />
+    <ClInclude Include="external\assimp\defs.h" />
+    <ClInclude Include="external\assimp\Exceptional.h" />
+    <ClInclude Include="external\assimp\Exporter.hpp" />
+    <ClInclude Include="external\assimp\fast_atof.h" />
+    <ClInclude Include="external\assimp\GenericProperty.h" />
+    <ClInclude Include="external\assimp\Hash.h" />
+    <ClInclude Include="external\assimp\Importer.hpp" />
+    <ClInclude Include="external\assimp\importerdesc.h" />
+    <ClInclude Include="external\assimp\IOStream.hpp" />
+    <ClInclude Include="external\assimp\IOStreamBuffer.h" />
+    <ClInclude Include="external\assimp\IOSystem.hpp" />
+    <ClInclude Include="external\assimp\irrXMLWrapper.h" />
+    <ClInclude Include="external\assimp\light.h" />
+    <ClInclude Include="external\assimp\LineSplitter.h" />
+    <ClInclude Include="external\assimp\LogAux.h" />
+    <ClInclude Include="external\assimp\Logger.hpp" />
+    <ClInclude Include="external\assimp\LogStream.hpp" />
+    <ClInclude Include="external\assimp\Macros.h" />
+    <ClInclude Include="external\assimp\material.h" />
+    <ClInclude Include="external\assimp\MathFunctions.h" />
+    <ClInclude Include="external\assimp\matrix3x3.h" />
+    <ClInclude Include="external\assimp\matrix4x4.h" />
+    <ClInclude Include="external\assimp\MemoryIOWrapper.h" />
+    <ClInclude Include="external\assimp\mesh.h" />
+    <ClInclude Include="external\assimp\metadata.h" />
+    <ClInclude Include="external\assimp\NullLogger.hpp" />
+    <ClInclude Include="external\assimp\ParsingUtils.h" />
+    <ClInclude Include="external\assimp\pbrmaterial.h" />
+    <ClInclude Include="external\assimp\port\AndroidJNI\AndroidJNIIOSystem.h" />
+    <ClInclude Include="external\assimp\postprocess.h" />
+    <ClInclude Include="external\assimp\Profiler.h" />
+    <ClInclude Include="external\assimp\ProgressHandler.hpp" />
+    <ClInclude Include="external\assimp\qnan.h" />
+    <ClInclude Include="external\assimp\quaternion.h" />
+    <ClInclude Include="external\assimp\RemoveComments.h" />
+    <ClInclude Include="external\assimp\scene.h" />
+    <ClInclude Include="external\assimp\SceneCombiner.h" />
+    <ClInclude Include="external\assimp\SGSpatialSort.h" />
+    <ClInclude Include="external\assimp\SkeletonMeshBuilder.h" />
+    <ClInclude Include="external\assimp\SmoothingGroups.h" />
+    <ClInclude Include="external\assimp\SpatialSort.h" />
+    <ClInclude Include="external\assimp\StandardShapes.h" />
+    <ClInclude Include="external\assimp\StreamReader.h" />
+    <ClInclude Include="external\assimp\StreamWriter.h" />
+    <ClInclude Include="external\assimp\StringComparison.h" />
+    <ClInclude Include="external\assimp\StringUtils.h" />
+    <ClInclude Include="external\assimp\Subdivision.h" />
+    <ClInclude Include="external\assimp\texture.h" />
+    <ClInclude Include="external\assimp\TinyFormatter.h" />
+    <ClInclude Include="external\assimp\types.h" />
+    <ClInclude Include="external\assimp\vector2.h" />
+    <ClInclude Include="external\assimp\vector3.h" />
+    <ClInclude Include="external\assimp\version.h" />
+    <ClInclude Include="external\assimp\Vertex.h" />
+    <ClInclude Include="external\assimp\XMLTools.h" />
     <ClInclude Include="external\imgui\examples\imgui_impl_dx12.h" />
     <ClInclude Include="external\imgui\examples\imgui_impl_win32.h" />
     <ClInclude Include="external\imgui\imconfig.h" />
@@ -197,30 +262,86 @@
     <ClInclude Include="external\imgui\imstb_textedit.h" />
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\stb\stb_image.h" />
+    <ClInclude Include="external\yaml-cpp\anchor.h" />
+    <ClInclude Include="external\yaml-cpp\binary.h" />
+    <ClInclude Include="external\yaml-cpp\contrib\anchordict.h" />
+    <ClInclude Include="external\yaml-cpp\contrib\graphbuilder.h" />
+    <ClInclude Include="external\yaml-cpp\dll.h" />
+    <ClInclude Include="external\yaml-cpp\emitfromevents.h" />
+    <ClInclude Include="external\yaml-cpp\emitter.h" />
+    <ClInclude Include="external\yaml-cpp\emitterdef.h" />
+    <ClInclude Include="external\yaml-cpp\emittermanip.h" />
+    <ClInclude Include="external\yaml-cpp\emitterstyle.h" />
+    <ClInclude Include="external\yaml-cpp\eventhandler.h" />
+    <ClInclude Include="external\yaml-cpp\exceptions.h" />
+    <ClInclude Include="external\yaml-cpp\mark.h" />
+    <ClInclude Include="external\yaml-cpp\node\convert.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\bool_type.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\impl.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\iterator.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\iterator_fwd.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\memory.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\node.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\node_data.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\node_iterator.h" />
+    <ClInclude Include="external\yaml-cpp\node\detail\node_ref.h" />
+    <ClInclude Include="external\yaml-cpp\node\emit.h" />
+    <ClInclude Include="external\yaml-cpp\node\impl.h" />
+    <ClInclude Include="external\yaml-cpp\node\iterator.h" />
+    <ClInclude Include="external\yaml-cpp\node\node.h" />
+    <ClInclude Include="external\yaml-cpp\node\parse.h" />
+    <ClInclude Include="external\yaml-cpp\node\ptr.h" />
+    <ClInclude Include="external\yaml-cpp\node\type.h" />
+    <ClInclude Include="external\yaml-cpp\noncopyable.h" />
+    <ClInclude Include="external\yaml-cpp\null.h" />
+    <ClInclude Include="external\yaml-cpp\ostream_wrapper.h" />
+    <ClInclude Include="external\yaml-cpp\parser.h" />
+    <ClInclude Include="external\yaml-cpp\stlemitter.h" />
+    <ClInclude Include="external\yaml-cpp\traits.h" />
+    <ClInclude Include="external\yaml-cpp\yaml.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="engine\graphics\shaders\BlitArray_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="engine\graphics\shaders\Blit_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
     </FxCompile>
     <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.1</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">6.1</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.1</ShaderModel>
     </FxCompile>
+    <FxCompile Include="engine\graphics\shaders\Shading_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="engine\graphics\shaders\Shading_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="engine\graphics\shaders\brdf.hlsli" />
+    <None Include="engine\graphics\shaders\Common.hlsli" />
+    <None Include="engine\graphics\shaders\IBL.hlsli" />
+    <None Include="engine\graphics\shaders\MaterialTemplate.hlsli" />
+    <None Include="engine\graphics\shaders\Random.hlsli" />
+    <None Include="engine\graphics\shaders\ShadingModels.hlsli" />
+    <None Include="external\assimp\color4.inl" />
+    <None Include="external\assimp\material.inl" />
+    <None Include="external\assimp\matrix3x3.inl" />
+    <None Include="external\assimp\matrix4x4.inl" />
+    <None Include="external\assimp\quaternion.inl" />
+    <None Include="external\assimp\SmoothingGroups.inl" />
+    <None Include="external\assimp\vector2.inl" />
+    <None Include="external\assimp\vector3.inl" />
+    <None Include="external\build.props" />
+    <None Include="external\v8\build\native\v8-v142-x64.props" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -230,19 +351,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -261,12 +369,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -274,59 +376,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
-    <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
-    <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(ProjectDir)external\**;$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(ProjectDir)external;$(VC_IncludePath);$(ProjectDir)external\**;$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
-      <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
-      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-    <FxCompile>
-      <ShaderModel>6.1</ShaderModel>
-      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
-      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
-      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
-      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
-      <VariableName>g%(Filename)</VariableName>
-    </FxCompile>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -336,48 +397,16 @@
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;$(ProjectDir)external\dxc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-    <FxCompile>
-      <ShaderModel>6.1</ShaderModel>
-      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
-      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
-      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
-      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
-      <VariableName>g%(Filename)</VariableName>
-    </FxCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
-      <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
-      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <FxCompile>
@@ -400,12 +429,13 @@
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>engine/pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir);$(ProjectDir)external;$(ProjectDir)external\dxc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

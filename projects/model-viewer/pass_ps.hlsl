@@ -60,7 +60,7 @@ float3 DiffuseBRDF(float3 color/*, float3 l, float3 v*/)
 float D(float3 n, float3 h, float roughness) 
 {
    // roughness = (roughness + 1.f) * .5f;
-   float alpha = roughness * roughness + 0.001f;
+   float alpha = roughness * roughness;
    
    float nh = dot(n, h);
    float k = nh * nh * (alpha * alpha - 1) + 1;
@@ -90,7 +90,6 @@ float3 F(float3 F0, float3 v, float3 h) {
 
 float3 SpecularBRDF(float3 F0, float3 l, float3 v, float3 n, float roughness) 
 {
-   roughness = max(0.001f, roughness);
    float3 h = normalize(l + v);
    return D(n, h, roughness);
    return ( D(n, h, roughness) * G(l, v, n, roughness) * F(F0, v, h)  ) /
@@ -122,7 +121,9 @@ float4 main(PSInput input) : SV_TARGET
 
    // return float4(pow(albedo, 1.f/gamma), 1.f);
    // albedo *= float3(1.f, .03f, 0.f);
-   float roughness = light.mat.x;
+   float roughness = max(light.mat.x, 0.089f);
+   float roughness2 = roughness * roughness;
+   // roughness = roughness * roughness;
    float metalic = light.mat.y;
    //albedo = pow(albedo, gamma);
    float3 l = normalize(light.position.xyz - input.world);
@@ -147,8 +148,8 @@ float4 main(PSInput input) : SV_TARGET
    uint specularLevels, _;
    gEnvSpecular.GetDimensions(0, _, _, specularLevels);
 
-   float3 prefilteredSpecular = gEnvSpecular.SampleLevel(gSampler, reflect(-v, input.norm), roughness * specularLevels).xyz;
-   float2 envBRDF = gEnvSpecularLUT.Sample(gSamplerClamp, float2(saturate(dot(input.norm, v)), roughness));
+   float3 prefilteredSpecular = gEnvSpecular.SampleLevel(gSampler, reflect(-v, input.norm), roughness2 * specularLevels).xyz;
+   float2 envBRDF = gEnvSpecularLUT.Sample(gSamplerClamp, float2(saturate(dot(input.norm, v)), roughness2));
 
    float3 specularIBL = prefilteredSpecular * (F0 * envBRDF.x + envBRDF.y);
 

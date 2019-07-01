@@ -3,6 +3,7 @@
 #include "engine/graphics/utils.hpp"
 #include "engine/core/Blob.hpp"
 #include "BindingLayout.hpp"
+#include "ShaderReflection.hpp"
 
 class Shader {
 public:
@@ -27,4 +28,5 @@ protected:
    eShaderType   mType = eShaderType::Unknown;
    Blob          mBinary;
    BindingLayout mBindingLayout;
+   ShaderReflection mReflection;
 };

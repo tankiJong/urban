@@ -26,6 +26,8 @@
 #include "../MvCamera.hpp"
 #include "engine/gui/ImGui.hpp"
 #include "../Renderer.hpp"
+#include "engine/graphics/model/ModelImporter.hpp"
+#include "engine/graphics/model/Model.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -112,84 +114,6 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
-// #include <windows.h>
-// #include <dxcapi.h>
-//
-// #pragma comment(lib, "dxcompiler.lib")
-bool CompileShader(fs::path path, Blob& blob)
-{
-   path = "projects/model-viewer" / path;
-   Blob src = fs::Read( path );
-   ID3DBlobPtr result, err;
-   HRESULT re = D3DCompile( src.Data(), src.Size(), path.generic_string().c_str(), nullptr, nullptr, "main", "ps_5_1", 0, 0, &result, &err);
-   if(SUCCEEDED( re )) {
-      blob = Blob{result->GetBufferPointer(), result->GetBufferSize()};
-      return true;
-   } else {
-      wprintf( L"%*s", (int)err->GetBufferSize() / 2, (LPCWSTR)err->GetBufferPointer() );
-      return false;
-   }
-   // IDxcLibrary*      pLibrary;
-   // IDxcBlobEncoding* pSource;
-   // DxcCreateInstance( CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void **)&pLibrary );
-   // pLibrary->CreateBlobFromFile( path.wstring().c_str(), CP_NONE, &pSource );
-   //
-   // LPCWSTR       ppArgs[] = { L"/Zi", L"/nologo" }; // debug info
-   // IDxcCompiler* pCompiler;
-   // DxcCreateInstance( CLSID_DxcCompiler, __uuidof(IDxcCompiler), (void **)&pCompiler );
-   //
-   // IDxcOperationResult* pResult;
-   //
-   // pCompiler->Compile(
-   //                    pSource,          // program text
-   //                    path.wstring().c_str(),   // file name, mostly for error messages
-   //                    L"main",          // entry point function
-   //                    L"ps_6_1",        // target profile
-   //                    ppArgs,           // compilation arguments
-   //                    _countof( ppArgs ), // number of compilation arguments
-   //                    nullptr, 0,       // name/value defines and their count
-   //                    nullptr,          // handler for #include directives
-   //                    &pResult );
-   //
-   // HRESULT hrCompilation;
-   // pResult->GetStatus( &hrCompilation );
-   //
-   // if(SUCCEEDED( hrCompilation )) {
-   //    IDxcBlob* blob;
-   //    pResult->GetResult( &blob );
-   //
-   //       
-   //    IDxcContainerReflection* pReflection;
-   //    DxcCreateInstance( CLSID_DxcContainerReflection, __uuidof(IDxcContainerReflection), (void **)&pReflection );
-   //    pReflection->Load( blob );
-   //    pReflection->FindFirstPartKind( hlsl:: )
-   //    
-   //    // Save to a file, disassemble and print, store somewhere ...
-   //    pResult->Release();
-   //
-   //    return Blob(blob->GetBufferPointer(), blob->GetBufferSize());
-   // } else {
-   //    IDxcBlobEncoding *pPrintBlob, *pPrintBlob16;
-   //    pResult->GetErrorBuffer( &pPrintBlob );
-   //    // We can use the library to get our preferred encoding.
-   //    pLibrary->GetBlobAsUtf16( pPrintBlob, &pPrintBlob16 );
-   //    wprintf( L"%*s", (int)pPrintBlob16->GetBufferSize() / 2, (LPCWSTR)pPrintBlob16->GetBufferPointer() );
-   //    pPrintBlob->Release();
-   //    pPrintBlob16->Release();
-   //
-   //    return Blob();
-   // }
-}
-
-Blob Compil1eShader(fs::path path)
-{
-   path = "temp/model-viewer_x64_Debug/target/CompiledShader/bin" / path;
-   path.replace_extension("cso");
-
-   return fs::Read( path );
-}
-
-
 struct light_t {
    float4 position;
    float4 intensity;
@@ -224,6 +148,9 @@ void GameApplication::OnInit()
 
    mRenderer.Init();
 
+   ModelImporter importer;
+
+   Model model = importer.Import( "DamagedHelmet.gltf" );
 }
 
 void GameApplication::OnUpdate()

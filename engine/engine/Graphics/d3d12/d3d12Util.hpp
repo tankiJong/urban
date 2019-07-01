@@ -8,15 +8,13 @@
 #include <d3d12.h>
 #include <dxgi1_5.h>
 #include <dxgiformat.h>
-#include <d3dcompiler.h>
-
 #pragma warning(pop)
 
 #include "engine/debug/assert.hpp"
 
-#pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 
 #undef max
 #undef min

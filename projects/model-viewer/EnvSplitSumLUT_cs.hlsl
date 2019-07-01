@@ -36,7 +36,7 @@ float2 SampleHammersley(uint i)
 // PBRT 13.3 has very detailed explanation about the inversion method
 float3 ImportanceSampleGGX(float u1, float u2, float roughness)
 {
-   float alpha = roughness * roughness;
+   float alpha = roughness;
 
    float cosTheta = sqrt((1.0 - u2) / (1.0 + (alpha * alpha - 1.0) * u2));
    float sinTheta = sqrt(1.0 - cosTheta * cosTheta); // Trig. identity

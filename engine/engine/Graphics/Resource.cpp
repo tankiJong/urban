@@ -50,6 +50,10 @@ void  Resource::SetGlobalState(eState state) const
 
    mState.global = true;
    mState.globalState = state;
+
+   for(auto& s: mState.subresourceState) {
+      s = state;
+   }
 }
 
 Resource::eState Resource::SubresourceState( uint arraySlice, uint mip ) const

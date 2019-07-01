@@ -123,4 +123,3 @@ Device& Device::Init(Window& window)
 
    return *gDevice;
 }
-

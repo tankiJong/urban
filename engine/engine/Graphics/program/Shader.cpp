@@ -1,5 +1,6 @@
 ﻿#include "engine/pch.h"
 #include "Shader.hpp"
+#include "engine/graphics/program/ShaderCompiler.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -20,5 +21,7 @@
 void Shader::SetBinary( const void* data, size_t size )
 {
    mBinary.Set( data, size );
-   SetupBindingLayout();
+   mReflection = ubsc::Reflect(data, size);
+   mBindingLayout = mReflection.CreateBindingLayout();
+   // SetupBindingLayout();
 }

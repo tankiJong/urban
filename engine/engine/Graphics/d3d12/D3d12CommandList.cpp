@@ -171,20 +171,9 @@ void CommandList::SetGraphicsPipelineState( GraphicsState& pps )
    mHandle->RSSetViewports( 1, &vp );
    mHandle->RSSetScissorRects( 1, &sr );
 
-   const FrameBuffer& fb = pps.GetFrameBuffer();
-
-   D3D12_CPU_DESCRIPTOR_HANDLE rtvs[kMaxRenderTargetSupport];
-   for(uint i = 0; i < kMaxRenderTargetSupport; i++) {
-      const RenderTargetView* rtv = fb.GetRenderTarget( i );
-      ASSERT_DIE( rtv != nullptr )
-      rtvs[i] = rtv->Handle()->GetCpuHandle( 0 );
-   }
-
-   D3D12_CPU_DESCRIPTOR_HANDLE dsv = fb.GetDepthStencilTarget()->Handle()->GetCpuHandle( 0 );
-   mHandle->OMSetRenderTargets( kMaxRenderTargetSupport, rtvs, 
-                                false, &dsv );
-   
-   // # blend factor
+   // UNIMPLEMENTED(); // set frame buffer;
+   // const FrameBuffer::Desc& fb = pps.GetFrameBuffer();
+   //
 }
 
 void CommandList::TransitionBarrier( const Resource& resource, Resource::eState newState, const ViewInfo* viewInfo )
@@ -289,16 +278,17 @@ void CommandList::Blit(
    S<ConstantBuffer> constants = ConstantBuffer::CreateFor<cBlit>( { dstUniOffset, srcScale, IsSRGBFormat( dstRes->Format() ) ? 1.f : 0.f },
                                                                    eAllocationType::Temporary );
 
-   ResourceBinding bindings( prog );
+   ResourceBinding bindings( prog->GetBindingLayout() );
    bindings.SetSrv( &src, 0 );
    bindings.SetUav( &dst, 0 );
    bindings.SetCbv( constants->Cbv(), 0 );
-   bindings.SetSampler( Sampler::Bilinear(), 1 );
+   bindings.SetSampler( Sampler::Bilinear(), 0, 1 );
 
    // setting up and dispatch
    constants->UploadGpu( this );
    SetComputePipelineState( *pps );
-   BindResources( bindings, true );
+
+   bindings.BindFor( *this, 0, true );
 
    TransitionBarrier( *srcRes, Resource::eState::NonPixelShader, &srcViewInfo );
    TransitionBarrier( *dstRes, Resource::eState::UnorderedAccess, &dstViewInfo );
@@ -342,6 +332,21 @@ void CommandList::DrawMesh( const Mesh& mesh )
       mHandle->IASetIndexBuffer( nullptr );
       Draw( mesh.GetDrawInstr().startIndex, mesh.GetDrawInstr().elementCount );
    }
+}
+
+void CommandList::SetFrameBuffer( const FrameBuffer& fb )
+{
+   D3D12_CPU_DESCRIPTOR_HANDLE rtvs[kMaxRenderTargetSupport];
+   for(uint i = 0; i < kMaxRenderTargetSupport; i++) {
+      const RenderTargetView* rtv = fb.GetRenderTarget( i );
+      ASSERT_DIE( rtv != nullptr )
+      rtvs[i] = rtv->Handle()->GetCpuHandle( 0 );
+   }
+   
+   D3D12_CPU_DESCRIPTOR_HANDLE dsv = fb.GetDepthStencilTarget()->Handle()->GetCpuHandle( 0 );
+   mHandle->OMSetRenderTargets( kMaxRenderTargetSupport, rtvs, 
+                                false, &dsv );
+   
 }
 
 void CommandList::ClearRenderTarget( Texture2& tex, const rgba& color )
@@ -448,72 +453,53 @@ void CommandList::GlobalBarrier( const Resource& resource, Resource::eState stat
    mHandle->ResourceBarrier( 1, &barrier );
 }
 
-void CommandList::BindResources( const ResourceBinding& bindings, bool forCompute )
+
+void CommandList::SetupDescriptorPools( size_t viewCount, size_t samplerCount )
 {
-   IndicateDescriptorCount();
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->AcquireDescriptorPool( mGpuViewDescriptorPool, viewCount );
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )
+          ->AcquireDescriptorPool( mGpuSamplerDescripPool, samplerCount );
+
    ID3D12DescriptorHeap* heaps[] = {
       mGpuViewDescriptorPool->HeapHandle().Get(),
       mGpuSamplerDescripPool->HeapHandle().Get(),
    };
    mHandle->SetDescriptorHeaps( 2, heaps );
-
-   ResourceBinding::Flattened flattened = bindings.GetFlattened();
-
-   uint samplerCount = std::accumulate(flattened.begin(), flattened.end(), 0, [](uint a, ResourceBinding::BindingItem& item)
-   {
-      return a + ((item.type == eDescriptorType::Sampler) ? 1U : 0U);
-   });
-
-   Descriptors descriptors = mGpuViewDescriptorPool->Allocate( flattened.size() - samplerCount, false );
-   Descriptors samplerDescriptors = mGpuSamplerDescripPool->Allocate( samplerCount, false );
-   const device_handle_t&      device     = Device::Get().NativeDevice();
-
-   for(uint i = 0, j = 0; size_t(i) + size_t(j) < flattened.size();) {
-      if(flattened[i].type == eDescriptorType::Sampler) {
-         D3D12_CPU_DESCRIPTOR_HANDLE destHandle = samplerDescriptors.GetCpuHandle( j );
-         device->CopyDescriptorsSimple(
-                                       1, destHandle,
-                                       flattened[j+i].location,
-                                       ToD3d12HeapType( flattened[j+i].type ) );
-         j++;
-      } else {
-         D3D12_CPU_DESCRIPTOR_HANDLE destHandle = descriptors.GetCpuHandle( i );
-         device->CopyDescriptorsSimple(
-                                       1, destHandle,
-                                       flattened[j+i].location,
-                                       ToD3d12HeapType( flattened[j+i].type ) );
-         i++;
-      }
-   }
-
-   uint tableIndex = 0;
-   if(forCompute) {
-      uint descriptorOffset = 0, samplerDescriptorOffset = 0;
-      for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
-         D3D12_GPU_DESCRIPTOR_HANDLE d;
-         if(flattened[i].type != eDescriptorType::Sampler) {
-            d = descriptors.GetGpuHandle( descriptorOffset );
-            descriptorOffset += flattened[i].nextTableOffset;
-         } else {
-            d = samplerDescriptors.GetGpuHandle( descriptorOffset );
-            samplerDescriptorOffset += flattened[i].nextTableOffset;
-         }
-         mHandle->SetComputeRootDescriptorTable( tableIndex, d );
-         ++tableIndex;
-      }
-   } else {
-      uint descriptorOffset = 0, samplerDescriptorOffset = 0;
-      for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
-         D3D12_GPU_DESCRIPTOR_HANDLE d;
-         if(flattened[i].type != eDescriptorType::Sampler) {
-            d = descriptors.GetGpuHandle( descriptorOffset );
-            descriptorOffset += flattened[i].nextTableOffset;
-         } else {
-            d = samplerDescriptors.GetGpuHandle( descriptorOffset );
-            samplerDescriptorOffset += flattened[i].nextTableOffset;
-         }
-         mHandle->SetGraphicsRootDescriptorTable( tableIndex, d );
-         ++tableIndex;
-      }
-   }
 }
+//
+// void CommandList::BindResources( const ResourceBinding& bindings, bool forCompute )
+// {
+//    IndicateDescriptorCount();
+//
+//
+//    uint tableIndex = 0;
+//    if(forCompute) {
+//       uint descriptorOffset = 0, samplerDescriptorOffset = 0;
+//       for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
+//          D3D12_GPU_DESCRIPTOR_HANDLE d;
+//          if(flattened[i].type != eDescriptorType::Sampler) {
+//             d = descriptors.GetGpuHandle( descriptorOffset );
+//             descriptorOffset += flattened[i].nextTableOffset;
+//          } else {
+//             d = samplerDescriptors.GetGpuHandle( descriptorOffset );
+//             samplerDescriptorOffset += flattened[i].nextTableOffset;
+//          }
+//          mHandle->SetComputeRootDescriptorTable( tableIndex, d );
+//          ++tableIndex;
+//       }
+//    } else {
+//       uint descriptorOffset = 0, samplerDescriptorOffset = 0;
+//       for(uint i = 0; i < flattened.size(); i += flattened[i].nextTableOffset) {
+//          D3D12_GPU_DESCRIPTOR_HANDLE d;
+//          if(flattened[i].type != eDescriptorType::Sampler) {
+//             d = descriptors.GetGpuHandle( descriptorOffset );
+//             descriptorOffset += flattened[i].nextTableOffset;
+//          } else {
+//             d = samplerDescriptors.GetGpuHandle( descriptorOffset );
+//             samplerDescriptorOffset += flattened[i].nextTableOffset;
+//          }
+//          mHandle->SetGraphicsRootDescriptorTable( tableIndex, d );
+//          ++tableIndex;
+//       }
+//    }
+// }

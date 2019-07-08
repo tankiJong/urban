@@ -3,6 +3,10 @@
 
 class BindingLayout {
 public:
+   struct Option {
+      bool includeReservedLayout = true;
+      bool includeProgramLayout = true;
+   };
 
    struct attrib {
       std::string name;
@@ -14,7 +18,15 @@ public:
       range( eDescriptorType type, uint baseRegisterIndex, uint registerSpace )
       : mType( type )
       , mBaseRegisterIndex( baseRegisterIndex )
-      , mRegisterSpace( registerSpace ) {}
+      , mRegisterSpace( registerSpace )
+      , mTotal( 0 ) {}
+
+      range( eDescriptorType type, uint baseRegisterIndex, uint registerSpace, std::vector<attrib> attribs )
+      : mType( type )
+      , mBaseRegisterIndex( baseRegisterIndex )
+      , mRegisterSpace( registerSpace )
+      , mTotal( attribs.size() )
+      , mAttribs( std::move( attribs ) ) {}
 
       eDescriptorType Type() const { return mType; }
       uint BaseRegisterIndex() const { return mBaseRegisterIndex; }
@@ -22,30 +34,54 @@ public:
       uint Total() const { return mTotal; }
 
       uint EndRegisterIndex() const { return mBaseRegisterIndex + mTotal - 1; }
+
+      // return current total count
       uint Prepend(std::string name, uint count);
+
+      // return current total count
       uint Append(std::string name, uint count);
 
       const attrib& At(uint registerIndex) const;
 
-      span<const attrib> Attribs() const;
+      span<const attrib> Attribs() const { return mAttribs; };
+
    protected:
       eDescriptorType     mType;
-      uint                mBaseRegisterIndex = 0;
-      uint                mRegisterSpace = 0;
-      uint                mTotal = 0;
-      std::vector<attrib> mAttribs = {};
+      uint                mBaseRegisterIndex;
+      uint                mRegisterSpace;
+      uint                mTotal;
+      std::vector<attrib> mAttribs;
    };
 
-   using table_t = std::vector<range>;
+   struct table_t: public std::vector<range> {
+      table_t() = default;
+      table_t(std::vector<range> ranges, bool isStatic)
+         : std::vector<range>(std::move(ranges))
+         , isStatic( isStatic ) {}
+      bool isStatic = false;
+      uint ElementCount() const;
+   };
 
-   BindingLayout(): BindingLayout( std::vector<table_t>{} ) {}
-   BindingLayout( const std::vector<table_t>& ranges );
+   BindingLayout(): BindingLayout( std::vector<table_t>{}, Option{} ) {}
+   BindingLayout( span<const table_t> ranges, const Option& op );
+   BindingLayout( const std::vector<table_t>& ranges, const Option& op )
+      : BindingLayout( span<const table_t>(ranges), op ) {}
 
-   const std::vector<table_t>& Data() const { return mLayout; }
-   std::vector<table_t>&       Data() { return mLayout; }
+   span<const table_t> Data() const { return mLayout; }
+   span<table_t>       Data()       { return mLayout; }
    ~BindingLayout();
+
+   BindingLayout( const BindingLayout& other ) = default;
+   BindingLayout( BindingLayout&& other ) noexcept = default;
+   BindingLayout& operator=( const BindingLayout& other ) = default;
+   BindingLayout& operator=( BindingLayout&& other ) noexcept = default;
+
+   BindingLayout GetPartLayout(const Option& op) const;
+
+   void MarkTableStatic(uint index) { mLayout[index].isStatic = true; }
 protected:
    std::vector<table_t> mLayout;
+   Option mOptions;
 };
 
 

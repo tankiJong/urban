@@ -23,6 +23,8 @@ public:
       eTextureFormat depthStencilTarget;
    };
 
+   FrameBuffer();
+
    void DefineRederTarget( uint index, eTextureFormat format );
    void DefineDepthStencilTarget( eTextureFormat format );
 
@@ -31,11 +33,10 @@ public:
 
    const RenderTargetView* GetRenderTarget(uint index) const { return mRenderTargets[index]; }
    const DepthStencilView* GetDepthStencilTarget() const { return mDepthStencilTarget; }
+
    const Desc& Describe() const { return mDesc; }
 
 protected:
-   FrameBuffer();
-
    Desc mDesc;
 
    const RenderTargetView* mRenderTargets[kMaxRenderTargetSupport];
@@ -95,13 +96,13 @@ public:
    const RenderState& GetRenderState() const { return mRenderState; }
    void        SetRenderState( const RenderState& renderState ) { mRenderState = renderState; mIsDirty = true; }
 
-   FrameBuffer& GetFrameBuffer() { return mFrameBuffer; mIsDirty = true; }
-   const FrameBuffer& GetFrameBuffer() const { return mFrameBuffer; }
+   FrameBuffer::Desc& GetFrameBufferDesc() { mIsDirty = true; return mFrameBufferDesc; }
+   const FrameBuffer::Desc& GetFrameBufferDesc() const { return mFrameBufferDesc; }
 
    virtual bool Finalize() override;
 protected:
-   const InputLayout* mInputLayout = nullptr;
-   eTopology          mTopology    = eTopology::Unknown;
-   RenderState        mRenderState = {};
-   FrameBuffer        mFrameBuffer = {};
+   const InputLayout* mInputLayout     = nullptr;
+   eTopology          mTopology        = eTopology::Unknown;
+   RenderState        mRenderState     = {};
+   FrameBuffer::Desc  mFrameBufferDesc = {};
 };

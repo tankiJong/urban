@@ -22,15 +22,23 @@
 #define R2D          (360.f / M_PI)
 
 template<class T> 
-const T& min(const T& a, const T& b)
+constexpr const T& min(const T& a, const T& b)
 {
     return (b < a) ? b : a;
 }
 
 template<class T> 
-const T& max(const T& a, const T& b)
+constexpr const T& max(const T& a, const T& b)
 {
     return (b < a) ? a : b;
+}
+
+template<class T>
+const T& clamp(const T& v, self_t<const T&> vmin, self_t<const T&> vmax)
+{
+   return v < vmin 
+        ? vmin 
+        : (v > vmax ? vmax : v);
 }
 
 inline float3 Spherical(float r, float thetaDeg, float phiDeg) {

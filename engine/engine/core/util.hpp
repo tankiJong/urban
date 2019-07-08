@@ -41,3 +41,19 @@ public:
     inline bool is_all_set(e_ val, e_ flag) { return (val & flag) == flag;}   
 
 #define UNUSED(X) (void*)&X;
+
+#define ___APPEND_IMPL(a, b) a##b
+#define APPEND(a, b) ___APPEND_IMPL(a, b)
+
+namespace detail
+{
+   struct __Static_Block {
+      template<typename T>
+      __Static_Block(T&& fn)
+      {
+         fn();
+      }
+   };
+}
+
+#define STATIC_BLOCK static detail::__Static_Block APPEND(__STATIC__, __LINE__) = [&]() -> void

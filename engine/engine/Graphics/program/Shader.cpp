@@ -22,6 +22,6 @@ void Shader::SetBinary( const void* data, size_t size )
 {
    mBinary.Set( data, size );
    mReflection = ubsc::Reflect(data, size);
-   mBindingLayout = mReflection.CreateBindingLayout();
+   mBindingLayout = mReflection.CreateBindingLayout(true, true);
    // SetupBindingLayout();
 }

@@ -33,7 +33,6 @@ float3 GetSampleVector(uint3 ThreadID)
    return normalize(result);
 }
 
-[RootSignature(RootSig)]
 [numthreads(32, 32, 1)]
 void main(uint3 ThreadID : SV_DispatchThreadID)
 {

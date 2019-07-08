@@ -18,7 +18,7 @@ const int STRINGF_STACK_LOCAL_TEMP_LENGTH = 2048;
 
 
 //-----------------------------------------------------------------------------------------------
-const std::string Stringv(const char* format, va_list args) {
+std::string Stringv(const char* format, va_list args) {
   char textLiteral[STRINGF_STACK_LOCAL_TEMP_LENGTH];
   vsnprintf_s(textLiteral, STRINGF_STACK_LOCAL_TEMP_LENGTH, _TRUNCATE, format, args);
   ENSURES(std::strlen(textLiteral) < 2048);
@@ -26,7 +26,7 @@ const std::string Stringv(const char* format, va_list args) {
 
   return std::string(textLiteral);
 }
-const std::string Stringf( const char* format, ... )
+std::string Stringf( const char* format, ... )
 {
 	char textLiteral[ STRINGF_STACK_LOCAL_TEMP_LENGTH ];
 	va_list variableArgumentList;
@@ -40,7 +40,7 @@ const std::string Stringf( const char* format, ... )
 
 
 //-----------------------------------------------------------------------------------------------
-const std::string Stringf( const int maxLength, const char* format, ... )
+std::string Stringf( const int maxLength, const char* format, ... )
 {
 	char textLiteralSmall[ STRINGF_STACK_LOCAL_TEMP_LENGTH ];
 	char* textLiteral = textLiteralSmall;
@@ -58,6 +58,17 @@ const std::string Stringf( const int maxLength, const char* format, ... )
 		delete[] textLiteral;
 
 	return returnValue;
+}
+
+
+std::wstring ToWString( const std::string_view str )
+{
+   setlocale( LC_CTYPE, "" );
+   wchar_t p[1024];
+   size_t  len;
+   mbstowcs_s( &len, p, str.data(), 1024 );
+   std::wstring str1( p );
+   return str1;
 }
 
 std::vector<std::string> split(const char* data, const char* delimiters) {

@@ -18,9 +18,8 @@ cbuffer constriants : register(b0)
 Texture2DArray tInput : register(t0);
 RWTexture2DArray<float4> uOutput : register(u0);
 
-SamplerState sLinear : register(s1);
+SamplerState sLinear : register(s0, space1);
 
-[RootSignature(RootSig)]
 [numthreads(16, 16, 1)]
 void main(uint3 threadId : SV_DispatchThreadID, uint3 groupId: SV_GroupID)
 {

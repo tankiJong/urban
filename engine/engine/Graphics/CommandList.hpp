@@ -4,6 +4,7 @@
 #include "Fence.hpp"
 #include "program/ResourceBinding.hpp"
 
+class FrameBuffer;
 class Mesh;
 class GraphicsState;
 class ResourceBinding;
@@ -28,7 +29,7 @@ public:
 
    void SetComputePipelineState(ComputeState& pps);
    void SetGraphicsPipelineState(GraphicsState& pps);
-   void BindResources(const ResourceBinding& bindings, bool forCompute = false);
+   // void BindResources(const ResourceBinding& bindings, bool forCompute = false);
 
    void IndicateDescriptorCount(size_t viewCount = 64, size_t samplerCount = 32);
 
@@ -44,7 +45,7 @@ public:
 
    // graphics ------------------------------------------------------------//
    void DrawMesh(const Mesh& mesh);
-
+   void SetFrameBuffer(const FrameBuffer& fb);
    void ClearRenderTarget(Texture2& tex, const rgba& color);
    void ClearDepthStencilTarget( const DepthStencilView* dsv, bool clearDepth = true, bool clearStencil = true, float depth = 1.f, uint8_t stencil = 0);
    void Draw(uint start, uint count);
@@ -52,6 +53,8 @@ public:
    void DrawInstanced(uint startVert, uint startIns, uint vertCount, uint insCount);
    void DrawIndirect(Buffer& args, uint count = 1, uint offset = 0);
 
+   DescriptorPool* GpuViewDescriptorPool() { IndicateDescriptorCount(); return mGpuViewDescriptorPool; };
+   DescriptorPool* GpuSamplerDescriptorPool() { IndicateDescriptorCount(); return mGpuSamplerDescripPool; };
 protected:
    void SubresourceBarrier( const Texture& tex, Resource::eState state, const ViewInfo* viewInfo );
    void GlobalBarrier( const Resource& res, Resource::eState state );

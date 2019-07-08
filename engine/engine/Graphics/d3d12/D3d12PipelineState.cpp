@@ -134,7 +134,7 @@ void SetD3d12DepthStencilState(D3D12_DEPTH_STENCIL_DESC* desc, const RenderState
 void SetD3d12RasterizerState( D3D12_RASTERIZER_DESC* desc, const RenderState::RasterizerState& rs )
 {
    desc->FillMode              = D3D12_FILL_MODE_SOLID;
-   desc->CullMode              = D3D12_CULL_MODE_NONE;
+   desc->CullMode              = D3D12_CULL_MODE_BACK;
    desc->FrontCounterClockwise = TRUE;
    desc->DepthBias             = 0;
    desc->DepthBiasClamp        = 0.0f;
@@ -315,7 +315,7 @@ bool GraphicsState::Finalize()
    SetD3d12DepthStencilState( &desc.DepthStencilState, mRenderState.depthStencil );
    SetD3d12RasterizerState( &desc.RasterizerState, mRenderState.rasterizer );
    SetD3d12InputLayout( &desc.InputLayout, mInputLayout );
-   SetD3d12FrameBufferFormats( &desc, mFrameBuffer.Describe() );
+   SetD3d12FrameBufferFormats( &desc, mFrameBufferDesc );
 
    desc.PrimitiveTopologyType = ToD3d12TopologyType( mTopology );
    desc.SampleDesc.Count = 1;

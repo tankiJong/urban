@@ -7,8 +7,8 @@
 inline float4 FullScreenTriangle(in uint vertexID)
 {
    float4 pos;
-   pos.x = (float) (vertexID / 2) * 4.0f - 1.0f;
-   pos.y = (float) (vertexID % 2) * 4.0f - 1.0f;
+   pos.y = (float) (vertexID / 2) * 4.0f - 1.0f;
+   pos.x = (float) (vertexID % 2) * 4.0f - 1.0f;
    pos.z = 1.0f;
    pos.w = 1.0f;
 
@@ -18,8 +18,8 @@ inline float4 FullScreenTriangle(in uint vertexID)
 inline float2 FullScreenUV(in uint vertexID)
 {
    float2 tex;
-   tex.x = (float) (vertexID / 2) * 2.0f;
-   tex.y = (float) (vertexID % 2) * 2.0f;
+   tex.x = (float) (vertexID % 2) * 2.0f;
+   tex.y = (float) (vertexID / 2) * 2.0f;
    return tex;
 }
 
@@ -43,7 +43,6 @@ TextureCube gSkyBox : register(t0);
 
 SamplerState gSampler : register(s0);
 
-[RootSignature(RootSig)]
 SkyInput main_vs(uint vid : SV_VertexID)
 {
    SkyInput output;
@@ -52,7 +51,6 @@ SkyInput main_vs(uint vid : SV_VertexID)
    return output;
 }
 
-[RootSignature(RootSig)]
 float4 main_ps(SkyInput input) : SV_TARGET
 {
 

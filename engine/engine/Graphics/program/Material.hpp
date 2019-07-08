@@ -4,14 +4,14 @@
 #include "ResourceBinding.hpp"
 #include "Program.hpp"
 #include "engine/graphics/ConstantBuffer.hpp"
+#include "engine/graphics/PipelineState.hpp"
 
 class ConstantBuffer;
 class Texture2;
 class Program;
 
-class Material {
+class Material: public std::enable_shared_from_this<Material> {
 public:
-   Material() = default;
 
    Material( const Material& other ) = delete;
    Material( Material&& other ) noexcept = delete;
@@ -33,17 +33,26 @@ public:
 
    void SetProgram(const Program& prog);
 
+   void ApplyFor(CommandList& commandList, uint bindingOffset) const;
+
 protected:
+   Material();
+
+   void Finalize();
    Program mProgram;
-   ResourceBinding mResource;
+   mutable GraphicsState mPipelineState;
+   mutable ResourceBinding mResource;
 };
 
-class StandardMaterial: public Material {
+class StandardMaterial: public Material, public inherit_shared_from_this<Material, StandardMaterial> {
    static constexpr std::string_view kMaterialCbv = "cMaterial";
    static constexpr std::string_view tRoughness = "gRoughness";
    static constexpr std::string_view tMetallic = "gMetallic";
    static constexpr std::string_view tAlbedo = "gAlbedo";
 public:
+
+   using inherit_shared_from_this<Material, StandardMaterial>::shared_from_this;
+
    enum eParameter {
       PARAM_ROUGHNESS,
       PARAM_METALLIC,
@@ -60,7 +69,8 @@ public:
 
    void SetParam( eParameter param, const ShaderResourceView& tex );
    void SetParam( eParameter param, const float4& val );
-   
+
+
 protected:
    S<ConstantBuffer> mConstParameters;
 };

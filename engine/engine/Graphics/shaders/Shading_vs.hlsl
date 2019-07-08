@@ -25,7 +25,7 @@ struct PSInput
 };
 
 
-cbuffer cCamera : register(b0)
+cbuffer cCamera : register(b0, space0)
 {
    float4x4 view;
    float4x4 proj;
@@ -41,18 +41,29 @@ struct light_t
    float4 mat;
 };
 
-cbuffer cLight : register(b1)
+cbuffer cLight : register(b1, space0)
 {
    light_t light;
 }
 
-Texture2D<float4> gTex : register(t0);
-TextureCube gEnvIrradiance : register(t1);
-TextureCube gEnvSpecular : register(t2);
-Texture2D<float2> gEnvSpecularLUT : register(t3);
+SamplerState gSampler : register(s0, space0);
+SamplerState gSamplerClamp : register(s1, space0);
 
-SamplerState gSampler : register(s0);
-SamplerState gSamplerClamp : register(s1);
+TextureCube gEnvIrradiance : register(t0, space0);
+TextureCube gEnvSpecular : register(t1, space0);
+Texture2D<float2> gEnvSpecularLUT : register(t2, space0);
+
+Texture2D<float4> gNormal : register(t0, space3);
+Texture2D<float4> gAlbedo : register(t1, space3);
+Texture2D<float4> gRoughness : register(t2, space3);
+Texture2D<float4> gMetallic : register(t3, space3);
+
+cbuffer cMaterial : register(b0, space3)
+{
+   float4 constAlbedo;
+   float4 constRoughness;
+   float4 constMetallic;
+}
 
 PSInput main(VSInput input)
 {

@@ -91,7 +91,7 @@ float3 F(float3 F0, float3 v, float3 h) {
 float3 SpecularBRDF(float3 F0, float3 l, float3 v, float3 n, float roughness) 
 {
    float3 h = normalize(l + v);
-   return D(n, h, roughness);
+   // return D(n, h, roughness);
    return ( D(n, h, roughness) * G(l, v, n, roughness) * F(F0, v, h)  ) /
           (0.00001f + 4 * saturate(dot(n, l)) * saturate(dot(n, v)) ).xxx;
 }

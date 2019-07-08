@@ -32,12 +32,11 @@ Blob fs::Read( const path& filePath )
 
    char* buffer = new char[(uint)size + 1];
 
-   if(file.read( buffer, size )) {
-      buffer[size] = 0;
-      Blob b( buffer, (uint)size );
-      delete[] buffer;
-      return b;
-   } else { return Blob(); }
+   file.read( buffer, size );
+   buffer[size] = 0;
+   Blob b( buffer, (uint)size );
+   delete[] buffer;
+   return b;
 }
 
 Blob fs::ReadText( const path& filePath )
@@ -53,10 +52,9 @@ Blob fs::ReadText( const path& filePath )
 
    char* buffer = new char[(uint)size + 1];
 
-   if(file.read( buffer, size )) {
-      buffer[size] = 0;
-      Blob b( buffer, (uint)size );
-      delete[] buffer;
-      return b;
-   } else { return Blob(); }
+   file.read( buffer, size );
+   buffer[size] = 0;
+   Blob b( buffer, (uint)size );
+   delete[] buffer;
+   return b;
 }

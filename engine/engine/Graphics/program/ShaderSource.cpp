@@ -2,6 +2,7 @@
 #include "ShaderSource.hpp"
 #include "engine/graphics/program/Shader.hpp"
 #include "engine/graphics/utils.hpp"
+#include "ShaderCompiler.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -25,12 +26,5 @@ Shader ShaderSource::Compile(
    std::vector<std::string_view> defineList,
    eShaderCompileFlag flags ) {
 
-   Shader ret;
-
-   std::vector<D3D_SHADER_MACRO> defines;
-   defines.reserve(defineList.size());
-
-
-
-   return ret;
+   return ubsc::Compile( type, mSource, mName, entryPoint, defineList, flags );
 }

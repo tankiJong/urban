@@ -17,6 +17,8 @@
 #include "EnvSpecularSplitSum_cs.h"
 #include "EnvSplitSumLUT_cs.h"
 #include "engine/graphics/Sampler.hpp"
+#include "engine/graphics/model/Model.hpp"
+#include "engine/graphics/program/Material.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -51,59 +53,152 @@ void Renderer::PreRender() const
 {
 }
 
-void Renderer::Render( const Mesh& mesh, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
+void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
 {
-   RenderSkyBox(camera);
+   RenderSkyBox( camera );
 
-   static Program* prog = nullptr;
-   static GraphicsState* gs = nullptr;
-   static ResourceBinding* binding = nullptr;
+   static BindingLayout reservedLayout{
+      { 
+         {  // reserved table 0 - space 0, static
+            {
+               {
+                  eDescriptorType::Cbv,
+                  0, // base register index
+                  0, // register space
+                  {
+                     { "cCamera", 1 },
+                     { "cLight",  1 },
+                  },
+               },
+               {
+                  eDescriptorType::Srv,
+                  0, // base register index
+                  0, // register space
+                  {
+                     { "gEnvIrradiance", 1 },
+                     { "gEnvSpecular", 1 },
+                     { "gEnvSpecularLUT", 1 },
+                  },
+               },
+            }, true // static
+         },
+         {  // reserved table 1 - space 0, static
+            {
+               {
+                  eDescriptorType::Sampler,
+                  11, // base register index
+                  0, // register space
+                  {
+                     { "gSamplerClamp", 1 },
+                  },
+               },
+            }, true // static
+         },
+       //  {  // reserved table  - space 3, mutable
+       //     {
+       //        {
+       //           eDescriptorType::Cbv,
+       //           2, // base register index
+       //           0, // register space
+       //           {
+       //              { "cModel", 1 },
+       //           },
+       //        },
+       //     }, false // non static
+       //  },
+      },
+      BindingLayout::Option{ true, false }
+   };
+   static ResourceBinding bindings(reservedLayout);
 
-   if(prog == nullptr) {
-      prog = new Program();
+   STATIC_BLOCK {
+      bindings.SetCbv( camera->Cbv(), 0, 0 );
+      bindings.SetCbv( light->Cbv(),  1, 0 );
 
-      prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
-      prog->Finalize();
-      binding = new ResourceBinding(prog);
-      binding->SetSrv(mAlbedo->Srv(), 0);
-      binding->SetSrv( mEnvIrradiance->Srv(), 1 );
-      binding->SetSrv( mEnvSpecular->Srv(), 2 );
-      binding->SetSrv( mSplitSumLUT->Srv(), 3 );
-      binding->SetCbv(camera->Cbv(), 0);
-      binding->SetCbv(light->Cbv(), 1);
-      binding->SetSampler( Sampler::Bilinear(), 1);
-   }
+      bindings.SetSrv( mEnvIrradiance->Srv(), 0, 0 );
+      bindings.SetSrv( mEnvSpecular->Srv(),   1, 0 );
+      bindings.SetSrv( mSplitSumLUT->Srv(),   2, 0 );
 
-   prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
-   // prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
-   
-   if(gs == nullptr) {
-      gs = new GraphicsState();
-      gs->SetTopology( eTopology::Triangle );
-      RenderState rs = gs->GetRenderState();
-      rs.depthStencil.depthFunc = eDepthFunc::Less;
-      gs->SetRenderState( rs );
-   }
-   
-   gs->SetProgram( prog );
-
-   gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
-   gs->GetFrameBuffer().SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
+      bindings.SetSampler( Sampler::Bilinear(), 11, 0 );
+   };
 
    CommandList list(eQueueType::Direct);
 
-   list.SetName( L"Draw CommandList" );
-   camera->UploadGpu(&list);
    light->UploadGpu( &list );
-   list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
-   // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
-   list.TransitionBarrier( *mAlbedo, Resource::eState::ShaderResource );
-   list.SetGraphicsPipelineState( *gs );
-   list.BindResources( *binding );
-   list.DrawMesh( mesh );
+
+   auto meshes = model.Meshes();
+   auto materials = model.Materials();
+
+   ASSERT_DIE(meshes.size() == materials.size());
+
+   list.SetFrameBuffer( mFrameBuffer );
+
+   for(uint i = 0; i < meshes.size(); i++) {
+      materials[i]->ApplyFor(list, bindings.RequiredTableCount());
+      bindings.BindFor( list, 0, false );
+      list.DrawMesh( meshes[i] );
+   }
 
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
 }
+//
+// void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
+// {
+//    RenderSkyBox(camera);
+//
+//    static Program* prog = nullptr;
+//    static GraphicsState* gs = nullptr;
+//    static ResourceBinding* binding = nullptr;
+//
+//    if(prog == nullptr) {
+//       prog = new Program();
+//
+//       prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
+//       prog->Finalize();
+//       binding = new ResourceBinding(prog);
+//       binding->SetSrv(mAlbedo->Srv(), 0);
+//       binding->SetSrv( mEnvIrradiance->Srv(), 1 );
+//       binding->SetSrv( mEnvSpecular->Srv(), 2 );
+//       binding->SetSrv( mSplitSumLUT->Srv(), 3 );
+//       binding->SetCbv(camera->Cbv(), 0);
+//       binding->SetCbv(light->Cbv(), 1);
+//       binding->SetSampler( Sampler::Bilinear(), 1);
+//    }
+//
+//    prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
+//    // prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
+//    
+//    if(gs == nullptr) {
+//       gs = new GraphicsState();
+//       gs->SetTopology( eTopology::Triangle );
+//       RenderState rs = gs->GetRenderState();
+//       rs.depthStencil.depthFunc = eDepthFunc::Less;
+//       gs->SetRenderState( rs );
+//    }
+//    
+//    gs->SetProgram( prog );
+//
+//    mFrameBuffer.SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
+//    mFrameBuffer.SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
+//
+//    gs->GetFrameBufferDesc() = mFrameBuffer.Describe();
+//
+//    CommandList list(eQueueType::Direct);
+//
+//    list.SetName( L"Draw CommandList" );
+//    camera->UploadGpu(&list);
+//    light->UploadGpu( &list );
+//    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
+//    // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
+//    list.TransitionBarrier( *mAlbedo, Resource::eState::ShaderResource );
+//    list.SetGraphicsPipelineState( *gs );
+//    list.BindResources( *binding );
+//    list.SetFrameBuffer( mFrameBuffer );
+//    
+//    model.Render(list);
+//
+//    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
+// }
 
 void Renderer::PrefilterEnvironment() const
 {
@@ -122,14 +217,14 @@ void Renderer::PrefilterEnvironment() const
       ComputeState pps;
       pps.SetProgram( &prog );
 
-      ResourceBinding bindings(&prog);
+      ResourceBinding bindings(prog.GetBindingLayout());
 
       S<Texture2> irradianceAlias( new Texture2(*mEnvIrradiance));
       bindings.SetSrv( mSkyBox->Srv(), 0 );
       bindings.SetUav( irradianceAlias->Uav(), 0 );
 
       list.SetComputePipelineState( pps );
-      list.BindResources( bindings, true );
+      bindings.BindFor( list, 0, true );
       list.TransitionBarrier( *irradianceAlias, Resource::eState::UnorderedAccess );
 
       list.Dispatch( irradianceAlias->Width() / 32, irradianceAlias->Height() / 32, 6 );
@@ -162,12 +257,11 @@ void Renderer::PrefilterEnvironment() const
          S<ConstantBuffer> config = ConstantBuffer::CreateFor<float>( roughness );
          config->UploadGpu( &list );
 
-         ResourceBinding bindings(&prog);
+         ResourceBinding bindings(prog.GetBindingLayout());
          bindings.SetSrv( mSkyBox->Srv(), 0 );
          bindings.SetUav( specularAlias->Uav(level), 0 );
          bindings.SetCbv( config->Cbv(), 0 );
 
-         list.BindResources( bindings, true );
 
          list.Dispatch( numGroup, numGroup, 6 );
       }
@@ -190,10 +284,11 @@ void Renderer::PrefilterEnvironment() const
       uint2 numGroup = mSplitSumLUT->size() / 32u;
 
 
-      ResourceBinding bindings(&prog);
+      ResourceBinding bindings(prog.GetBindingLayout());
       bindings.SetUav( mSplitSumLUT->Uav(), 0 );
 
-      list.BindResources( bindings, true );
+      bindings.BindFor( list, 0, true );
+
       list.Dispatch( numGroup.x, numGroup.y, 1 );
 
       list.TransitionBarrier( *mSplitSumLUT, Resource::eState::Common );
@@ -216,13 +311,14 @@ void Renderer::RenderSkyBox(const S<ConstantBuffer>& camera) const
       prog = new Program();
 
       prog->GetStage( eShaderType::Vertex ).SetBinary( gSkybox_vs, sizeof(gSkybox_vs) );
+      prog->GetStage( eShaderType::Pixel ).SetBinary( gSkybox_ps, sizeof(gSkybox_ps) );
+      
       prog->Finalize();
-      binding = new ResourceBinding(prog);
+      binding = new ResourceBinding(prog->GetBindingLayout());
       binding->SetSrv( mSkyBox->Srv(), 0 );
       binding->SetCbv( camera->Cbv(), 0 );
    }
 
-   prog->GetStage( eShaderType::Pixel ).SetBinary( gSkybox_ps, sizeof(gSkybox_ps) );
    // prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
    
    if(gs == nullptr) {
@@ -235,8 +331,10 @@ void Renderer::RenderSkyBox(const S<ConstantBuffer>& camera) const
    
    gs->SetProgram( prog );
 
-   gs->GetFrameBuffer().SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
-   gs->GetFrameBuffer().SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
+   mFrameBuffer.SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
+   mFrameBuffer.SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
+
+   gs->GetFrameBufferDesc() = mFrameBuffer.Describe();
 
    CommandList list(eQueueType::Direct);
 
@@ -248,7 +346,10 @@ void Renderer::RenderSkyBox(const S<ConstantBuffer>& camera) const
    // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{0.f, 0.f, 0.f, 1.f} );
    // list.ClearDepthStencilTarget(Window::Get().DepthBuffer().Dsv(), true, true, 1.f, 0u);
    list.SetGraphicsPipelineState( *gs );
-   list.BindResources( *binding );
+
+   binding->BindFor( list, 0, false );
+
+   list.SetFrameBuffer( mFrameBuffer );
    list.Draw( 0, 3 );
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::Common );
    list.TransitionBarrier( *mSkyBox, Resource::eState::Common );

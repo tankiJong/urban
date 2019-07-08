@@ -5,6 +5,7 @@
 #include "engine/core/string.hpp"
 
 #include <d3dcompiler.h>
+#include "d3dx12.h"
 
 
 
@@ -38,13 +39,10 @@ D3D12_DESCRIPTOR_RANGE_TYPE ToD3d12RangeType(const eDescriptorType type)
 void initParamAndRange(D3D12_ROOT_PARAMETER& param, std::vector<D3D12_DESCRIPTOR_RANGE>& range, const BindingLayout::table_t& table)
 {
    size_t rangeCount = table.size();
+   ASSERT_DIE( rangeCount > 0 );
    range.resize( rangeCount );
 
-   param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-   param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-   param.DescriptorTable.NumDescriptorRanges = (uint)rangeCount;
-   param.DescriptorTable.pDescriptorRanges = range.data();
-
+   // uint totalOffset = 0;
    for(size_t i = 0; i < rangeCount; i++ ) {
       const auto& r = table[i];
       range[i].RegisterSpace = r.RegisterSpace();
@@ -52,21 +50,32 @@ void initParamAndRange(D3D12_ROOT_PARAMETER& param, std::vector<D3D12_DESCRIPTOR
       range[i].NumDescriptors = (uint)r.Attribs().size();
       range[i].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
       range[i].RangeType = ToD3d12RangeType(r.Type());
+      // range[i].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+      // totalOffset += range[i].NumDescriptors;
    }
+
+   param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+   param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+   param.DescriptorTable.NumDescriptorRanges = (uint)rangeCount;
+   param.DescriptorTable.pDescriptorRanges = range.data();
 }
 
-void initRootSignature(rootsignature_t& handle, const std::vector<BindingLayout::table_t>& ranges)
+void initRootSignature(rootsignature_t& handle, span<BindingLayout::table_t> tables)
 {
-   std::vector<D3D12_ROOT_PARAMETER> rootParams( ranges.size() );
+   std::vector<D3D12_ROOT_PARAMETER> rootParams( tables.size() );
 
-   std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> d3dranges( ranges.size() );
+   std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> d3dranges( tables.size() );
 
-   for(size_t i = 0; i < ranges.size(); i++) {
-      const auto& table = ranges[i];
-      initParamAndRange( rootParams[i], d3dranges[i], table );
+   size_t TableCount = 0;
+   for(size_t i = 0; i < tables.size(); i++) {
+      const auto& table = tables[i];
+      if(table.size() > 0) {
+         initParamAndRange( rootParams[TableCount], d3dranges[TableCount], table );
+         ++TableCount;
+      }
    }
 
-   D3D12_ROOT_SIGNATURE_DESC desc;
+   D3D12_ROOT_SIGNATURE_DESC desc = {};
    desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
    // provide a default static sampler to pixel shader
@@ -88,20 +97,27 @@ void initRootSignature(rootsignature_t& handle, const std::vector<BindingLayout:
    }
 
    desc.pParameters       = rootParams.data();
-   desc.NumParameters     = (uint)rootParams.size();
+   desc.NumParameters     = (uint)TableCount;
    desc.pStaticSamplers   = &linearSampler;
    desc.NumStaticSamplers = 1;
 
    ID3DBlobPtr sigBlob;
    ID3DBlobPtr errBlob;
 
-   assert_win( D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &sigBlob, &errBlob) );
+   auto hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &sigBlob, &errBlob);
+
+   if(FAILED( hr )) {
+      DebuggerPrintf( "%s\n", errBlob->GetBufferPointer() );
+   }
 
    // https://docs.microsoft.com/en-us/windows/desktop/direct3d12/root-signature-limits
-   uint totalSize = 8 * (uint)d3dranges.size(); // each range(in my case, are all descriptor table) cost 1 DWORD => 1 byte
-   if(totalSize > sizeof( uint ) + D3D12_MAX_ROOT_COST) {
+   uint totalSize = (uint)d3dranges.size(); // each root param(in my case, are all descriptor table) cost 1 DWORD
+   if(totalSize > D3D12_MAX_ROOT_COST) {
       FATAL( "Root-signature cost is too high. D3D12 root-signatures are limited to 64 DWORDs" );
    }
+
+   auto ptr = sigBlob->GetBufferPointer();
+   auto size = sigBlob->GetBufferSize();
 
    Device::Get().NativeDevice()->CreateRootSignature( 0, sigBlob->GetBufferPointer(), 
                                                       sigBlob->GetBufferSize(), IID_PPV_ARGS( &handle ) );
@@ -125,6 +141,18 @@ bool TryMergeLayouts(BindingLayout* inOutLayout, const BindingLayout** layouts, 
    return true;
 }
 
+bool TryMergeShaderReflection(ShaderReflection* inOutReflection, const ShaderReflection** reflections, size_t count)
+{
+
+   *inOutReflection = *reflections[0];
+
+   for(size_t i = 0; i < count; ++i) {
+      bool re = ShaderReflection::MergeInto( inOutReflection, *reflections[i] );
+      ASSERT_DIE_M( re, "Failed to Merge reflections, the bindings are not compatible" );
+      if(!re) return false;
+   }
+   return true;
+}
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
@@ -175,25 +203,27 @@ bool TryMergeLayouts(BindingLayout* inOutLayout, const BindingLayout** layouts, 
 
 void Program::Finalize()
 {
-   if(mIsReady) return;
+   if(mIsReady)
+      return;
 
    bool re = false;
 
    // try to merge shader reflection
-   UNIMPLEMENTED();
 
    // resolve mLayout
    if(GetStage( eShaderType::Compute ).Valid()) {
-      const BindingLayout* layouts[] = {
-         &GetStage( eShaderType::Compute ).GetBindingLayout(),
+      const ShaderReflection* reflections[] = {
+         &GetStage( eShaderType::Compute ).GetShaderReflection(),
       };
-      re = TryMergeLayouts( &mBindingLayout, layouts, 1 );
+      re = TryMergeShaderReflection( &mShaderReflection, reflections, 1 );
+      mBindingLayout = mShaderReflection.CreateBindingLayout( true, true );
    } else {
-      const BindingLayout* layouts[] = {
-         &GetStage( eShaderType::Vertex ).GetBindingLayout(),
-         &GetStage( eShaderType::Pixel ).GetBindingLayout(),
+      const ShaderReflection* reflections[] = {
+         &GetStage( eShaderType::Vertex ).GetShaderReflection(),
+         &GetStage( eShaderType::Pixel ).GetShaderReflection(),
       };
-      re = TryMergeLayouts( &mBindingLayout, layouts, 2 );
+      re = TryMergeShaderReflection( &mShaderReflection, reflections, 2 );
+      mBindingLayout = mShaderReflection.CreateBindingLayout( true, true );
    }
 
    ASSERT_DIE( re );
@@ -202,4 +232,3 @@ void Program::Finalize()
 
    mIsReady = true;
 }
-

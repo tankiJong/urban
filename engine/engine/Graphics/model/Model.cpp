@@ -1,5 +1,7 @@
 ﻿#include "engine/pch.h"
 #include "Model.hpp"
+#include "engine/graphics/program/Material.hpp"
+#include "engine/graphics/CommandList.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -16,3 +18,18 @@
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
+uint Model::AddMesh( Mesh mesh )
+{
+   uint index = (uint) mMeshes.size();
+   mMeshes.push_back( std::move(mesh) );
+   return index;
+}
+
+void Model::SetMaterial( uint meshIndex, const S<const Material>& material )
+{
+   if( meshIndex >= mMaterials.size() ) {
+      mMaterials.resize( meshIndex + 1 );
+   }
+
+   mMaterials[meshIndex] = material;
+}

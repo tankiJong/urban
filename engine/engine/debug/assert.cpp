@@ -51,7 +51,7 @@ void DebuggerPrintf( const char* messageFormat, ... )
 
 
 //-----------------------------------------------------------------------------------------------
-// Converts a SeverityLevel to a Windows MessageBox icon mType (MB_etc)
+// Converts a SeverityLevel to a Windows MessageBox icon type (MB_etc)
 //
 #if defined( PLATFORM_WINDOWS )
 UINT GetWindowsMessageBoxIconFlagForSeverityLevel( SeverityLevel severity )

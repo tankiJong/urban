@@ -57,7 +57,7 @@
 // GCC 7 does not like the signed unsigned missmatch (size_t ptrdiff_t)
 // While there is a conversion from signed to unsigned, it happens at
 // compiletime, so the compiler wouldn't have to warn indiscriminently, but
-// could check if the source value actually doesn't fit into the target mType
+// could check if the source value actually doesn't fit into the target type
 // and only warn in those cases.
 #if defined(__GNUC__) && __GNUC__ > 6
 #pragma GCC diagnostic push
@@ -74,7 +74,7 @@ namespace details
 } // namespace details
 
 template <class T, class U>
-// GSL_SUPPRESS(mType.1) // NO-FORMAT: attribute
+// GSL_SUPPRESS(type.1) // NO-FORMAT: attribute
 constexpr T narrow_cast(U&& u) noexcept
 {
     return static_cast<T>(std::forward<U>(u));
@@ -280,7 +280,7 @@ namespace details
 
 #ifdef _MSC_VER
         // MSVC++ iterator debugging support; allows STL algorithms in 15.8+
-        // to unwrap span_iterator to a pointer mType after a range check in STL
+        // to unwrap span_iterator to a pointer type after a range check in STL
         // algorithm calls
         friend constexpr void _Verify_range(span_iterator lhs, span_iterator rhs) noexcept
         { // test that [lhs, rhs) forms a valid range inside an STL algorithm
@@ -491,7 +491,7 @@ public:
     template <std::ptrdiff_t Offset, std::ptrdiff_t Count = dynamic_extent>
     // GSL_SUPPRESS(bounds.1) // NO-FORMAT: attribute
     constexpr auto subspan() const ->
-        typename details::calculate_subspan_type<ElementType, Extent, Offset, Count>::mType
+        typename details::calculate_subspan_type<ElementType, Extent, Offset, Count>::type
     {
         EXPECTS((Offset >= 0 && size() - Offset >= 0) &&
                 (Count == dynamic_extent || (Count >= 0 && Offset + Count <= size())));
@@ -731,7 +731,7 @@ template <class ElementType, std::ptrdiff_t Extent>
 span<const byte, details::calculate_byte_size<ElementType, Extent>::value>
 as_bytes(span<ElementType, Extent> s) noexcept
 {
-    // GSL_SUPPRESS(mType.1) // NO-FORMAT: attribute
+    // GSL_SUPPRESS(type.1) // NO-FORMAT: attribute
     return {reinterpret_cast<const byte*>(s.data()), s.size_bytes()};
 }
 
@@ -740,7 +740,7 @@ template <class ElementType, std::ptrdiff_t Extent,
 span<byte, details::calculate_byte_size<ElementType, Extent>::value>
 as_writeable_bytes(span<ElementType, Extent> s) noexcept
 {
-    // GSL_SUPPRESS(mType.1) // NO-FORMAT: attribute
+    // GSL_SUPPRESS(type.1) // NO-FORMAT: attribute
     return {reinterpret_cast<byte*>(s.data()), s.size_bytes()};
 }
 

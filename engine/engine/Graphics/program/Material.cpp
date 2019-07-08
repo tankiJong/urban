@@ -4,6 +4,7 @@
 #include "engine/core/span.hpp"
 
 #include "engine/graphics/shaders/Shading_vs.h"
+#include "engine/graphics/CommandList.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -45,9 +46,30 @@ void Material::Set( std::string_view name, const ShaderResourceView& tex )
 void Material::SetProgram( const Program& prog )
 {
    mProgram = prog;
-   mProgram.Finalize();
+   Finalize();
+}
 
-   mResource = ResourceBinding(&mProgram);
+void Material::ApplyFor( CommandList& commandList, uint bindingOffset ) const
+{
+   commandList.SetGraphicsPipelineState( mPipelineState );
+   mResource.BindFor( commandList, bindingOffset, false );
+}
+
+Material::Material()
+{
+   mPipelineState.SetProgram( &mProgram );
+}
+
+void Material::Finalize()
+{
+   mProgram.Finalize();
+   mPipelineState.SetProgram( &mProgram );
+
+   BindingLayout::Option op;
+   op.includeProgramLayout = true;
+   op.includeReservedLayout = false;
+   mResource.RegenerateFlattened(mProgram.GetBindingLayout().GetPartLayout( op ));
+
 }
 
 StandardMaterial::StandardMaterial()
@@ -56,26 +78,24 @@ StandardMaterial::StandardMaterial()
 
    // need to load in the source
 
-   Blob ps = fs::ReadText("Engine/graphics/shaders/Shading_ps.hlsl");
-   UNIMPLEMENTED();
+   std::vector<std::string_view> defines = {};
+   // std::vector<std::string_view> defines = {
+   //    "FIXED_ALBEDO",
+   //    "FIXED_ROUGHNESS",
+   //    "FIXED_METALLIC",
+   // };
 
-   ShaderSource psSource({ (const char*)ps.Data(), ps.Size() }, "shading_ps");
+   mProgram.GetStage( eShaderType::Pixel )
+      = ubsc::CompileFromFile( "engine/engine/graphics/shaders/Shading_ps.hlsl", eShaderType::Pixel, "main", defines, eShaderCompileFlag::None);
 
-   std::vector<std::string_view> defines = {
-      "FIXED_ALBEDO",
-      "FIXED_ROUGHNESS",
-      "FIXED_METALLIC",
-   };
+   mProgram.GetStage( eShaderType::Vertex ).SetBinary( gShading_vs, sizeof(gShading_vs) );
 
-   Program prog;
-   prog.GetStage( eShaderType::Pixel )
-      = psSource.Compile( eShaderType::Pixel, "main", defines, eShaderCompileFlag::None);
+   mPipelineState.SetTopology( eTopology::Triangle );
 
-   prog.GetStage( eShaderType::Vertex ).SetBinary( gShading_vs, sizeof(gShading_vs) );
-
-   prog.Finalize();
-
-   SetProgram( prog );
+   RenderState state;
+   state.depthStencil.depthFunc = eDepthFunc::Less;
+   mPipelineState.SetRenderState( state );
+   Finalize();
 
    Set( kMaterialCbv, *mConstParameters->Cbv() );
 }

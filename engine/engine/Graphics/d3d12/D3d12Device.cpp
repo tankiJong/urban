@@ -85,9 +85,12 @@ bool Device::RhiInit(Window& window)
    getHardwareAdapter( window.NativeData()->dxgiFactory.Get(), hardwareAdapter );
    ASSERT_DIE( hardwareAdapter != nullptr);
 
-   assert_win( D3D12CreateDevice(hardwareAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mHandle)) );
+   assert_win( D3D12CreateDevice(hardwareAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&mHandle)) );
    if(mHandle == nullptr) { return false; }
+    D3D12_FEATURE_DATA_SHADER_MODEL model{};
 
+   model.HighestShaderModel = D3D_SHADER_MODEL_6_4;
+   assert_win( mHandle->CheckFeatureSupport( D3D12_FEATURE_SHADER_MODEL, &model, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL)) );
    mCommandQueues[0] = CreateCommandQueue( eQueueType(0) );
    mCommandQueues[1] = CreateCommandQueue( eQueueType(1) );
    mCommandQueues[2] = CreateCommandQueue( eQueueType(2) );
@@ -111,7 +114,7 @@ bool Device::RhiInit(Window& window)
    mCpuDescriptorHeap[1]->Init();
    mCpuDescriptorHeap[2]->Init();
    mCpuDescriptorHeap[3]->Init();
-   
+ 
    mGpuDescriptorHeap[0] = new GpuDescriptorHeap(eDescriptorType::Cbv | eDescriptorType::Uav | eDescriptorType::Srv, 16 * 1024 * 4);
    mGpuDescriptorHeap[1] = new GpuDescriptorHeap(eDescriptorType::Sampler, 2 * 1024);
    mGpuDescriptorHeap[0]->Init();

@@ -24,11 +24,11 @@ bool OptimizeRanges(std::vector<BindingLayout::range>* outRange, const std::vect
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-BindingLayout ShaderReflection::CreateBindingLayout() const
+BindingLayout ShaderReflection::CreateBindingLayout( bool includeProgramBindings, bool includeReservedBindings) const
 {
    std::vector<BindingLayout::table_t> tables;
 
-   tables.resize( 2 );
+   tables.resize( kMaxTableCount * 2 );
 
    using range_map_t = std::map<uint, std::vector<BindingLayout::range>>;
    range_map_t cbvRanges, srvRanges, uavRanges, samplerRanges;
@@ -89,8 +89,14 @@ BindingLayout ShaderReflection::CreateBindingLayout() const
          BindingLayout::range range( res.type, res.registerIndex, res.registerSpace );
          range.Append( res.name, res.count );
 
-         if(res.registerIndex < ranges[0].BaseRegisterIndex()) { ranges.insert( ranges.begin(), range ); } else {
+         if( ranges.size() == 0) {
             ranges.push_back( range );
+         } else {
+            if(res.registerIndex < ranges[0].BaseRegisterIndex()) {
+               ranges.insert( ranges.begin(), range );
+            } else {
+               ranges.push_back( range );
+            }
          }
       }
    }
@@ -111,37 +117,56 @@ BindingLayout ShaderReflection::CreateBindingLayout() const
       }
    }
 
-   // sorting ranges by register space
+   uint samplerSpaceMap[kMaxTableCount] = { 1, 3, 5, 7, 9, 11 };
+   uint viewSpaceMap[kMaxTableCount]    = { 0, 2, 4, 6, 8, 10 };
    {
-      // table *0* // 
       range_map_t* maps[] = {
          &cbvRanges,
          &srvRanges,
          &uavRanges,
-         &samplerRanges,
       };
       for(auto& rangeMap: maps) {
-         auto iter = rangeMap->find( 0 );
-         if(iter == rangeMap->end()) { iter = rangeMap->upper_bound( 0 ); }
-         while(iter != rangeMap->end()) {
-            tables[0].insert( tables[0].end(), iter->second.begin(), iter->second.end() );
-            iter = rangeMap->upper_bound( iter->first );
-         }
-      }
-
-      // table *1* // 
-      {
-         auto rangeMap = &samplerRanges;
-         auto iter     = rangeMap->find( 0 );
-         if(iter == rangeMap->end()) { iter = rangeMap->upper_bound( 0 ); }
-         while(iter != rangeMap->end()) {
-            tables[0].insert( tables[0].end(), iter->second.begin(), iter->second.end() );
-            iter = rangeMap->upper_bound( iter->first );
+         for(auto& [registerSpace, range]: *rangeMap) {
+            uint tableIndex = clamp(registerSpace, 0, kMaxTableCount);
+            tableIndex = viewSpaceMap[tableIndex];
+            tables[tableIndex].insert( 
+               tables[tableIndex].end(), 
+               range.begin(), range.end() );
          }
       }
    }
+   {
+      auto rangeMap = &samplerRanges;
+      for(auto& [registerSpace, range]: *rangeMap) {
+         uint tableIndex = clamp(registerSpace, 0, kMaxTableCount);
+         tableIndex = samplerSpaceMap[tableIndex];
+         tables[tableIndex].insert( 
+            tables[tableIndex].end(), 
+            range.begin(), range.end() );
+      }
+   }
 
-   return { tables };
+
+   auto iterBegin = tables.begin();
+   auto iterEnd = tables.end();
+
+   if(!includeReservedBindings) {
+      iterBegin += kProgramRootIndexStart;
+   }
+
+   if(!includeProgramBindings) {
+      iterEnd -= kProgramRootIndexStart;
+   }
+
+   span<BindingLayout::table_t> finalTables { &*iterBegin, iterEnd - iterBegin };
+   BindingLayout::Option options;
+
+   options.includeProgramLayout = includeProgramBindings;
+   options.includeReservedLayout = includeReservedBindings;
+
+   ASSERT_DIE( includeProgramBindings || includeReservedBindings );
+
+   return { finalTables, options };
 }
 
 const ShaderReflection::InputBinding& ShaderReflection::QueryBindingByName( std::string_view name ) const
@@ -149,4 +174,31 @@ const ShaderReflection::InputBinding& ShaderReflection::QueryBindingByName( std:
    auto iter = mBindedResources.find( name );
    ASSERT_DIE( iter != mBindedResources.end() );
    return iter->second;
+}
+
+bool ShaderReflection::MergeInto( ShaderReflection* target, const ShaderReflection& from )
+{
+   if(!AreCompatible( *target, from )) return false;
+
+   for(auto& [name, binding]: from.mBindedResources) {
+      if(target->mBindedResources.find( name ) == target->mBindedResources.end()) {
+         target->mBindedResources[name] = binding;
+      }
+   }
+
+   return true;
+}
+
+bool ShaderReflection::AreCompatible( const ShaderReflection& a, const ShaderReflection& b )
+{
+   std::vector<std::string> commonNames;
+   for(auto&    [nameA, resA]: a.mBindedResources) {
+      for(auto& [nameB, resB]: b.mBindedResources) {
+         if(nameA == nameB && resA != resB) {
+            return false;
+         }
+      }
+   }
+
+   return true;
 }

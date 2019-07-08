@@ -1,13 +1,12 @@
 ﻿#pragma once
 
+#include "ShaderCompiler.hpp"
+
+enum class eShaderCompileFlag: unsigned short;
 enum class eShaderType: unsigned;
 class Shader;
 
-enum class eShaderCompileFlag: uint16_t {
-   None = 0,
-};
 
-enum_class_operators( eShaderCompileFlag );
 
 class ShaderSource {
 public:

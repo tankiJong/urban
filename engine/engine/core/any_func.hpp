@@ -32,14 +32,14 @@ struct function_t<R(Args...)> {
 
    template<size_t N>
    struct param {
-      using type = typename std::tuple_element<N, std::tuple<Args...>>::mType;
+      using type = typename std::tuple_element<N, std::tuple<Args...>>::type;
       static_assert(N < sizeof...(Args), "index out of range");
    };
 
    using param_pack_t = func_params<Args...>;
    
    template<size_t N>
-   using param_t = typename param<N>::mType;
+   using param_t = typename param<N>::type;
    static constexpr bool is_member_function = false;
 };
 
@@ -98,7 +98,7 @@ private:
    template<typename T, 
             typename ...Args,
             typename F     = function_t<std::decay_t<T>>,
-            typename C     = typename F::mType, 
+            typename C     = typename F::type, 
             typename R     = typename F::return_t>
    any_func(T&& func, const void* object, func_params<Args...>)
       : mArgInfo(&tid<std::decay_t<Args>...>::value)
@@ -163,7 +163,7 @@ public:
    template<typename T>
    bool operator==(T&& func) const {
       if constexpr(!std::is_same_v<std::decay_t<T>, any_func>) {
-         using F = typename function_t<std::decay_t<T>>::mType;
+         using F = typename function_t<std::decay_t<T>>::type;
          if(&tid<F>::value != mFunctionInfo) return false;
          const F& storedFunc = mFunction.Get<F>();
          return func == storedFunc;

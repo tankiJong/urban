@@ -98,7 +98,3 @@ protected:
    Shader mCompiledShader;
    bool mIsDirty;
 };
-
-class Material {
-   
-};

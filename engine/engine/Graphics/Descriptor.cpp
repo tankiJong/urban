@@ -207,6 +207,7 @@ Descriptors& Descriptors::operator=( Descriptors&& other ) noexcept
    mMaxDescriptorCount = other.mMaxDescriptorCount;
    mPoolOffsetStart    = other.mPoolOffsetStart;
    mOwner              = other.mOwner;
+   mNeedToFree         = other.mNeedToFree;
 
    other.mNeedToFree = false;
    other.Reset();

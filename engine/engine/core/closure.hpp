@@ -32,12 +32,12 @@ template<
   > using closure_decay = std::conditional<
     std::is_convertible<T, R(*)(Args...)>::value,
     R(*)(Args...),
-    typename std::decay<T>::mType
+    typename std::decay<T>::type
   >;
 class closure {
    public:
 
-      template<typename ...Args, typename T, typename C = typename closure_decay<T, void, Args...>::mType>
+      template<typename ...Args, typename T, typename C = typename closure_decay<T, void, Args...>::type>
       closure(T&& func, Args&&... args)
          : mArgs(std::forward<std::decay_t<Args>>(args)...) 
          , mFunction(func) {

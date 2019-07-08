@@ -164,15 +164,16 @@ inline vec<4, bool> operator ||( const vec<4, bool>& lhs, const vec<4, bool>& rh
 
 
 // --------------------------------------------------------------- //
-using int2 = vec<2, int32_t>;
-using uint2 = vec<2, uint32_t>;
+
+using int2   = vec<2, int32_t>;
+using uint2  = vec<2, uint32_t>;
 using float2 = vec<2, float>;
 
-using uint3 = vec<3, uint32_t>;
+using uint3  = vec<3, uint32_t>;
 using float3 = vec<3, float>;
-using euler = float3;
+using euler  = float3;
 
-using uint4 = vec<4, uint32_t>;
+using uint4  = vec<4, uint32_t>;
 using float4 = vec<4, float>;
 
 

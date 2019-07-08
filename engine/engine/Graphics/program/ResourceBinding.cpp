@@ -17,73 +17,69 @@
 /////////////////////// Standalone Function /////////////////////
 ////////////////////////////////////////////////////////////////
 
+
+
+
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
-
-
-ResourceBinding::ResourceBinding( const Program* prog ) 
-   : mProgram( prog )
-{
-   
-}
 
 ResourceBinding::~ResourceBinding()
 {
 
 }
 
-const ResourceBinding::Flattened& ResourceBinding::GetFlattened() const
-{
-   if(mIsDirty) {
-      RegenerateFlattened();
-   }
-   return mFlattenedBindings;
-}
-
 void ResourceBinding::SetSrv( const ShaderResourceView* srv, uint registerIndex, uint registerSpace )
 {
-   if(mIsDirty) RegenerateFlattened();
-
-   auto& b = FindBindingItem( eDescriptorType::Srv, registerIndex, registerSpace );
+   auto& b = mFlattenedBindings.FindBindingItem( eDescriptorType::Srv, registerIndex, registerSpace );
    b.type = eDescriptorType::Srv;
    b.location = srv->Handle()->GetCpuHandle( 0 );
 }
 
 void ResourceBinding::SetCbv( const ConstantBufferView* cbv, uint registerIndex, uint registerSpace )
 {
-   if(mIsDirty) RegenerateFlattened();
-
-   auto& b    = FindBindingItem( eDescriptorType::Cbv, registerIndex, registerSpace );
+   auto& b    = mFlattenedBindings.FindBindingItem( eDescriptorType::Cbv, registerIndex, registerSpace );
    b.type     = eDescriptorType::Cbv;
    b.location = cbv->Handle()->GetCpuHandle( 0 );
 }
 
 void ResourceBinding::SetUav( const UnorderedAccessView* uav, uint registerIndex, uint registerSpace )
 {
-   if(mIsDirty) RegenerateFlattened();
-
-   auto& b    = FindBindingItem( eDescriptorType::Uav, registerIndex, registerSpace );
+   auto& b    = mFlattenedBindings.FindBindingItem( eDescriptorType::Uav, registerIndex, registerSpace );
    b.type     = eDescriptorType::Uav;
    b.location = uav->Handle()->GetCpuHandle( 0 );
 }
 
 void ResourceBinding::SetSampler( const Sampler* sampler, uint registerIndex, uint registerSpace )
 {
-   if(mIsDirty) RegenerateFlattened();
-
-   auto& b    = FindBindingItem( eDescriptorType::Sampler, registerIndex, registerSpace );
+   auto& b    = mFlattenedBindings.FindBindingItem( eDescriptorType::Sampler, registerIndex, registerSpace );
    b.type     = eDescriptorType::Sampler;
    b.location = sampler->GetCpuHandle();
 }
 
-ResourceBinding::BindingItem& ResourceBinding::FindBindingItem( eDescriptorType type, uint registerIndex, uint registerSpace )
+void ResourceBinding::BindFor( CommandList& commandList, uint startRootIndex, bool forCompute )
 {
-   for(auto& item: mFlattenedBindings) {
-      if(item.type == type && item.registerIndex == registerIndex && item.registerSpace == registerSpace) {
-         auto& range = mProgram->GetBindingLayout().Data()[item.rootIndex][item.rangeIndex];
+   mFlattenedBindings.FinalizeStaticResources();
+   mFlattenedBindings.BindFor( commandList, startRootIndex, forCompute );
+}
 
-         // same mType
+uint ResourceBinding::RequiredTableCount()
+{
+   uint count = 0;
+   for(auto& data: mLayout.Data()) {
+      count += data.size() > 0 ? 1 : 0;
+   }
+
+   return count;
+}
+
+ResourceBinding::BindingItem& ResourceBinding::Flattened::FindBindingItem( eDescriptorType type, uint registerIndex, uint registerSpace )
+{
+   for(auto& item: mBindingItems) {
+      if(item.type == type && item.registerIndex == registerIndex && item.registerSpace == registerSpace) {
+         auto& range = mOwner->mLayout.Data()[item.rootIndexOffset][item.rangeIndex];
+
+         // same type
          ASSERT_DIE( range.Type() == type );
          // same space
          ASSERT_DIE( range.RegisterSpace() == registerSpace );
@@ -97,11 +93,26 @@ ResourceBinding::BindingItem& ResourceBinding::FindBindingItem( eDescriptorType 
    BAD_CODE_PATH();
 }
 
-void ResourceBinding::RegenerateFlattened() const
-{
-   ASSERT_DIE_M( mProgram->Ready(), "Resource Binding is not usable before the program is finalized." );
+// const ResourceBinding::Flattened& ResourceBinding::GetFlattened() const
+// {
+//    return mFlattenedBindings;
+// }
 
-   const auto& layout = mProgram->GetBindingLayout().Data();
+void ResourceBinding::RegenerateFlattened(const BindingLayout& bindingLayout)
+{
+   mLayout = bindingLayout;
+   RegenerateFlattened();
+}
+
+void ResourceBinding::RegenerateFlattened( BindingLayout&& bindingLayout )
+{
+   mLayout = std::move(bindingLayout);
+   RegenerateFlattened();
+}
+
+void ResourceBinding::RegenerateFlattened()
+{
+   const auto& layout = mLayout.Data();
 
    std::vector<std::vector<size_t>> tableSizeLayout;
    std::transform( layout.begin(), layout.end(), std::back_inserter( tableSizeLayout ),
@@ -116,7 +127,7 @@ void ResourceBinding::RegenerateFlattened() const
 
    size_t totalItemCount = 0;
 
-   mFlattenedBindings.clear();
+   mFlattenedBindings.Reset();
    for(size_t i = 0; i < tableSizeLayout.size(); i++) {
       auto&  tableSize        = tableSizeLayout[i];
       size_t currentTableSize = std::accumulate( tableSize.begin(), tableSize.end(), size_t( 0 ) );
@@ -149,7 +160,7 @@ void ResourceBinding::RegenerateFlattened() const
 
          for(size_t rangeOffset = tableSize[j], registerIndexOffset = 0; rangeOffset > 0;
              --rangeOffset, ++registerIndexOffset) {
-            mFlattenedBindings.push_back( {
+            mFlattenedBindings.Append( {
                handle,
                range.Type(),
                range.BaseRegisterIndex() + (uint)registerIndexOffset,
@@ -165,6 +176,4 @@ void ResourceBinding::RegenerateFlattened() const
          --offset;
       }
    }
-
-   mIsDirty = false;
 }

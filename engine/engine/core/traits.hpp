@@ -1,6 +1,16 @@
 ﻿#pragma once
 #include <memory>
 
+namespace detail
+{
+template<typename T>
+struct self_type {
+   using type = T;
+};
+}
+template<typename T> 
+using self_t = typename detail::self_type<T>::type;
+
 struct unique {
   constexpr bool operator==(const unique& rhs) const { return type == rhs.type; }
 protected:

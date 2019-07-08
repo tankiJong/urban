@@ -18,7 +18,7 @@ public:
    void SetBinary( const void* data, size_t size );
 
    const BindingLayout& GetBindingLayout() const { return mBindingLayout; }
-
+   const ShaderReflection& GetShaderReflection() const { return mReflection; }
    void SetType( eShaderType t ) { mType = t; }
 
    bool Valid() const { return mBinary.Size() > 0; } 

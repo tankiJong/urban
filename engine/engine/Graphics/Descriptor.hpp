@@ -154,10 +154,12 @@ public:
    descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const { return mOwner->GetGpuHandle( mPoolOffsetStart + offset ); }
    descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const { return mOwner->GetCpuHandle( mPoolOffsetStart + offset ); }
 
-   bool Valid() const { return mOwner == nullptr; }
+   bool Valid() const { return mOwner != nullptr; }
 
    descriptor_heap_t HeapHandle() const { return mOwner->HeapHandle(); }
-   DescriptorHeap*  OwnerHeap() const { return mOwner->OwnerHeap(); } 
+   DescriptorHeap*  OwnerHeap() const { return mOwner->OwnerHeap(); }
+
+   void Release() { Reset(); }
 protected:
    Descriptors( size_t maxDescriptorCount, size_t poolOffsetStart, DescriptorPool* owner, bool needToFree )
       : mMaxDescriptorCount( maxDescriptorCount )

@@ -133,9 +133,8 @@ protected:
    S<ConstantBuffer> mCameraBuffer;
    S<ConstantBuffer> mLightBuffer;
    MvCamera mCamera;
-   Mesh mFloor;
-   Mesh mSphere;
-   Renderer mRenderer;
+   Model mModel;
+   Renderer* mRenderer = nullptr;
 };
 
 void GameApplication::OnInit()
@@ -146,22 +145,18 @@ void GameApplication::OnInit()
    mLightBuffer = ConstantBuffer::CreateFor<light_t>();
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
 
-   mRenderer.Init();
+   mRenderer = new Renderer();
+   mRenderer->Init();
 
    ModelImporter importer;
 
-   Model model = importer.Import( "DamagedHelmet.gltf" );
+   mModel = importer.Import( "DamagedHelmet.gltf" );
 }
 
 void GameApplication::OnUpdate()
 {
 
    PrimBuilder pb;
-
-   pb.Begin( eTopology::Triangle, true );
-   pb.Sphere(float3{0, 0, 0}, 1.f, 100, 100);
-   pb.End();
-   mSphere = pb.CreateMesh(eAllocationType::Temporary, false);
 
    mCamera.OnUpdate();
 
@@ -195,8 +190,8 @@ void GameApplication::OnUpdate()
 
 void GameApplication::OnRender() const
 {
-   mRenderer.PreRender();
-   mRenderer.Render( mSphere, mCameraBuffer, mLightBuffer );
+   mRenderer->PreRender();
+   mRenderer->Render( mModel, mCameraBuffer, mLightBuffer );
    
 }
 

@@ -48,13 +48,6 @@ void CommandList::IndicateDescriptorCount( size_t viewCount, size_t samplerCount
    SetupDescriptorPools( viewCount, samplerCount );
 }
 
-void CommandList::SetupDescriptorPools( size_t viewCount, size_t samplerCount )
-{
-   mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->AcquireDescriptorPool( mGpuViewDescriptorPool, viewCount );
-   mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )
-          ->AcquireDescriptorPool( mGpuSamplerDescripPool, samplerCount );
-}
-
 void CommandList::CleanupDescriptorPools()
 {
    if(mGpuViewDescriptorPool == nullptr) {

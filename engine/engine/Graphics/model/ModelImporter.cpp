@@ -53,8 +53,9 @@ S<Texture2> CreateAndUploadTexture(CommandList& list, aiTexture* source)
    return tex;
 }
 
-void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& materials, std::map<aiTexture*, S<Texture2>>& textures,
-                     CommandList* list, const aiScene* scene, std::string_view storeAssetPrefix)
+void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& materials, 
+                                 std::map<aiTexture*, S<Texture2>>& textures,
+                                 CommandList* list, const aiScene* scene, std::string_view storeAssetPrefix)
 {
    for(uint i = 0; i < scene->mNumMaterials; i++) {
       aiMaterial* mat = scene->mMaterials[i];
@@ -70,9 +71,14 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
 
             material->SetParam( StandardMaterial::PARAM_ALBEDO, { color.r, color.g, color.b, 1.f } );
          } else {
-            aiTexture* tex;
-            mat->Get( AI_MATKEY_TEXTURE_DIFFUSE( 0 ), tex );
+            aiString path;
+            aiReturn ret = mat->GetTexture( aiTextureType_DIFFUSE, 0, &path );
 
+            //https://github.com/assimp/assimp/wiki/Embedded-Textures-References
+            ASSERT_DIE( *path.data == '*');
+            int texIndex = atoi(path.data+1);
+            aiTexture* tex = scene->mTextures[texIndex];
+            
             std::string storeName = Stringf( "%s_%s", storeAssetPrefix.data(),
                                              tex->mFilename.length == 0 ? "Diffuse" : tex->mFilename.C_Str() );
             S<Texture2> texture;
@@ -93,8 +99,13 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
             material->SetParam( StandardMaterial::PARAM_ROUGHNESS, 0.f );
             material->SetParam( StandardMaterial::PARAM_METALLIC, 1.f );
          } else {
-            aiTexture* tex;
-            mat->Get( AI_MATKEY_TEXTURE( aiTextureType_UNKNOWN, 0 ), tex );
+            aiString path;
+            aiReturn ret = mat->GetTexture( aiTextureType_UNKNOWN, 0, &path );
+
+            //https://github.com/assimp/assimp/wiki/Embedded-Textures-References
+            ASSERT_DIE( *path.data == '*');
+            int texIndex = atoi(path.data+1);
+            aiTexture* tex = scene->mTextures[texIndex];
 
             std::string storeName = Stringf( "%s_%s", storeAssetPrefix.data(),
                                              tex->mFilename.length == 0
@@ -111,7 +122,6 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
          }
       }
 
-      UNIMPLEMENTED(); // material need to be initialized here;
    }
 }
 
@@ -124,9 +134,11 @@ Model ModelImporter::Import( fs::path fileName )
 {
    ASSERT_DIE( fs::exists( fileName ) );
    Assimp::Importer importer;
-
+   
    const aiScene* scene = importer.ReadFile( fileName.generic_string().c_str(),
-                                             aiProcess_Triangulate | aiProcess_ConvertToLeftHanded );
+                           aiProcess_CalcTangentSpace | aiProcess_Triangulate |
+                           aiProcess_MakeLeftHanded |aiProcess_FlipUVs |  
+                           aiProcess_FixInfacingNormals );
 
    if(scene == nullptr) { FATAL( importer.GetErrorString() ); }
 
@@ -147,7 +159,8 @@ Model ModelImporter::Import( fs::path fileName )
    std::map<aiMaterial*, S<StandardMaterial>> materials;
 
    ImportTexturesAndMaterials(materials, textures, &list, scene, storeAssetPrefix);
-
+   
+   aiMatrix4x4 transform = scene->mRootNode->mTransformation;
    for(uint i = 0; i < scene->mNumMeshes; ++i) {
       aiMesh* aimesh = scene->mMeshes[i];
 
@@ -158,11 +171,21 @@ Model ModelImporter::Import( fs::path fileName )
       builder.Begin( eTopology::Triangle, aimesh->HasFaces() );
 
       for(uint k = 0; k < aimesh->mNumVertices; k++) {
+        
          builder.Uv( { aimesh->mTextureCoords[0][k].x, aimesh->mTextureCoords[0][k].y } );
-         builder.Normal( { aimesh->mNormals[k].x, aimesh->mNormals[k].y, aimesh->mNormals[k].z } );
-         builder.Color( { aimesh->mColors[k]->r, aimesh->mColors[k]->g, aimesh->mColors[k]->b, aimesh->mColors[k]->a } );
-         builder.Tangent( { aimesh->mTangents[k].x, aimesh->mTangents[k].y, aimesh->mTangents[k].z } );
-         builder.Vertex3( { aimesh->mVertices[k].x, aimesh->mVertices[k].y, aimesh->mVertices[k].z } );
+         
+         auto norm = aimesh->mNormals[k];
+         norm *= transform;
+         builder.Normal( { norm.x, norm.y, norm.z } );
+
+         // builder.Color( { aimesh->mColors[k]->r, aimesh->mColors[k]->g, aimesh->mColors[k]->b, aimesh->mColors[k]->a } );
+         auto tang = aimesh->mTangents[k];
+         tang *= transform;
+         builder.Tangent( { tang.x, tang.y, tang.z } );
+
+         auto vert = aimesh->mVertices[k];
+         vert *= transform;
+         builder.Vertex3( { vert.x, vert.y, vert.z } );
       }
 
       if(aimesh->HasFaces()) { 
@@ -178,10 +201,9 @@ Model ModelImporter::Import( fs::path fileName )
       builder.End();
 
       Mesh mesh = builder.CreateMesh( eAllocationType::Persistent, false );
+      uint meshIndex = model.AddMesh( std::move(mesh) );
 
       aiMaterial* mat = scene->mMaterials[aimesh->mMaterialIndex];
-      
-      uint meshIndex = model.AddMesh( mesh );
       model.SetMaterial( meshIndex, materials[mat] );
    }
 

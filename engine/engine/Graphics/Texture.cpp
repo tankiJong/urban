@@ -332,7 +332,7 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const void* binary, size_t s
       S<Texture2> cubeMapAlias( new Texture2(*res));
       const UnorderedAccessView* uav = cubeMapAlias->Uav();
 
-      ResourceBinding bindings( &prog );
+      ResourceBinding bindings( prog.GetBindingLayout() );
       bindings.SetSrv( tex->Srv(), 0 );
       bindings.SetUav( uav, 0 );
 
@@ -340,7 +340,7 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const void* binary, size_t s
       pps.SetProgram( &prog );
 
       list.SetComputePipelineState( pps );
-      list.BindResources( bindings, true );
+      bindings.BindFor( list, 0, true );
       list.TransitionBarrier( *tex, Resource::eState::NonPixelShader );
       list.TransitionBarrier( *cubeMapAlias, Resource::eState::UnorderedAccess,  &uav->GetViewInfo());
       list.Dispatch( w / 32, h / 32, 6 );

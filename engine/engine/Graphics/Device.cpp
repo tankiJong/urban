@@ -2,6 +2,7 @@
 #include "Device.hpp"
 #include "Descriptor.hpp"
 #include "Fence.hpp"
+#include "CommandQueue.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -28,8 +29,11 @@ Device::~Device()
    for(uint i = 0; i < _countof( mGpuDescriptorHeap ); i++) {
       SAFE_DELETE( mGpuDescriptorHeap[i] );
    }
-
-   SAFE_DELETE( mCommandListCompletion );
+   //
+   // for(auto& fence: mCommandListCompletion) {
+   //    
+   //    SAFE_DELETE( fence );
+   // }
 }
 
 CpuDescriptorHeap* Device::GetCpuDescriptorHeap( eDescriptorType type )
@@ -76,37 +80,57 @@ void Device::ResetAllCommandBuffer()
    }
 }
 
-size_t Device::AcquireNextCommandListId()
-{
-   return mNextCommandListId.fetch_add( 1 );
-}
-
-size_t Device::GetRecentCompletedCommandListId()
-{
-   return mCommandListCompletion->GpuCurrentValue();
-}
+// size_t Device::AcquireNextCommandListId(eQueueType type)
+// {
+//    std::scoped_lock lock(mCommandListIdAcquireLock);
+//    mRecentAcquiredListTYpe = type;
+//    return mNextCommandListId++;
+// }
+//
+// size_t Device::GetRecentCompletedCommandListId()
+// {
+//    size_t mins = 0;
+//    for(auto* fence: mCommandListCompletion) {
+//       mins = min(mins, fence->GpuCurrentValue());
+//    }
+//
+//    return mins;
+// }
 
 void Device::RelaseObject( device_obj_t obj )
 {
-   size_t currentValue = mNextCommandListId;
-
-   mDeferredReleaseList.push( { 
-         currentValue,
-         obj
-      } );
+   ReleaseItem r;
+   r.object = obj;
+   for(uint i = 0; i < uint(eQueueType::Total); i++) {
+      r.expectValueToRelease[i] = mCommandQueues[i]->LastSubmittedCommandListIndex();
+   }
+   mDeferredReleaseList.push( r );
 
 }
 
 void Device::ExecuteDeferredRelease()
 {
-   size_t currentValue = mCommandListCompletion->GpuCurrentValue();
+   
+   size_t currentValues[uint(eQueueType::Total)];
 
-   while( !mDeferredReleaseList.empty() && cyclic(mDeferredReleaseList.front().expectValueToRelease) < cyclic(currentValue) ) {
+   for(uint i = 0; i < uint(eQueueType::Total); i++) {
+      currentValues[i] = mCommandQueues[i]->LastFinishedCommandListIndex();
+   }
+
+   auto comp = [&](size_t* values)
+   {
+      for(uint i = 0; i < uint(eQueueType::Total); i++) {
+         if(currentValues[i] <= values[i]) return false;
+      }
+      return true;
+   };
+
+   while( !mDeferredReleaseList.empty() && comp(mDeferredReleaseList.front().expectValueToRelease) ) {
       mDeferredReleaseList.pop();
    }
 
-   mGpuDescriptorHeap[0]->ExecuteDeferredRelease( currentValue );
-   mGpuDescriptorHeap[1]->ExecuteDeferredRelease( currentValue );
+   mGpuDescriptorHeap[0]->ExecuteDeferredRelease( currentValues, uint(eQueueType::Total) );
+   mGpuDescriptorHeap[1]->ExecuteDeferredRelease( currentValues, uint(eQueueType::Total) );
 }
 
 Device& Device::Get()

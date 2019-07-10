@@ -97,6 +97,7 @@ CommandList::CommandList( eQueueType type )
 CommandList::~CommandList()
 {
    CleanupDescriptorPools();
+   
 }
 
 void CommandList::Reset()
@@ -118,7 +119,6 @@ void CommandList::Reset()
    CleanupDescriptorPools();
 
    mIsClosed      = false;
-   mCommandListId = mDevice->AcquireNextCommandListId();
 }
 
 void CommandList::Close()
@@ -210,6 +210,8 @@ void CommandList::TransitionBarrier( const Resource& resource, Resource::eState 
 void CommandList::CopyResource( const Resource& from, Resource& to )
 {
    mHasCommandPending = true;
+   TransitionBarrier( from, Resource::eState::CopySource );
+   TransitionBarrier( to,   Resource::eState::CopyDest );
    mHandle->CopyResource(to.Handle().Get(), from.Handle().Get());
 }
 
@@ -418,13 +420,13 @@ void CommandList::SubresourceBarrier( const Texture& tex, Resource::eState newSt
       for(uint mip = viewInfo->mostDetailedMip;
           mip < viewInfo->mipCount + viewInfo->mostDetailedMip;
           ++mip) {
-         Resource::eState oldState = tex.SubresourceState( arraySlice, mip );
+         Resource::eState oldState = tex.SubresourceState( arraySlice, mip, tex.MipCount() );
 
          if(oldState != newState) {
-            setTransitionBarrier( tex, newState, oldState, tex.SubresourceIndex( arraySlice, mip ),
+            setTransitionBarrier( tex, newState, oldState, tex.SubresourceIndex( arraySlice, mip, tex.MipCount() ),
                                   Handle().Get() );
             if(!setGlobal) {
-               tex.SetSubresourceState( arraySlice, mip, newState );
+               tex.SetSubresourceState( arraySlice, mip, tex.MipCount(), newState );
                // if(flag != TRANSITION_BEGIN) { tex.setSubresourceState( arraySlice, mip, newState ); }
                // tex.markSubresourceInTransition( arraySlice, mip, flag == TRANSITION_BEGIN );
             }

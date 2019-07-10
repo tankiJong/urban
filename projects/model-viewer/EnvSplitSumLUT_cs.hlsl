@@ -67,7 +67,6 @@ float SchlickGGX_IBL(float cosLi, float cosLo, float roughness)
 }
 
 
-[RootSignature(RootSig)]
 [numthreads(32, 32, 1)]
 void main( uint3 threadId : SV_DispatchThreadID )
 {

@@ -63,6 +63,8 @@ public:
 
 
    static void WaitAll(Fence* fences, size_t count);
+
+   ~Fence();
 protected:
    std::atomic<uint64_t> mExpectValue = 0;
    void* mEventHandle = nullptr;

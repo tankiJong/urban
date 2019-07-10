@@ -6,7 +6,7 @@
 #include <thread>
 #include <queue>
 #include <atomic>
-
+#include <mutex>
 #include "CommandBuffer.hpp"
 
 enum class eDescriptorType;
@@ -23,6 +23,7 @@ class Device: public std::enable_shared_from_this<Device>, public WithHandle<dev
 public:
    ~Device();
 
+   span<const S<CommandQueue>> GetMainQueues() const { return mCommandQueues; }
    const S<CommandQueue>& GetMainQueue(eQueueType type) const { return mCommandQueues[uint(type)]; };
    const device_handle_t& NativeDevice() const { return mHandle; };
    Window* AttachedWindow() const { return mWindow; }
@@ -31,9 +32,7 @@ public:
 
    CommandBuffer& GetThreadCommandBuffer(eQueueType type);
    void ResetAllCommandBuffer();
-   size_t AcquireNextCommandListId();
-   size_t GetRecentCompletedCommandListId();
-   Fence& GetCommandListCompletionFence() { return *mCommandListCompletion; }
+   // Fence& GetCommandListCompletionFence(eQueueType type) { return *mCommandListCompletion[uint(type)]; }
    void RelaseObject(device_obj_t obj);
    void ExecuteDeferredRelease();
 
@@ -52,12 +51,15 @@ protected:
    GpuDescriptorHeap* mGpuDescriptorHeap[2] = { nullptr, nullptr };
 
    struct ReleaseItem {
-      size_t expectValueToRelease;
+      size_t expectValueToRelease[uint(eQueueType::Total)];
       device_obj_t object;
    };
 
    std::queue<ReleaseItem> mDeferredReleaseList;
-   std::atomic<size_t> mNextCommandListId = 0;
-   Fence* mCommandListCompletion = nullptr;
+   std::mutex mCommandListIdAcquireLock;
+   size_t mNextCommandListId = 0;
+   eQueueType mRecentAcquiredListTYpe;
+   
+   // Fence* mCommandListCompletion[uint(eQueueType::Total)];
 
 };

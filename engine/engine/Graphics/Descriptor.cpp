@@ -136,9 +136,15 @@ void DescriptorHeap::ReleaseDescriptorPool( DescriptorPool& pool )
    mAllocator.Free( pool.mHeapOffsetStart, pool.mMaxDescriptorCount );
 }
 
-void DescriptorHeap::DeferredFreeDescriptorPool( DescriptorPool* pool, size_t holdUntilValue )
+void DescriptorHeap::DeferredFreeDescriptorPool( DescriptorPool* pool, span<size_t> values )
 {
-   mPendingRelease.push( ReleaseItem{ pool, holdUntilValue } );
+   ASSERT_DIE( values.size() == uint(eQueueType::Total) );
+   ReleaseItem item = {};
+   item.pool = pool;
+   for(uint i = 0; i < uint(eQueueType::Total); i++) {
+      item.expectValue[i] = values[i];
+   }
+   mPendingRelease.push( item );
 }
 
 descriptor_gpu_handle_t DescriptorPool::GetGpuHandle( size_t offset ) const
@@ -171,13 +177,24 @@ descriptor_heap_t DescriptorPool::HeapHandle() const
 CpuDescriptorHeap::CpuDescriptorHeap( eDescriptorType type, size_t count )
    : DescriptorHeap( type, count, count, false ) {}
 
-void DescriptorHeap::ExecuteDeferredRelease( size_t currentValue )
+void DescriptorHeap::ExecuteDeferredRelease( size_t* currentValue, size_t total )
 {
-   while(!mPendingRelease.empty() && cyclic(mPendingRelease.front().expectValue) < cyclic(currentValue)) {
+   ASSERT_DIE( total == uint(eQueueType::Total) );
+
+   auto comp = [&]( size_t* values )
+   {
+      for(uint i = 0; i < uint( eQueueType::Total ); i++) {
+         if(currentValue[i] < values[i])
+            return false;
+      }
+      return true;
+   };
+
+   while(!mPendingRelease.empty() && comp( mPendingRelease.front().expectValue )) {
       auto& front = mPendingRelease.front();
       ReleaseDescriptorPool( *mPendingRelease.front().pool );
       delete mPendingRelease.front().pool;
-      mPendingRelease.pop();  
+      mPendingRelease.pop();
    }
 }
 

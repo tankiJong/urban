@@ -60,7 +60,18 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
    for(uint i = 0; i < scene->mNumMaterials; i++) {
       aiMaterial* mat = scene->mMaterials[i];
 
-      S<StandardMaterial> material( new StandardMaterial() );
+      std::vector<StandardMaterial::eOption> options;
+
+      if(mat->GetTextureCount( aiTextureType_DIFFUSE ) == 0) {
+         options.push_back( StandardMaterial::OP_FIX_ALBEDO );
+      }
+
+      if(mat->GetTextureCount( aiTextureType_UNKNOWN ) == 0) {
+         options.push_back( StandardMaterial::OP_FIX_METALLIC );
+         options.push_back( StandardMaterial::OP_FIX_ROUGHNESS );
+      }
+
+      S<StandardMaterial> material( new StandardMaterial(options) );
       materials[mat] = material;
 
       // diffuse
@@ -78,8 +89,8 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
             ASSERT_DIE( *path.data == '*');
             int texIndex = atoi(path.data+1);
             aiTexture* tex = scene->mTextures[texIndex];
-            
-            std::string storeName = Stringf( "%s_%s", storeAssetPrefix.data(),
+
+            std::string storeName = Stringf( "%u_%s_%s", i, storeAssetPrefix.data(),
                                              tex->mFilename.length == 0 ? "Diffuse" : tex->mFilename.C_Str() );
             S<Texture2> texture;
             if(textures.find( tex ) == textures.end()) {
@@ -107,7 +118,7 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
             int texIndex = atoi(path.data+1);
             aiTexture* tex = scene->mTextures[texIndex];
 
-            std::string storeName = Stringf( "%s_%s", storeAssetPrefix.data(),
+            std::string storeName = Stringf( "%u_%s_%s", i, storeAssetPrefix.data(),
                                              tex->mFilename.length == 0
                                                 ? "Metallic_Roughness"
                                                 : tex->mFilename.C_Str() );
@@ -200,7 +211,12 @@ Model ModelImporter::Import( fs::path fileName )
 
       builder.End();
 
-      Mesh mesh = builder.CreateMesh( eAllocationType::Persistent, false );
+      PrimBuilder pb;
+      pb.Begin( eTopology::Triangle );
+      pb.Sphere(0, 2, 20, 20);
+      pb.End();
+      Mesh mesh = pb.CreateMesh( eAllocationType::Persistent, false );
+      // Mesh mesh = builder.CreateMesh( eAllocationType::Persistent, false );
       uint meshIndex = model.AddMesh( std::move(mesh) );
 
       aiMaterial* mat = scene->mMaterials[aimesh->mMaterialIndex];

@@ -25,7 +25,7 @@ public:
    void Flush(bool wait = false);
    void Reset();
    void Close();
-   size_t Id() const { return mCommandListId; }
+   // size_t Id() const { return mCommandListId; }
 
    void SetComputePipelineState(ComputeState& pps);
    void SetGraphicsPipelineState(GraphicsState& pps);
@@ -68,7 +68,7 @@ protected:
    Fence mExecutionFence;
    Device* mDevice = nullptr;
    CommandBuffer* mCurrentUsedCommandBuffer;
-   size_t mCommandListId;
+   // size_t mCommandListId;
    DescriptorPool* mGpuViewDescriptorPool;
    DescriptorPool* mGpuSamplerDescripPool;
 };

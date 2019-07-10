@@ -55,9 +55,20 @@ void CommandList::CleanupDescriptorPools()
       ASSERT_DIE( mGpuSamplerDescripPool == nullptr );
       return;
    }
-   mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->DeferredFreeDescriptorPool( mGpuViewDescriptorPool, mCommandListId );
+
+   size_t currentValues[uint(eQueueType::Total)];
+
+   auto queues = mDevice->GetMainQueues();
+
+   ASSERT_DIE( queues.size() == uint(eQueueType::Total) );
+
+   for(uint i = 0; i < queues.size(); i++) {
+      currentValues[i] = queues[i]->LastFinishedCommandListIndex();
+   }
+
+   mDevice->GetGpuDescriptorHeap( eDescriptorType::Srv )->DeferredFreeDescriptorPool( mGpuViewDescriptorPool, currentValues );
    mDevice->GetGpuDescriptorHeap( eDescriptorType::Sampler )
-          ->DeferredFreeDescriptorPool( mGpuSamplerDescripPool, mCommandListId );
+          ->DeferredFreeDescriptorPool( mGpuSamplerDescripPool, currentValues );
 
    mGpuViewDescriptorPool = nullptr;
    mGpuSamplerDescripPool = nullptr;

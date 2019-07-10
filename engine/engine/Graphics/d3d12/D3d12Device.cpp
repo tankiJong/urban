@@ -75,7 +75,7 @@ S<CommandQueue> Device::CreateCommandQueue( eQueueType type )
    command_queue_t handle;
    mHandle->CreateCommandQueue( &desc, IID_PPV_ARGS( &handle ));
 
-   return S<CommandQueue>(new CommandQueue( this, handle ));
+   return S<CommandQueue>(new CommandQueue( this, type, handle ));
 }
 
 
@@ -94,6 +94,10 @@ bool Device::RhiInit(Window& window)
    mCommandQueues[0] = CreateCommandQueue( eQueueType(0) );
    mCommandQueues[1] = CreateCommandQueue( eQueueType(1) );
    mCommandQueues[2] = CreateCommandQueue( eQueueType(2) );
+
+   mCommandQueues[0]->SetName(L"Copy");
+   mCommandQueues[1]->SetName(L"Compute");
+   mCommandQueues[2]->SetName(L"Direct");
 
    window.AttachDevice( shared_from_this() );
    mWindow = &window;
@@ -119,8 +123,9 @@ bool Device::RhiInit(Window& window)
    mGpuDescriptorHeap[1] = new GpuDescriptorHeap(eDescriptorType::Sampler, 2 * 1024);
    mGpuDescriptorHeap[0]->Init();
    mGpuDescriptorHeap[1]->Init();
+   //
+   // mCommandListCompletion = new Fence();
+   // mCommandListCompletion->SetName( L"CommandList Completion Fence" );
 
-   mCommandListCompletion = new Fence();
-   SET_NAME(*mCommandListCompletion);
    return true;
 }

@@ -25,10 +25,14 @@ void CommandQueue::IssueCommandList( CommandList& commandList )
 {
    std::scoped_lock lock(mCpuLock);
 
+   mCommandListFence.IncreaseExpectedValue();
    ID3D12CommandList* commandListHandle = commandList.Handle().Get();
    commandList.Close();
    mHandle->ExecuteCommandLists( 1, &commandListHandle );
-   mHandle->Signal( mOwner->GetCommandListCompletionFence().Handle().Get(), commandList.Id() );
+
+   mHandle->Signal( mCommandListFence.Handle().Get(), mCommandListFence.ExpectedValue() );
+   
+   // mHandle->Signal( mOwner->GetCommandListCompletionFence(mType).Handle().Get(), commandList.Id() );
 }
 
 void CommandQueue::Wait( Fence& fence )
@@ -43,4 +47,19 @@ void CommandQueue::Signal( Fence& fence )
    std::scoped_lock lock(mCpuLock);
    
    mHandle->Signal( fence.Handle().Get(), fence.ExpectedValue() );
+}
+
+size_t CommandQueue::LastFinishedCommandListIndex() const
+{
+   return mCommandListFence.GpuCurrentValue();
+}
+
+size_t CommandQueue::LastSubmittedCommandListIndex() const
+{
+   return mCommandListFence.ExpectedValue();
+}
+
+bool CommandQueue::IsCommandListFinished( size_t index ) const
+{
+   return LastFinishedCommandListIndex() >= index;
 }

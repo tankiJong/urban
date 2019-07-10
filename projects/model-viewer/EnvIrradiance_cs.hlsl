@@ -90,7 +90,6 @@ void GenerateTBN(float3 N, out float3 T, out float3 B)
    B = normalize(cross(N, T));
 }
 
-[RootSignature(RootSig)]
 [numthreads(32, 32, 1)]
 void main( uint3 threadId : SV_DispatchThreadID )
 {

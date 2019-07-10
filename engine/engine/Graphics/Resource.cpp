@@ -56,17 +56,17 @@ void  Resource::SetGlobalState(eState state) const
    }
 }
 
-Resource::eState Resource::SubresourceState( uint arraySlice, uint mip ) const
+Resource::eState Resource::SubresourceState( uint arraySlice, uint mip, uint totalMip ) const
 {
-   return mState.global ? mState.globalState : mState.subresourceState[SubresourceIndex( arraySlice, mip )];
+   return mState.global ? mState.globalState : mState.subresourceState[SubresourceIndex( arraySlice, mip, totalMip )];
 }
 
-void Resource::SetSubresourceState( uint arraySlice, uint32_t mipLevel, eState newState ) const
+void Resource::SetSubresourceState( uint arraySlice, uint32_t mipLevel, uint totalMip, eState newState ) const
 {
    if(mState.global) {
       std::fill( mState.subresourceState.begin(), mState.subresourceState.end(), mState.globalState );
    }
    mState.global                  = false;
-   uint index                     = SubresourceIndex( arraySlice, mipLevel );
+   uint index                     = SubresourceIndex( arraySlice, mipLevel, totalMip );
    mState.subresourceState[index] = newState;
 }

@@ -72,18 +72,29 @@ void Material::Finalize()
 
 }
 
-StandardMaterial::StandardMaterial()
+StandardMaterial::StandardMaterial(span<eOption> options)
 {
    mConstParameters = ConstantBuffer::CreateFor<ConstParameters>( eAllocationType::General );
 
    // need to load in the source
 
    std::vector<std::string_view> defines = {};
-   // std::vector<std::string_view> defines = {
-   //    "FIXED_ALBEDO",
-   //    "FIXED_ROUGHNESS",
-   //    "FIXED_METALLIC",
-   // };
+
+   for(auto& option: options) {
+      switch(option) { 
+         case OP_FIX_ALBEDO: 
+         defines.push_back( "FIXED_ALBEDO" );
+         break;
+      case OP_FIX_ROUGHNESS: 
+         defines.push_back( "FIXED_ROUGHNESS" );
+         break;
+      case OP_FIX_METALLIC: 
+         defines.push_back( "FIXED_METALLIC" );
+         break;
+      default: 
+         BAD_CODE_PATH();
+      }
+   }
 
    mProgram.GetStage( eShaderType::Pixel )
       = ubsc::CompileFromFile( "engine/engine/graphics/shaders/Shading_ps.hlsl", eShaderType::Pixel, "main", defines, eShaderCompileFlag::None);
@@ -95,6 +106,9 @@ StandardMaterial::StandardMaterial()
    RenderState state;
    state.depthStencil.depthFunc = eDepthFunc::Less;
    mPipelineState.SetRenderState( state );
+   mPipelineState.GetFrameBufferDesc().renderTargets[0] = eTextureFormat::RGBA8Unorm;
+   mPipelineState.GetFrameBufferDesc().depthStencilTarget = eTextureFormat::D24Unorm_S8Uint;
+
    Finalize();
 
    Set( kMaterialCbv, *mConstParameters->Cbv() );

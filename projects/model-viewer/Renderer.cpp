@@ -44,17 +44,25 @@ void Renderer::Init()
    mSplitSumLUT   = Texture2::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource, 
                                       1024, 1024, 1, eTextureFormat::RG16Float, false );
 
+   SET_NAME( *mEnvIrradiance );
+   SET_NAME( *mEnvSpecular );
+   SET_NAME( *mSplitSumLUT );
+
    mSkyBox = Asset<TextureCube>::Get( "engine/resource/environment_0.hdr" );
-   mAlbedo = Asset<Texture2>::Get( "engine/resource/CalibrationCard.jpg" );
+
    PrefilterEnvironment();
 }
 
 void Renderer::PreRender() const
 {
+   mFrameBuffer.SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
+   mFrameBuffer.SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
 }
 
 void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
 {
+   // PrefilterEnvironment();
+
    RenderSkyBox( camera );
 
    static BindingLayout reservedLayout{
@@ -131,15 +139,36 @@ void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, cons
 
    ASSERT_DIE(meshes.size() == materials.size());
 
+
+   list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
+   list.TransitionBarrier( Window::Get().DepthBuffer(), Resource::eState::DepthStencil );
+   list.TransitionBarrier( *mEnvIrradiance, Resource::eState::ShaderResource );
+   list.TransitionBarrier( *mEnvSpecular, Resource::eState::ShaderResource );
+   list.TransitionBarrier( *mSplitSumLUT, Resource::eState::ShaderResource );
+
+
+   mFrameBuffer.SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
+   mFrameBuffer.SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
    list.SetFrameBuffer( mFrameBuffer );
+
 
    for(uint i = 0; i < meshes.size(); i++) {
       materials[i]->ApplyFor(list, bindings.RequiredTableCount());
       bindings.BindFor( list, 0, false );
       list.DrawMesh( meshes[i] );
    }
-
+   list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::Common );
+   list.TransitionBarrier( *mEnvIrradiance, Resource::eState::Common );
+   list.TransitionBarrier( *mEnvSpecular,   Resource::eState::Common );
+   list.TransitionBarrier( *mSplitSumLUT,   Resource::eState::Common );
    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
+
+   Fence syncFence;
+   syncFence.IncreaseExpectedValue();
+   Device::Get().GetMainQueue( eQueueType::Direct )->Signal( syncFence );
+   Device::Get().GetMainQueue( eQueueType::Copy )->Wait( syncFence );
+   Device::Get().GetMainQueue( eQueueType::Compute )->Wait( syncFence );
+
 }
 //
 // void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
@@ -202,6 +231,7 @@ void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, cons
 
 void Renderer::PrefilterEnvironment() const
 {
+
    CommandList list(eQueueType::Compute);
 
    list.CopyResource( *mSkyBox, *mEnvSpecular );
@@ -224,11 +254,12 @@ void Renderer::PrefilterEnvironment() const
       bindings.SetUav( irradianceAlias->Uav(), 0 );
 
       list.SetComputePipelineState( pps );
+      pps.SetName( L"prefilter-diffuse-pps" );
       bindings.BindFor( list, 0, true );
-      list.TransitionBarrier( *irradianceAlias, Resource::eState::UnorderedAccess );
+      list.TransitionBarrier( *mEnvIrradiance, Resource::eState::UnorderedAccess );
 
       list.Dispatch( irradianceAlias->Width() / 32, irradianceAlias->Height() / 32, 6 );
-      list.TransitionBarrier( *irradianceAlias, Resource::eState::Common );
+      list.TransitionBarrier( *mEnvIrradiance, Resource::eState::Common );
    }
 
    // specular
@@ -241,10 +272,11 @@ void Renderer::PrefilterEnvironment() const
       pps.SetProgram( &prog );
 
       list.SetComputePipelineState( pps );
+      pps.SetName( L"prefilter-specular-pps" );
 
       S<Texture2> specularAlias( new Texture2(*mEnvSpecular));
 
-      list.TransitionBarrier( *specularAlias, Resource::eState::UnorderedAccess );
+      list.TransitionBarrier( *mEnvSpecular, Resource::eState::UnorderedAccess );
 
       float deltaRoughness = 1.f / std::max(float(specularAlias->MipCount() - 1.f), 1.f);
 
@@ -262,11 +294,11 @@ void Renderer::PrefilterEnvironment() const
          bindings.SetUav( specularAlias->Uav(level), 0 );
          bindings.SetCbv( config->Cbv(), 0 );
 
-
+         bindings.BindFor( list, 0, true );
          list.Dispatch( numGroup, numGroup, 6 );
       }
 
-      list.TransitionBarrier( *specularAlias, Resource::eState::Common );
+      list.TransitionBarrier( *mEnvSpecular, Resource::eState::Common );
    }
 
    {
@@ -299,6 +331,12 @@ void Renderer::PrefilterEnvironment() const
    list.TransitionBarrier( *mSkyBox, Resource::eState::Common );
 
    Device::Get().GetMainQueue( eQueueType::Compute )->IssueCommandList( list );
+
+   // Fence syncFence;
+   // syncFence.IncreaseExpectedValue();
+   // Device::Get().GetMainQueue( eQueueType::Compute )->Signal( syncFence );
+   // Device::Get().GetMainQueue( eQueueType::Copy )->Wait( syncFence );
+   // Device::Get().GetMainQueue( eQueueType::Direct )->Wait( syncFence );
 }
 
 void Renderer::RenderSkyBox(const S<ConstantBuffer>& camera) const
@@ -331,9 +369,6 @@ void Renderer::RenderSkyBox(const S<ConstantBuffer>& camera) const
    
    gs->SetProgram( prog );
 
-   mFrameBuffer.SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
-   mFrameBuffer.SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
-
    gs->GetFrameBufferDesc() = mFrameBuffer.Describe();
 
    CommandList list(eQueueType::Direct);
@@ -341,6 +376,7 @@ void Renderer::RenderSkyBox(const S<ConstantBuffer>& camera) const
    list.SetName( L"Draw CommandList" );
    camera->UploadGpu(&list);
    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
+   list.TransitionBarrier( Window::Get().DepthBuffer(), Resource::eState::DepthStencil );
    list.TransitionBarrier( *mSkyBox, Resource::eState::ShaderResource );
    // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
    // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{0.f, 0.f, 0.f, 1.f} );

@@ -18,6 +18,7 @@ public:
     , mType( other.mType )
     , mBindingFlags( other.mBindingFlags )
     , mAllocationType( other.mAllocationType )
+    , mState( other.mState )
     , mIsAlias( true ) {}
 
    Resource( Resource&& other ) noexcept
@@ -25,6 +26,7 @@ public:
     , mType( other.mType )
     , mBindingFlags( other.mBindingFlags )
     , mAllocationType( other.mAllocationType )
+    , mState( other.mState )
     , mIsAlias( other.mIsAlias ) {}
 
    Resource& operator=( const Resource& other )
@@ -35,6 +37,7 @@ public:
       mType           = other.mType;
       mBindingFlags   = other.mBindingFlags;
       mAllocationType = other.mAllocationType;
+      mState          = other.mState;
       mIsAlias        = true;
       return *this;
    }
@@ -47,6 +50,7 @@ public:
       mType           = other.mType;
       mBindingFlags   = other.mBindingFlags;
       mAllocationType = other.mAllocationType;
+      mState          = other.mState;
       mIsAlias        = other.mIsAlias;
       return *this;
    }
@@ -102,9 +106,9 @@ public:
    bool   IsStateGlobal() const { return mState.global; }
    void   SetGlobalState( eState state ) const;
 
-   uint   SubresourceIndex( uint arraySlice, uint mipLevel ) const { return mipLevel + arraySlice * mipLevel; }
-   eState SubresourceState( uint arraySlice, uint mip ) const;
-   void   SetSubresourceState( uint arraySlice, uint32_t mipLevel, eState newState ) const;
+   uint   SubresourceIndex( uint arraySlice, uint mipLevel, uint totalMip ) const { return mipLevel + arraySlice * totalMip; }
+   eState SubresourceState( uint arraySlice, uint mip, uint totalMip ) const;
+   void   SetSubresourceState( uint arraySlice, uint32_t mipLevel, uint totalMip, eState newState ) const;
 
    virtual const RenderTargetView* Rtv( uint mip = 0, uint firstArraySlice = 0, uint arraySize = 1 ) const 
       { UNUSED(mip); UNUSED(firstArraySlice); UNUSED( arraySize ); return nullptr; }

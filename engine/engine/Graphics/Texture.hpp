@@ -148,7 +148,22 @@ public:
    {
       mDepthOrArraySize = mDepthOrArraySize * 6;
       mType = eType::Texture2D;
-      mState.subresourceState.resize( mMipLevels * mDepthOrArraySize, mState.globalState );
+
+      if(mState.global) {
+         mState.subresourceState.clear();
+         mState.subresourceState.resize( mDepthOrArraySize * mMipLevels, mState.globalState );
+      } else {
+         auto states = mState.subresourceState;
+         mState.subresourceState.resize( mDepthOrArraySize * mMipLevels, mState.globalState );
+         for(uint i = 0; i < states.size(); i++) {
+            mState.subresourceState[i * 6 + 0] = states[i];
+            mState.subresourceState[i * 6 + 1] = states[i];
+            mState.subresourceState[i * 6 + 2] = states[i];
+            mState.subresourceState[i * 6 + 3] = states[i];
+            mState.subresourceState[i * 6 + 4] = states[i];
+            mState.subresourceState[i * 6 + 5] = states[i];
+         }
+      }
    }
 
    Texture2() = default;

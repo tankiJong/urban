@@ -8,14 +8,15 @@ class Descriptors;
 class Device;
 
 enum class eDescriptorType {
-   None    = 0u,
-   Srv     = BIT_FLAG( 0 ),
-   Uav     = BIT_FLAG( 1 ),
-   Cbv     = BIT_FLAG( 2 ),
+   None = 0u,
+   Srv = BIT_FLAG( 0 ),
+   Uav = BIT_FLAG( 1 ),
+   Cbv = BIT_FLAG( 2 ),
    Sampler = BIT_FLAG( 3 ),
-   Rtv     = BIT_FLAG( 4 ),
-   Dsv     = BIT_FLAG( 5 ),
+   Rtv = BIT_FLAG( 4 ),
+   Dsv = BIT_FLAG( 5 ),
 };
+
 enum_class_operators( eDescriptorType );
 
 class DescriptorPool;
@@ -52,17 +53,16 @@ class DescriptorPool {
 public:
    DescriptorPool( size_t count )
       : mMaxDescriptorCount( count )
-      , mAllocator( count ) { }
-
+    , mAllocator( count ) { }
 
    descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const;
    descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const;
 
-   Descriptors Allocate(size_t size, bool needToFree = true);
-   void Free(Descriptors& descriptors);
+   Descriptors Allocate( size_t size, bool needToFree = true );
+   void        Free( Descriptors& descriptors );
 
    descriptor_heap_t HeapHandle() const;
-   DescriptorHeap* OwnerHeap() const { return mOwner; }
+   DescriptorHeap*   OwnerHeap() const { return mOwner; }
 protected:
 
    size_t           mMaxDescriptorCount;
@@ -78,10 +78,8 @@ public:
     , mHeapSize( count )
     , mAllocator( count )
     , mReservedPool( reservedCount )
-    , mIsShaderVisible( shaderVisible )
-   {
-      SetupDescriptorPool( mReservedPool );
-   }
+    , mIsShaderVisible( shaderVisible ) { SetupDescriptorPool( mReservedPool ); }
+
    virtual ~DescriptorHeap() = default;
 
    descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const;
@@ -91,11 +89,11 @@ public:
    void ReleaseDescriptorPool( DescriptorPool& pool );
 
    void AcquireDescriptorPool( DescriptorPool*& pool, size_t poolSize );
-   void DeferredFreeDescriptorPool(DescriptorPool* pool, size_t holdUntilValue);
-   void ExecuteDeferredRelease(size_t currentValue);
+   void DeferredFreeDescriptorPool( DescriptorPool* pool, span<size_t> values );
+   void ExecuteDeferredRelease( size_t* currentValue, size_t total );
 
-   Descriptors Allocate(size_t size);
-   void Free(Descriptors& descriptors);
+   Descriptors Allocate( size_t size );
+   void        Free( Descriptors& descriptors );
 
    // Calling this will properly do the GPU mapping/allocation 
    void Init();
@@ -111,9 +109,10 @@ protected:
    descriptor_gpu_handle_t mGpuStart       = {};
 
    struct ReleaseItem {
-      DescriptorPool* pool;
-      size_t expectValue;
+      DescriptorPool* pool = nullptr;
+      size_t          expectValue[uint( eQueueType::Total )];
    };
+
    std::queue<ReleaseItem> mPendingRelease;
 };
 
@@ -134,10 +133,9 @@ public:
 class GpuDescriptorHeap: public DescriptorHeap {
 public:
 
-   GpuDescriptorHeap( eDescriptorType type, size_t count);
+   GpuDescriptorHeap( eDescriptorType type, size_t count );
 protected:
 };
-
 
 class Descriptors {
 public:
@@ -146,18 +144,25 @@ private:
    friend class DescriptorPool;
 public:
    Descriptors() = default;
-   Descriptors(Descriptors&& from) noexcept;
-   Descriptors(const Descriptors&) = delete;
-   Descriptors& operator=(const Descriptors&) = delete;
+   Descriptors( Descriptors&& from ) noexcept;
+   Descriptors( const Descriptors& )            = delete;
+   Descriptors& operator=( const Descriptors& ) = delete;
    Descriptors& operator=( Descriptors&& other ) noexcept;
 
-   descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const { return mOwner->GetGpuHandle( mPoolOffsetStart + offset ); }
-   descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const { return mOwner->GetCpuHandle( mPoolOffsetStart + offset ); }
+   descriptor_gpu_handle_t GetGpuHandle( size_t offset = 0 ) const
+   {
+      return mOwner->GetGpuHandle( mPoolOffsetStart + offset );
+   }
+
+   descriptor_cpu_handle_t GetCpuHandle( size_t offset = 0 ) const
+   {
+      return mOwner->GetCpuHandle( mPoolOffsetStart + offset );
+   }
 
    bool Valid() const { return mOwner != nullptr; }
 
    descriptor_heap_t HeapHandle() const { return mOwner->HeapHandle(); }
-   DescriptorHeap*  OwnerHeap() const { return mOwner->OwnerHeap(); }
+   DescriptorHeap*   OwnerHeap() const { return mOwner->OwnerHeap(); }
 
    void Release() { Reset(); }
 protected:
@@ -167,10 +172,9 @@ protected:
     , mOwner( owner )
     , mNeedToFree( needToFree ) {}
 
-   void Reset();
-   size_t mMaxDescriptorCount = 0;
-   size_t mPoolOffsetStart = 0;
-   DescriptorPool* mOwner = nullptr;
-   bool mNeedToFree = true;
+   void            Reset();
+   size_t          mMaxDescriptorCount = 0;
+   size_t          mPoolOffsetStart    = 0;
+   DescriptorPool* mOwner              = nullptr;
+   bool            mNeedToFree         = true;
 };
-

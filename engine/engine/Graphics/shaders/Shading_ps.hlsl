@@ -109,13 +109,22 @@ float4 main(PSInput input): SV_Target
                        * LightFalloff(light.position.xyz, input.world, 30.f);
 
    // IBL 
-   uint specularLevels, _;
+   float specularLevels, _;
    gEnvSpecular.GetDimensions(0, _, _, specularLevels);
 
    float3 envAlbedo = gEnvIrradiance.SampleLevel(gSampler, input.norm, 0).xyz;
-   float3 envSpecular = gEnvSpecular.SampleLevel(gSampler, 
-                                                 reflect(-V, input.norm), 
-                                                 roughness2 * specularLevels).xyz;
+
+   float3 refl = reflect(-V, input.norm);
+   float3 reflddx = ddx(refl);
+   float3 reflddy = ddy(refl);
+   float delta_max_sqr = max(dot(reflddx, reflddx), dot(reflddy, reflddy));
+   float mip = 0.5 * log2(delta_max_sqr) * ( 1 - roughness2 ) * specularLevels;
+   float specLevel = roughness2 * specularLevels + mip;
+
+   float3 envSpecular = gEnvSpecular.SampleLevel(gSampler,
+                                                 reflect(-V, input.norm),
+                                                 specLevel).xyz;
+
    float2 envBRDF = gEnvSpecularLUT.Sample(gSamplerClamp, float2(saturate(dot(input.norm, V)), roughness2));
                 
    float3 envRadiance = ComputeIBL(albedo, specular, 
@@ -135,7 +144,7 @@ float4 main(PSInput input): SV_Target
 	// Scale color by ratio of average luminances.
    float3 mappedColor = (mappedLuminance / luminance) * finalColor;
 
-
+   return float4(envAlbedo, 1.f);
    // return float4(N * .5f + .5f, 1.f);
    // Gamma correction.
    // In my case, the render target share the exact format as the texture, so I have to do gamma correction here

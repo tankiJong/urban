@@ -58,14 +58,18 @@ public:
       PARAM_METALLIC,
       PARAM_ALBEDO,
    };
-
+   enum eOption {
+      OP_FIX_ALBEDO,
+      OP_FIX_ROUGHNESS,
+      OP_FIX_METALLIC,
+   };
    struct ConstParameters {
       float4 albedo;
       float4 roughness;
       float4 metallic;
    };
 
-   StandardMaterial();
+   StandardMaterial(span<eOption> options = {});
 
    void SetParam( eParameter param, const ShaderResourceView& tex );
    void SetParam( eParameter param, const float4& val );

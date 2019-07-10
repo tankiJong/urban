@@ -53,3 +53,8 @@ uint64_t Fence::GpuCurrentValue() const
    return mHandle->GetCompletedValue();
 }
 
+Fence::~Fence()
+{
+   Device::Get().RelaseObject( mHandle );
+}
+

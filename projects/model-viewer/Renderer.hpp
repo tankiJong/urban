@@ -24,7 +24,5 @@ protected:
    S<TextureCube> mEnvIrradiance = nullptr;
    S<TextureCube> mEnvSpecular   = nullptr;
 
-   S<const Texture2>    mAlbedo        = nullptr;
-
    mutable FrameBuffer mFrameBuffer;
 };

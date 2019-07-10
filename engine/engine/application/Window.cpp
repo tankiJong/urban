@@ -156,12 +156,12 @@ void Window::SwapBuffer()
 {
    S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
 
-   mFrameFence->IncreaseExpectedValue( );
    mainQueue->Signal( *mFrameFence );
 
    mFrameFence->Wait();
-
    mWindowData->swapChain->Present( 1, 0 );
+
+   mFrameFence->IncreaseExpectedValue( );
 
    mCurrentBackBufferIndex = ( mCurrentBackBufferIndex + 1 ) % kFrameCount;
    mCurrentFrameCount++;
@@ -249,8 +249,8 @@ void Window::AttachDevice( const S<Device>& device )
    mFrameFence = new Fence();
    SET_NAME(*mFrameFence);
 
-   mFrameFence->IncreaseExpectedValue();
+   // mFrameFence->IncreaseExpectedValue();
 
    S<CommandQueue> mainQueue = mDevice->GetMainQueue( eQueueType::Direct );
-   mainQueue->Signal( *mFrameFence );
+   // mainQueue->Signal( *mFrameFence );
 }

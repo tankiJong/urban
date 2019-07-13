@@ -4,7 +4,7 @@
     <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)bin\$(Configuration)\icudtl*.dat" />
     <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)bin\$(Configuration)\*_blob.bin" />
   </ItemGroup>
-  <ItemDefinitionGroup Condition="'$(PlatformToolset)' == 'v142' And '$(Platform)' == 'x64'">
+  <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

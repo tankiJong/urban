@@ -1,42 +1,7 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-!data/*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-#codedatabases
-*.db
-*.sdf
-*.opensdf
-
 # =========================
 # Build Folder
 build/
-
+temp/
 # =========================
 # Operating System Files
 # =========================
@@ -99,4 +64,3 @@ $RECYCLE.BIN/
 ipch
 *sdf
 .vs
-temp

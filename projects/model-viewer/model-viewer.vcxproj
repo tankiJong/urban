@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(SolutionDir)engine\external\build.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -43,16 +42,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
-    <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
-    <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
-    <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
-    <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</OutDir>
     <IntDir>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\</IntDir>
@@ -65,36 +54,6 @@
     <IncludePath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
-      <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-    </Link>
-    <FxCompile>
-      <VariableName>g%(Filename)</VariableName>
-    </FxCompile>
-    <FxCompile>
-      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
-    </FxCompile>
-    <FxCompile>
-      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile>
-      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
-      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
-      <ShaderModel>6.1</ShaderModel>
-    </FxCompile>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -109,40 +68,6 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-    </Link>
-    <FxCompile>
-      <VariableName>g%(Filename)</VariableName>
-    </FxCompile>
-    <FxCompile>
-      <HeaderFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include\%(RelativeDir)\%(Filename).h</HeaderFileOutput>
-    </FxCompile>
-    <FxCompile>
-      <ObjectFileOutput>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\bin\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
-    </FxCompile>
-    <FxCompile>
-      <AssemblerOutputFile>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\asm\%(RelativeDir)\%(Filename).cso</AssemblerOutputFile>
-      <AssemblerOutput>AssemblyCodeAndHex</AssemblerOutput>
-      <ShaderModel>6.1</ShaderModel>
-    </FxCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)temp\$(ProjectName)_$(PlatformName)_$(Configuration)\target\CompiledShader\include;$(ProjectDir)..\..\engine;$(ProjectDir)..\..\engine\external;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AssemblerListingLocation>$(IntDir)%(RelativeDir)\</AssemblerListingLocation>
-      <ObjectFileName>$(IntDir)%(RelativeDir)\</ObjectFileName>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <DisableSpecificWarnings>4201</DisableSpecificWarnings>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <FxCompile>
       <VariableName>g%(Filename)</VariableName>
@@ -247,4 +172,5 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <Import Project="$(SolutionDir)engine\engine.targets" />
 </Project>

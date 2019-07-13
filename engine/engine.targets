@@ -1,0 +1,41 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Project="$(SolutionDir)engine\external\build.props" />
+	<Target Name="AfterBuild">
+	    <Message Text="1. ReferencePath:%0D%0A%09@(ReferencePath->'$(OutDir)%(DestinationSubDirectory)%(Filename)%(Extension)', '%0D%0A%09')" />
+	    <Message Text="2. ReferenceCopyLocalPaths:%0D%0A%09@(ReferenceCopyLocalPaths->'$(OutDir)%(DestinationSubDirectory)%(Filename)%(Extension)', '%0D%0A%09')" />
+	    <ItemGroup>
+	    	<EngineResource Include="$(SolutionDir)engine\resource\**\*.*"/>
+	    	<EngineShader Include="$(SolutionDir)engine\engine\**\*.hlsl"/>
+	    	<EngineShader Include="$(SolutionDir)engine\engine\**\*.hlsli"/>
+
+	    	<ProgramResource Include="$(ProjectDir)\resource\**\*.*"/>
+	    	<ProgramShader Include="$(ProjectDir)**\*.hlsl"/>
+	    	<ProgramShader Include="$(ProjectDir)**\*.hlsli"/>
+
+	    </ItemGroup>
+	    	<Message Text="Copying engine resource files" />
+	  		<MakeDir Directories="$(OutDir)engine" Condition="!Exists('$(OutDir)engine')"/>
+	  		<MakeDir Directories="$(OutDir)engine\resource" Condition="!Exists('$(OutDir)engine\resource')"/>
+	  		<MakeDir Directories="$(OutDir)engine\shader" Condition="!Exists('$(OutDir)engine\shader')"/>
+	  		<Copy
+            SourceFiles="@(EngineResource)"
+            DestinationFiles="@(EngineResource->'$(OutDir)engine\resource\%(RecursiveDir)%(Filename)%(Extension)')"
+			/>
+			<Copy
+            SourceFiles="@(EngineShader)"
+            DestinationFiles="@(EngineShader->'$(OutDir)engine\shader\%(RecursiveDir)%(Filename)%(Extension)')"
+			/>
+
+	  		<MakeDir Directories="$(OutDir)data" Condition="!Exists('$(OutDir)data')"/>
+	  		<MakeDir Directories="$(OutDir)data\resource" Condition="!Exists('$(OutDir)data\resource')"/>
+	  		<MakeDir Directories="$(OutDir)data\shader" Condition="!Exists('$(OutDir)data\shader')"/>			
+			<Copy
+            SourceFiles="@(ProgramResource)"
+            DestinationFiles="@(ProgramResource->'$(OutDir)data\resource\%(RecursiveDir)%(Filename)%(Extension)')"
+			/>
+			<Copy
+            SourceFiles="@(ProgramShader)"
+            DestinationFiles="@(ProgramShader->'$(OutDir)data\shader\%(RecursiveDir)%(Filename)%(Extension)')"
+			/>
+	</Target>
+</Project>

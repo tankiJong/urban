@@ -62,13 +62,17 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
 
       std::vector<StandardMaterial::eOption> options;
 
+      if(mat->GetTextureCount( aiTextureType_NORMALS ) == 0) {
+         options.push_back( StandardMaterial::OP_NON_NORMAL_MAP );
+      }
+
       if(mat->GetTextureCount( aiTextureType_DIFFUSE ) == 0) {
-         options.push_back( StandardMaterial::OP_FIX_ALBEDO );
+         options.push_back( StandardMaterial::OP_FIXED_ALBEDO );
       }
 
       if(mat->GetTextureCount( aiTextureType_UNKNOWN ) == 0) {
-         options.push_back( StandardMaterial::OP_FIX_METALLIC );
-         options.push_back( StandardMaterial::OP_FIX_ROUGHNESS );
+         options.push_back( StandardMaterial::OP_FIXED_METALLIC );
+         options.push_back( StandardMaterial::OP_FIXED_ROUGHNESS );
       }
 
       S<StandardMaterial> material( new StandardMaterial(options) );
@@ -95,11 +99,38 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
             S<Texture2> texture;
             if(textures.find( tex ) == textures.end()) {
                texture = CreateAndUploadTexture( *list, tex );
+               texture->SetName( ToWString( storeName ).c_str() );
                Asset<Texture2>::Register( texture, storeName );
+               texture->SetName( ToWString( storeName ).c_str() );
                textures[tex] = texture;
             } else { texture = textures.at( tex ); }
 
             material->SetParam( StandardMaterial::PARAM_ALBEDO, *texture->Srv() );
+         }
+      }
+
+      // normal
+      {
+         if(mat->GetTextureCount( aiTextureType_NORMALS ) != 0) {
+            aiString path;
+            aiReturn ret = mat->GetTexture( aiTextureType_NORMALS, 0, &path );
+
+            //https://github.com/assimp/assimp/wiki/Embedded-Textures-References
+            ASSERT_DIE( *path.data == '*');
+            int texIndex = atoi(path.data+1);
+            aiTexture* tex = scene->mTextures[texIndex];
+
+            std::string storeName = Stringf( "%u_%s_%s", i, storeAssetPrefix.data(),
+                                             tex->mFilename.length == 0 ? "NORMAL" : tex->mFilename.C_Str() );
+            S<Texture2> texture;
+            if(textures.find( tex ) == textures.end()) {
+               texture = CreateAndUploadTexture( *list, tex );
+               texture->SetName( ToWString( storeName ).c_str() );
+               Asset<Texture2>::Register( texture, storeName );
+               textures[tex] = texture;
+            } else { texture = textures.at( tex ); }
+
+            material->SetParam( StandardMaterial::PARAM_NORMAL, *texture->Srv() );
          }
       }
 
@@ -125,6 +156,7 @@ void ImportTexturesAndMaterials(std::map<aiMaterial*, S<StandardMaterial>>& mate
             S<Texture2> texture;
             if(textures.find( tex ) == textures.end()) {
                texture = CreateAndUploadTexture( *list, tex );
+               texture->SetName( ToWString( storeName ).c_str() );
                Asset<Texture2>::Register( texture, storeName );
                textures[tex] = texture;
             } else { texture = textures.at( tex ); }
@@ -211,12 +243,12 @@ Model ModelImporter::Import( fs::path fileName )
 
       builder.End();
 
-      PrimBuilder pb;
-      pb.Begin( eTopology::Triangle );
-      pb.Sphere(0, 2, 20, 20);
-      pb.End();
-      Mesh mesh = pb.CreateMesh( eAllocationType::Persistent, false );
-      // Mesh mesh = builder.CreateMesh( eAllocationType::Persistent, false );
+      // PrimBuilder pb;
+      // pb.Begin( eTopology::Triangle );
+      // pb.Sphere(0, 2, 20, 20);
+      // pb.End();
+      // Mesh mesh = pb.CreateMesh( eAllocationType::Persistent, false );
+      Mesh mesh = builder.CreateMesh( eAllocationType::Persistent, false );
       uint meshIndex = model.AddMesh( std::move(mesh) );
 
       aiMaterial* mat = scene->mMaterials[aimesh->mMaterialIndex];

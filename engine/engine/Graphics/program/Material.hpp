@@ -49,6 +49,7 @@ class StandardMaterial: public Material, public inherit_shared_from_this<Materia
    static constexpr std::string_view tRoughness = "gRoughness";
    static constexpr std::string_view tMetallic = "gMetallic";
    static constexpr std::string_view tAlbedo = "gAlbedo";
+   static constexpr std::string_view tNormal = "gNormal";
 public:
 
    using inherit_shared_from_this<Material, StandardMaterial>::shared_from_this;
@@ -57,11 +58,13 @@ public:
       PARAM_ROUGHNESS,
       PARAM_METALLIC,
       PARAM_ALBEDO,
+      PARAM_NORMAL,
    };
    enum eOption {
-      OP_FIX_ALBEDO,
-      OP_FIX_ROUGHNESS,
-      OP_FIX_METALLIC,
+      OP_FIXED_ALBEDO,
+      OP_FIXED_ROUGHNESS,
+      OP_FIXED_METALLIC,
+      OP_NON_NORMAL_MAP,
    };
    struct ConstParameters {
       float4 albedo;

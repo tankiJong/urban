@@ -82,14 +82,17 @@ StandardMaterial::StandardMaterial(span<eOption> options)
 
    for(auto& option: options) {
       switch(option) { 
-         case OP_FIX_ALBEDO: 
+         case OP_FIXED_ALBEDO: 
          defines.push_back( "FIXED_ALBEDO" );
          break;
-      case OP_FIX_ROUGHNESS: 
+      case OP_FIXED_ROUGHNESS: 
          defines.push_back( "FIXED_ROUGHNESS" );
          break;
-      case OP_FIX_METALLIC: 
+      case OP_FIXED_METALLIC: 
          defines.push_back( "FIXED_METALLIC" );
+         break;
+      case OP_NON_NORMAL_MAP: 
+         defines.push_back( "NON_NORMAL_MAP" );
          break;
       default: 
          BAD_CODE_PATH();
@@ -127,6 +130,9 @@ void StandardMaterial::SetParam( eParameter param, const ShaderResourceView& tex
    case PARAM_ALBEDO: 
       name = tAlbedo.data();
       break;
+   case PARAM_NORMAL:
+      name = tNormal.data();
+      break;
    default:
    BAD_CODE_PATH();
    }
@@ -152,6 +158,7 @@ void StandardMaterial::SetParam( eParameter param, const float4& val )
                         sizeof(float4), 
                      offsetof( ConstParameters, metallic ) );
       break;
-
+   default:
+      BAD_CODE_PATH();
    }
 }

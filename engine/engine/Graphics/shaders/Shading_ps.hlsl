@@ -15,6 +15,7 @@ struct PSInput
    float4 pos : SV_POSITION;
    float3 world : WORLD_POS;
    float3 norm : NORMAL;
+   float3 tangent : TANGENT;
    float2 uv : UV;
 };
 
@@ -89,12 +90,20 @@ float4 main(PSInput input): SV_Target
    metallic = gMetallic.Sample(gSampler, input.uv).b;
 #endif
 
+#ifdef NON_NORMAL_MAP
+   float3 N = input.norm;
+#else
+   float3 localNormal = gNormal.Sample(gSampler, input.uv).xyz;
+   float3 N = TBNToWorld(localNormal, input.norm, input.tangent);
+#endif
+
+
+
    const float3 sFdielectric = 0.04f.xxx;
    float3 specular = lerp(sFdielectric, albedo, metallic);
 
    float3 L = normalize( light.position.xyz - input.world );
    float3 V = normalize(mul(invView, float4(0.f.xxx, 1)).xyz - input.world);
-   float3 N = input.norm;
    float3 H = normalize(L + V);
 
    float VdH = saturate(dot(V, H));
@@ -112,9 +121,9 @@ float4 main(PSInput input): SV_Target
    float specularLevels, _;
    gEnvSpecular.GetDimensions(0, _, _, specularLevels);
 
-   float3 envAlbedo = gEnvIrradiance.SampleLevel(gSampler, input.norm, 0).xyz;
+   float3 envAlbedo = gEnvIrradiance.SampleLevel(gSampler, N, 0).xyz;
 
-   float3 refl = reflect(-V, input.norm);
+   float3 refl = reflect(-V, N);
    float3 reflddx = ddx(refl);
    float3 reflddy = ddy(refl);
    float delta_max_sqr = max(dot(reflddx, reflddx), dot(reflddy, reflddy));
@@ -122,10 +131,10 @@ float4 main(PSInput input): SV_Target
    float specLevel = roughness2 * specularLevels + mip;
 
    float3 envSpecular = gEnvSpecular.SampleLevel(gSampler,
-                                                 reflect(-V, input.norm),
+                                                 reflect(-V, N),
                                                  specLevel).xyz;
 
-   float2 envBRDF = gEnvSpecularLUT.Sample(gSamplerClamp, float2(saturate(dot(input.norm, V)), roughness2));
+   float2 envBRDF = gEnvSpecularLUT.Sample(gSamplerClamp, float2(saturate(dot(N, V)), roughness2));
                 
    float3 envRadiance = ComputeIBL(albedo, specular, 
                                    envAlbedo, envSpecular,
@@ -144,7 +153,7 @@ float4 main(PSInput input): SV_Target
 	// Scale color by ratio of average luminances.
    float3 mappedColor = (mappedLuminance / luminance) * finalColor;
 
-   return float4(envAlbedo, 1.f);
+   // qreturn float4(pow(envAlbedo, 1 / 2.2), 1.f);
    // return float4(N * .5f + .5f, 1.f);
    // Gamma correction.
    // In my case, the render target share the exact format as the texture, so I have to do gamma correction here

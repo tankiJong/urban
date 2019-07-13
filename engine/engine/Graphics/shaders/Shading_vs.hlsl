@@ -21,6 +21,7 @@ struct PSInput
    float4 pos : SV_POSITION;
    float3 world : WORLD_POS;
    float3 norm : NORMAL;
+   float3 tangent : TANGENT;
    float2 uv : UV;
 };
 
@@ -72,5 +73,6 @@ PSInput main(VSInput input)
    output.pos = mul(mul(proj, view), float4(input.position, 1.f));
    output.uv = input.uv;
    output.norm = input.normal;
+   output.tangent = input.tangent.xyz * input.tangent.w;
    return output;
 }

@@ -10,7 +10,7 @@ static const float Eps = 0.00001;
 static const uint kSampleCount = 64 * 1024;
 static const float kInvSampleCount = 1.f / float(kSampleCount);
 
-TextureCube tSkyBox : register(t0);
+TextureCube tSkyBox: register(t0);
 RWTexture2DArray<float4> uEnvMap : register(u0);
 
 SamplerState sBilinear : register(s0);
@@ -101,16 +101,19 @@ void main( uint3 threadId : SV_DispatchThreadID )
    GenerateTBN(N, T, B);
 
    float3 irradiance = 0.f.xxx;
+   // irradiance = tSkyBox.SampleLevel(sBilinear, N, 0).xyz /* * PI / PI */;
+   // uEnvMap[threadId] = float4(irradiance, 1.f);
+   // return;
    for (uint i = 0; i < kSampleCount; i++)
    {
       float2 u = SampleHammersley(i);
       float3 local = SampleHemisphere(u);
-      float3 world = TangentToWorld(local, N, T, B);
-      float WdN = max(0.f, dot(world, N));
-
+      float3 world = normalize(TangentToWorld(local, N, T, B));
+      float WdN = saturate(dot(world, N));
+      float sintheta = sqrt(1 - WdN * WdN);
       // irradiance = C * 2 * PI / PDF
       // PDF = PI
-      irradiance += tSkyBox.SampleLevel(sBilinear, world, 0).xyz * WdN * 2 /* * PI / PI */;
+      irradiance += tSkyBox.SampleLevel(sBilinear, world, 0).xyz * WdN * 2 * sintheta /* * PI / PI */;
    }
 
    irradiance *= kInvSampleCount;

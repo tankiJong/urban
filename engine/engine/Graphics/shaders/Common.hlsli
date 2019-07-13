@@ -99,5 +99,15 @@ float4 Pow6(float4 x)
    return xx * xx * xx;
 }
 
+float3 TBNToWorld(float3 position, float3 normal, float3 tangent)
+{
+   float3x3 tbn = transpose(
+      float3x3(tangent, normalize(cross(normal, tangent)), normal)
+   );
+
+   return normalize(mul(tbn, position));
+
+}
+
 
 #endif

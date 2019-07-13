@@ -38,7 +38,7 @@
 void Renderer::Init()
 {
    mEnvIrradiance = TextureCube::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
-                                         32, 32, eTextureFormat::RGBA16Float, false );
+                                         64, 64, eTextureFormat::RGBA16Float, false );
    mEnvSpecular   = TextureCube::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
                                          1024, 1024, eTextureFormat::RGBA16Float, true );
    mSplitSumLUT   = Texture2::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource, 

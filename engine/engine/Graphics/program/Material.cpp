@@ -100,7 +100,7 @@ StandardMaterial::StandardMaterial(span<eOption> options)
    }
 
    mProgram.GetStage( eShaderType::Pixel )
-      = ubsc::CompileFromFile( "engine/engine/graphics/shaders/Shading_ps.hlsl", eShaderType::Pixel, "main", defines, eShaderCompileFlag::None);
+      = ubsc::CompileFromFile( "engine/shader/graphics/shaders/Shading_ps.hlsl", eShaderType::Pixel, "main", defines, eShaderCompileFlag::None);
 
    mProgram.GetStage( eShaderType::Vertex ).SetBinary( gShading_vs, sizeof(gShading_vs) );
 

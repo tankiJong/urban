@@ -91,13 +91,14 @@ bool Device::RhiInit(Window& window)
 
    model.HighestShaderModel = D3D_SHADER_MODEL_6_4;
    assert_win( mHandle->CheckFeatureSupport( D3D12_FEATURE_SHADER_MODEL, &model, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL)) );
+
    mCommandQueues[0] = CreateCommandQueue( eQueueType(0) );
    mCommandQueues[1] = CreateCommandQueue( eQueueType(1) );
    mCommandQueues[2] = CreateCommandQueue( eQueueType(2) );
 
-   mCommandQueues[0]->SetName(L"Copy");
-   mCommandQueues[1]->SetName(L"Compute");
-   mCommandQueues[2]->SetName(L"Direct");
+   mCommandQueues[0]->SetName(L"Copy Queue");
+   mCommandQueues[1]->SetName(L"Compute Queue");
+   mCommandQueues[2]->SetName(L"Direct Queue");
 
    window.AttachDevice( shared_from_this() );
    mWindow = &window;

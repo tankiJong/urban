@@ -150,7 +150,7 @@ void GameApplication::OnInit()
 
    ModelImporter importer;
 
-   mModel = importer.Import( "DamagedHelmet.gltf" );
+   mModel = importer.Import( "engine/resource/DamagedHelmet.gltf" );
 }
 
 void GameApplication::OnUpdate()

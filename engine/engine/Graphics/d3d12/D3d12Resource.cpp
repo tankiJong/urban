@@ -176,6 +176,8 @@ Buffer::Buffer( size_t size, eBindingFlag bindingFlags, eBufferUsage bufferUsage
    } else if (mBufferUsage == eBufferUsage::ReadBack) {
       ASSERT_DIE( mBindingFlags == eBindingFlag::None );
       SetGlobalState( eState::CopyDest );
+   } else if (is_any_set( mBindingFlags, eBindingFlag::AccelerationStructure )) {
+      SetGlobalState( eState::AccelerationStructure );
    } else {
       SetGlobalState( eState::Common );
    }
@@ -197,7 +199,9 @@ bool Buffer::Init()
    desc.SampleDesc.Quality = 0;
 
    ASSERT_DIE( mState.global );
-   D3D12_RESOURCE_STATES initState = ToD3d12ResourceState( mState.globalState );
+   D3D12_RESOURCE_STATES initState;
+
+   initState = ToD3d12ResourceState( mState.globalState );
 
    const D3D12_HEAP_PROPERTIES* prop;
    switch(mBufferUsage) {

@@ -1,5 +1,8 @@
 ﻿#include "engine/pch.h"
 #include "Mesh.hpp"
+#include "engine/graphics/Device.hpp"
+#include "engine/graphics/CommandList.hpp"
+#include "engine/graphics/CommandQueue.hpp"
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
@@ -17,11 +20,22 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-Mesh::Mesh( S<StructuredBuffer> vertexBuffer, S<StructuredBuffer> indexBuffer, const draw_instr_t& instr )
+Mesh::Mesh( S<StructuredBuffer> vertexBuffer, S<StructuredBuffer> indexBuffer, const draw_instr_t& instr, bool buildAccelerationStructure )
    : mVertexBuffer( vertexBuffer )
    , mIndexBuffer( indexBuffer )
    , mDrawInstr( instr )
 {
    ASSERT_DIE( vertexBuffer != nullptr );
    ASSERT_DIE_M( mDrawInstr.useIndices == (indexBuffer != nullptr ), "Missing IndexBuffer for Indexed Mesh");
+
+   if(buildAccelerationStructure) {
+      ReconstructAS();
+   }
+}
+
+void Mesh::ReconstructAS()
+{
+   CommandList list(eQueueType::Compute);
+   mBottomLevelAS = list.CreateBottomLevelAS( *mVertexBuffer, mIndexBuffer.get() );
+   Device::Get().GetMainQueue( eQueueType::Compute )->IssueCommandList( list );
 }

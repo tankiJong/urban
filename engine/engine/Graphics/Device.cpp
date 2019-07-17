@@ -120,7 +120,7 @@ void Device::ExecuteDeferredRelease()
    auto comp = [&](size_t* values)
    {
       for(uint i = 0; i < uint(eQueueType::Total); i++) {
-         if(currentValues[i] <= values[i]) return false;
+         if(currentValues[i] < values[i]) return false;
       }
       return true;
    };
@@ -129,6 +129,7 @@ void Device::ExecuteDeferredRelease()
       mDeferredReleaseList.pop();
    }
 
+   printf( "[Device] Left %llu items in the deferred release list\n", mDeferredReleaseList.size() );
    mGpuDescriptorHeap[0]->ExecuteDeferredRelease( currentValues, uint(eQueueType::Total) );
    mGpuDescriptorHeap[1]->ExecuteDeferredRelease( currentValues, uint(eQueueType::Total) );
 }

@@ -87,10 +87,12 @@ bool Device::RhiInit(Window& window)
 
    assert_win( D3D12CreateDevice(hardwareAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&mHandle)) );
    if(mHandle == nullptr) { return false; }
-    D3D12_FEATURE_DATA_SHADER_MODEL model{};
 
-   model.HighestShaderModel = D3D_SHADER_MODEL_6_4;
-   assert_win( mHandle->CheckFeatureSupport( D3D12_FEATURE_SHADER_MODEL, &model, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL)) );
+   // check DXR support
+   D3D12_FEATURE_DATA_D3D12_OPTIONS5 caps = {};
+   assert_win( mHandle->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof(caps) ) );
+   ASSERT_DIE( caps.RaytracingTier >= D3D12_RAYTRACING_TIER_1_0 );
+
 
    mCommandQueues[0] = CreateCommandQueue( eQueueType(0) );
    mCommandQueues[1] = CreateCommandQueue( eQueueType(1) );

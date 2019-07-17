@@ -4,6 +4,7 @@
 #include "Fence.hpp"
 #include "program/ResourceBinding.hpp"
 
+class StructuredBuffer;
 class FrameBuffer;
 class Mesh;
 class GraphicsState;
@@ -25,6 +26,7 @@ public:
    void Flush(bool wait = false);
    void Reset();
    void Close();
+   void MarkHasCommand() { mHasCommandPending = true; }
    // size_t Id() const { return mCommandListId; }
 
    void SetComputePipelineState(ComputeState& pps);
@@ -42,6 +44,7 @@ public:
    // compute ------------------------------------------------------------//
    void Dispatch(uint groupx, uint groupy, uint groupz);
    void Blit(const ShaderResourceView& src, const UnorderedAccessView& dst, const float2& srcScale = float2::One, const float2& dstUniOffset = float2::Zero);
+   S<Buffer> CreateBottomLevelAS(const StructuredBuffer& vertexBuffer, const StructuredBuffer* indexBuffer);
 
    // graphics ------------------------------------------------------------//
    void DrawMesh(const Mesh& mesh);
@@ -65,12 +68,12 @@ protected:
    bool mIsClosed = false;
    eQueueType mRequireCommandQueueType = eQueueType::Copy;
    uint mCreateFrame = 0;
-   Fence mExecutionFence;
+   Fence mExecutionFence = {};
    Device* mDevice = nullptr;
-   CommandBuffer* mCurrentUsedCommandBuffer;
+   CommandBuffer* mCurrentUsedCommandBuffer = nullptr;
    // size_t mCommandListId;
-   DescriptorPool* mGpuViewDescriptorPool;
-   DescriptorPool* mGpuSamplerDescripPool;
+   DescriptorPool* mGpuViewDescriptorPool = nullptr;
+   DescriptorPool* mGpuSamplerDescripPool = nullptr;
 };
 
 

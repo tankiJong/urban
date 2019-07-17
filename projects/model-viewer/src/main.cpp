@@ -28,6 +28,7 @@
 #include "../Renderer.hpp"
 #include "engine/graphics/model/ModelImporter.hpp"
 #include "engine/graphics/model/Model.hpp"
+#include "engine/graphics/TopLevelAS.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -135,6 +136,7 @@ protected:
    MvCamera mCamera;
    Model mModel;
    Renderer* mRenderer = nullptr;
+   TopLevelAS mSceneAS;
 };
 
 void GameApplication::OnInit()
@@ -151,6 +153,12 @@ void GameApplication::OnInit()
    ModelImporter importer;
 
    mModel = importer.Import( "engine/resource/DamagedHelmet.gltf" );
+
+   for(auto& element: mModel.Meshes()) {
+      mSceneAS.AddInstance( element );
+   }
+
+   mSceneAS.Finalize();
 }
 
 void GameApplication::OnUpdate()

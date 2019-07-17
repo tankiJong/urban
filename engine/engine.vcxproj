@@ -46,6 +46,7 @@
     <ClCompile Include="engine\graphics\d3d12\D3d12Resource.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12ResourceView.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12Sampler.cpp" />
+    <ClCompile Include="engine\graphics\d3d12\D3d12TopLevelAS.cpp" />
     <ClCompile Include="engine\graphics\d3d12\d3d12Util.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3dResourceBinding.cpp" />
     <ClCompile Include="engine\graphics\Descriptor.cpp" />
@@ -71,6 +72,7 @@
     <ClCompile Include="engine\graphics\Sampler.cpp" />
     <ClCompile Include="engine\graphics\StructuredBuffer.cpp" />
     <ClCompile Include="engine\graphics\Texture.cpp" />
+    <ClCompile Include="engine\graphics\TopLevelAS.cpp" />
     <ClCompile Include="engine\graphics\utils.cpp" />
     <ClCompile Include="engine\graphics\ResourceView.cpp" />
     <ClCompile Include="engine\gui\ImGui.cpp" />
@@ -168,6 +170,7 @@
     <ClInclude Include="engine\graphics\Sampler.hpp" />
     <ClInclude Include="engine\graphics\StructuredBuffer.hpp" />
     <ClInclude Include="engine\graphics\Texture.hpp" />
+    <ClInclude Include="engine\graphics\TopLevelAS.hpp" />
     <ClInclude Include="engine\graphics\utils.hpp" />
     <ClInclude Include="engine\graphics\ResourceView.hpp" />
     <ClInclude Include="engine\gui\ImGui.hpp" />

@@ -207,6 +207,21 @@ void CommandList::TransitionBarrier( const Resource& resource, Resource::eState 
    
 }
 
+void CommandList::UavBarrier( const Resource& resource )
+{
+   ASSERT_DIE( resource.IsStateGlobal() );
+   ASSERT_DIE( resource.GlobalState() == Resource::eState::UnorderedAccess 
+            || resource.GlobalState() == Resource::eState::AccelerationStructure );
+
+   mHasCommandPending = true;
+   D3D12_RESOURCE_BARRIER barrier;
+   barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+   barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+   barrier.UAV.pResource          = resource.Handle().Get();
+
+   mHandle->ResourceBarrier( 1, &barrier );
+}
+
 void CommandList::CopyResource( const Resource& from, Resource& to )
 {
    mHasCommandPending = true;
@@ -301,6 +316,55 @@ void CommandList::Blit(
 
    TransitionBarrier( *srcRes, Resource::eState::Common, &srcViewInfo );
    TransitionBarrier( *dstRes, Resource::eState::Common, &dstViewInfo );
+}
+
+S<Buffer> CommandList::CreateBottomLevelAS( const StructuredBuffer& vertexBuffer, const StructuredBuffer* indexBuffer )
+{
+   mHasCommandPending = true;
+
+   D3D12_RAYTRACING_GEOMETRY_DESC geometry;
+   ZeroMemory(&geometry, sizeof(geometry));
+
+   geometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+   geometry.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+   geometry.Triangles.Transform3x4 = NULL;
+
+   // RGB32 for vertex
+   ASSERT_DIE( sizeof(vertex_t::position) == sizeof(float)*3 );
+   geometry.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+   geometry.Triangles.VertexBuffer.StartAddress = vertexBuffer.GpuStartAddress();
+   geometry.Triangles.VertexBuffer.StrideInBytes = vertexBuffer.GetStride();
+   geometry.Triangles.VertexCount = vertexBuffer.GetElementCount();
+
+   if( indexBuffer != nullptr ) {
+      geometry.Triangles.IndexBuffer = indexBuffer->GpuStartAddress();
+      ASSERT_DIE( sizeof(mesh_index_t) == sizeof(uint32_t) );
+      geometry.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
+      geometry.Triangles.IndexCount = indexBuffer->GetElementCount();
+   }
+
+   D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};
+   asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+   asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+   asInputs.pGeometryDescs = &geometry;
+   asInputs.NumDescs = 1;
+   asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+
+   D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO asBuildInfo = {};
+   Device::Get().NativeDevice()->GetRaytracingAccelerationStructurePrebuildInfo( &asInputs, &asBuildInfo );
+
+   S<Buffer> scratchBuffer = Buffer::Create( asBuildInfo.ScratchDataSizeInBytes, eBindingFlag::UnorderedAccess, Buffer::eBufferUsage::Default, eAllocationType::Temporary );
+   S<Buffer> blas = Buffer::Create( asBuildInfo.ResultDataMaxSizeInBytes, eBindingFlag::AccelerationStructure, Buffer::eBufferUsage::Default, eAllocationType::General );
+
+   D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
+   desc.Inputs = asInputs;
+   desc.ScratchAccelerationStructureData = scratchBuffer->GpuStartAddress();
+   desc.DestAccelerationStructureData = blas->GpuStartAddress();
+
+   mHandle->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+   UavBarrier( *blas );
+   
+   return blas;
 }
 
 void CommandList::DrawMesh( const Mesh& mesh )

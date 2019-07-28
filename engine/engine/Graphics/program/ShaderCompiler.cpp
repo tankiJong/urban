@@ -291,7 +291,7 @@ Shader ubsc::Compile(
    case eShaderType::Pixel: 
       target = "ps_6_1";
       break;
-   case eShaderType::Total:
+   case eShaderType::GraphicsTotal:
    case eShaderType::Unknown:
    default:
    BAD_CODE_PATH();

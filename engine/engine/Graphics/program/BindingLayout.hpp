@@ -77,8 +77,9 @@ public:
    BindingLayout& operator=( BindingLayout&& other ) noexcept = default;
 
    BindingLayout GetPartLayout(const Option& op) const;
-
    void MarkTableStatic(uint index) { mLayout[index].isStatic = true; }
+
+   static void InitRootSignature(rootsignature_t& inoutHandle, const BindingLayout& layout, bool rtLocal);
 protected:
    std::vector<table_t> mLayout;
    Option mOptions;

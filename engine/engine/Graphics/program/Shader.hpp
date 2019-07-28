@@ -20,11 +20,10 @@ public:
    const BindingLayout& GetBindingLayout() const { return mBindingLayout; }
    const ShaderReflection& GetShaderReflection() const { return mReflection; }
    void SetType( eShaderType t ) { mType = t; }
-
+   eShaderType GetType() const { return mType; }
    bool Valid() const { return mBinary.Size() > 0; } 
 protected:
 
-   void SetupBindingLayout();
    eShaderType   mType = eShaderType::Unknown;
    Blob          mBinary;
    BindingLayout mBindingLayout;

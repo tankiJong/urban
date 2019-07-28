@@ -35,6 +35,7 @@ MAKE_SMART_COM_PTR( ID3D12Fence );
 MAKE_SMART_COM_PTR( IUnknown );
 MAKE_SMART_COM_PTR( ID3D12DescriptorHeap );
 MAKE_SMART_COM_PTR( ID3D12PipelineState );
+MAKE_SMART_COM_PTR( ID3D12StateObject );
 MAKE_SMART_COM_PTR( ID3D12RootSignature );
 MAKE_SMART_COM_PTR( ID3DBlob );
 
@@ -46,6 +47,7 @@ using command_list_t = ID3D12GraphicsCommandList4Ptr;
 using resource_handle_t = ID3D12ResourcePtr;
 using fence_t = ID3D12FencePtr;
 using pipelinestate_t = ID3D12PipelineStatePtr;
+using stateobject_t = ID3D12StateObjectPtr;
 using rootsignature_t = ID3D12RootSignaturePtr;
 using descriptor_heap_t = ID3D12DescriptorHeapPtr;
 using descriptor_cpu_handle_t = D3D12_CPU_DESCRIPTOR_HANDLE;

@@ -24,7 +24,9 @@ public:
   }
 };
 
-
+#define KB * 1024
+#define MB KB * 1024
+#define GB MB * 1024
 
 #define SAFE_DELETE(p) if((p)) { delete (p); (p) = nullptr; } 
 

@@ -42,9 +42,12 @@ public:
    void CopyBufferRegion(Buffer& from, size_t fromOffset, Buffer& to, size_t toOffset, size_t byteCount = 0);
 
    // compute ------------------------------------------------------------//
-   void Dispatch(uint groupx, uint groupy, uint groupz);
-   void Blit(const ShaderResourceView& src, const UnorderedAccessView& dst, const float2& srcScale = float2::One, const float2& dstUniOffset = float2::Zero);
    S<Buffer> CreateBottomLevelAS(const StructuredBuffer& vertexBuffer, const StructuredBuffer* indexBuffer);
+
+   void Dispatch(uint groupx, uint groupy, uint groupz);
+   void DispatchRays(uint dimx, uint dimy, uint dimz);
+
+   void Blit(const ShaderResourceView& src, const UnorderedAccessView& dst, const float2& srcScale = float2::One, const float2& dstUniOffset = float2::Zero);
 
    // graphics ------------------------------------------------------------//
    void DrawMesh(const Mesh& mesh);

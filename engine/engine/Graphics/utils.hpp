@@ -106,6 +106,11 @@ enum class eShaderType: uint {
    Compute = 0,
    Vertex,
    Pixel,
+   GraphicsTotal,
+   RtGen = GraphicsTotal,
+   RtMiss,
+   RtAnyHit,
+   RtClosestHit,
    Total,
 };
 

@@ -24,7 +24,7 @@ public:
    bool Ready() const { return mIsReady; }
 
 protected:
-   std::array<Shader, uint(eShaderType::Total)> mStages;
+   std::array<Shader, uint(eShaderType::GraphicsTotal)> mStages;
    BindingLayout mBindingLayout;
    ShaderReflection mShaderReflection;
    bool mIsReady = false;

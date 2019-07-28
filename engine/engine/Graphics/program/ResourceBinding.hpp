@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "BindingLayout.hpp"
 #include "engine/graphics/ResourceView.hpp"
+#include "engine/graphics/ConstantBuffer.hpp"
 
 class CommandList;
 class Sampler;
@@ -45,12 +46,10 @@ public:
 
       void Append( const BindingItem& b ) { mBindingItems.push_back( b ); }
 
+      void BindFor( CommandList& commandList, uint startRootIndex, bool forCompute );
       void FinalizeStaticResources();
 
-      void BindFor( CommandList& commandList, uint startRootIndex, bool forCompute ) ;
-
    protected:
-
       std::vector<BindingItem> mBindingItems;
       std::vector<Descriptors> mBindLocations;
       const ResourceBinding*   mOwner       = nullptr;
@@ -74,7 +73,40 @@ public:
    uint RequiredTableCount();
 protected:
 
-   void         RegenerateFlattened();
+   void          RegenerateFlattened();
    BindingLayout mLayout;
-   Flattened     mFlattenedBindings { *this };
+   Flattened     mFlattenedBindings{ *this };
+};
+
+class RayTracingBinding {
+public:
+   enum class eRecordType {
+      Shader,
+      HitGroup,
+   };
+
+   struct Record {
+      eRecordType   type;
+      uint          identifier;
+      BindingLayout layout;
+   };
+
+   void SetGlobalSrv( const ShaderResourceView* srv, uint registerIndex, uint registerSpace = 0 );
+   void SetGlobalCbv( const ConstantBufferView* cbv, uint registerIndex, uint registerSpace = 0 );
+   void SetGlobalUav( const UnorderedAccessView* uav, uint registerIndex, uint registerSpace = 0 );
+   void SetGlobalSampler( const Sampler* sampler, uint registerIndex, uint registerSpace = 0 );
+
+   void SetLocalSrv( std::string_view recordName, const ShaderResourceView* srv, uint registerIndex, uint registerSpace = 0 );
+   void SetLocalCbv( std::string_view recordName, const ConstantBufferView* cbv, uint registerIndex, uint registerSpace = 0 );
+   void SetLocalUav( std::string_view recordName, const UnorderedAccessView* uav, uint registerIndex, uint registerSpace = 0 );
+   void SetLocalSampler( std::string_view recordName, const Sampler* sampler, uint registerIndex, uint registerSpace = 0 );
+
+   void BindFor( CommandList& list, int startRootIndex );
+protected:
+   static constexpr size_t kShaderRecordStride = 4 KB; // bytes
+
+   bool                mIsDirty    = true;
+   S<Buffer>           mGpuStorage = nullptr;
+   Blob                mCpuCache;
+   std::vector<Record> mShaderTable;
 };

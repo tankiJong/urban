@@ -8,6 +8,8 @@ public:
    uint AddInstance( const Mesh& blas, uint8_t instanceMask = 0xFF, const mat44& transform = mat44::Identity );
    void Finalize(CommandList* commandList = nullptr);
 
+   ShaderResourceView* Srv() const;
+
    resource_handle_t Handle() const { ASSERT_DIE( mTlas != nullptr ); return mTlas->Handle(); };
 
 protected:

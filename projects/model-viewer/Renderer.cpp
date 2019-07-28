@@ -19,6 +19,10 @@
 #include "engine/graphics/Sampler.hpp"
 #include "engine/graphics/model/Model.hpp"
 #include "engine/graphics/program/Material.hpp"
+#include "engine/graphics/program/ShaderSource.hpp"
+#include "engine/graphics/TopLevelAS.hpp"
+
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -44,6 +48,9 @@ void Renderer::Init()
    mSplitSumLUT   = Texture2::Create( eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource, 
                                       1024, 1024, 1, eTextureFormat::RG16Float, false );
 
+   auto windowSize = Window::Get().WindowSize();
+   mColorBuffer = Texture2::Create( eBindingFlag::UnorderedAccess, 
+                                    windowSize.x, windowSize.y, 1, eTextureFormat::RGBA8Unorm );
    SET_NAME( *mEnvIrradiance );
    SET_NAME( *mEnvSpecular );
    SET_NAME( *mSplitSumLUT );
@@ -119,10 +126,10 @@ void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, cons
    };
    static ResourceBinding bindings(reservedLayout);
 
-   STATIC_BLOCK {
-      bindings.SetCbv( camera->Cbv(), 0, 0 );
-      bindings.SetCbv( light->Cbv(),  1, 0 );
+   bindings.SetCbv( camera->Cbv(), 0, 0 );
+   bindings.SetCbv( light->Cbv(),  1, 0 );
 
+   STATIC_BLOCK {
       bindings.SetSrv( mEnvIrradiance->Srv(), 0, 0 );
       bindings.SetSrv( mEnvSpecular->Srv(),   1, 0 );
       bindings.SetSrv( mSplitSumLUT->Srv(),   2, 0 );
@@ -170,64 +177,54 @@ void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, cons
    Device::Get().GetMainQueue( eQueueType::Compute )->Wait( syncFence );
 
 }
-//
-// void Renderer::Render( const Model& model, const S<ConstantBuffer>& camera, const S<ConstantBuffer>& light ) const
-// {
-//    RenderSkyBox(camera);
-//
-//    static Program* prog = nullptr;
-//    static GraphicsState* gs = nullptr;
-//    static ResourceBinding* binding = nullptr;
-//
-//    if(prog == nullptr) {
-//       prog = new Program();
-//
-//       prog->GetStage( eShaderType::Vertex ).SetBinary( gpass_vs, sizeof(gpass_vs) );
-//       prog->Finalize();
-//       binding = new ResourceBinding(prog);
-//       binding->SetSrv(mAlbedo->Srv(), 0);
-//       binding->SetSrv( mEnvIrradiance->Srv(), 1 );
-//       binding->SetSrv( mEnvSpecular->Srv(), 2 );
-//       binding->SetSrv( mSplitSumLUT->Srv(), 3 );
-//       binding->SetCbv(camera->Cbv(), 0);
-//       binding->SetCbv(light->Cbv(), 1);
-//       binding->SetSampler( Sampler::Bilinear(), 1);
-//    }
-//
-//    prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
-//    // prog->GetStage( eShaderType::Pixel ).SetBinary( gpass_ps, sizeof(gpass_ps) );
-//    
-//    if(gs == nullptr) {
-//       gs = new GraphicsState();
-//       gs->SetTopology( eTopology::Triangle );
-//       RenderState rs = gs->GetRenderState();
-//       rs.depthStencil.depthFunc = eDepthFunc::Less;
-//       gs->SetRenderState( rs );
-//    }
-//    
-//    gs->SetProgram( prog );
-//
-//    mFrameBuffer.SetRenderTarget( 0, Window::Get().BackBuffer().Rtv() );
-//    mFrameBuffer.SetDepthStencilTarget( Window::Get().DepthBuffer().Dsv() );
-//
-//    gs->GetFrameBufferDesc() = mFrameBuffer.Describe();
-//
-//    CommandList list(eQueueType::Direct);
-//
-//    list.SetName( L"Draw CommandList" );
-//    camera->UploadGpu(&list);
-//    light->UploadGpu( &list );
-//    list.TransitionBarrier( Window::Get().BackBuffer(), Resource::eState::RenderTarget );
-//    // list.ClearRenderTarget( Window::Get().BackBuffer(), rgba{.1f, .4f, 1.f} );
-//    list.TransitionBarrier( *mAlbedo, Resource::eState::ShaderResource );
-//    list.SetGraphicsPipelineState( *gs );
-//    list.BindResources( *binding );
-//    list.SetFrameBuffer( mFrameBuffer );
-//    
-//    model.Render(list);
-//
-//    Device::Get().GetMainQueue( eQueueType::Direct )->IssueCommandList( list );
-// }
+
+void Renderer::TraceScene(
+   const TopLevelAS& scene,
+   const S<ConstantBuffer>& camera,
+   const S<ConstantBuffer>& light )
+{
+   mRayTracingBindings.SetGlobalCbv( camera->Cbv(), 0, 0 );
+   mRayTracingBindings.SetGlobalCbv( light->Cbv(),  1, 0 );
+   mRayTracingBindings.SetGlobalSrv( mEnvIrradiance->Srv(), 0, 0 );
+   mRayTracingBindings.SetGlobalSrv( mEnvSpecular->Srv(),   1, 0 );
+   mRayTracingBindings.SetGlobalSrv( mSplitSumLUT->Srv(),   2, 0 );
+   mRayTracingBindings.SetGlobalSrv( scene.Srv(), 3, 0 );
+   mRayTracingBindings.SetGlobalUav( mColorBuffer->Uav(),   0, 0 );
+   mRayTracingBindings.SetGlobalSampler( Sampler::Bilinear(), 11, 0 );
+
+   CommandList list(eQueueType::Compute);
+
+   mRayTracingBindings.BindFor(list, 0);
+
+   list.DispatchRays( 1024, 1024, 1 );
+
+}
+
+void Renderer::SetupRaytracingPipeline()
+{
+   Blob text = fs::ReadText( "data/shader/src/rt_pass.hlsl" );
+   ShaderSource source({ (const char*)text.Data(), text.Size() }, "rt_shaders");
+
+   RayTracingStateBuilder builder;
+   builder.DefineShader( 
+      source.Compile( eShaderType::RtGen, "RayGen" ),
+      "rt_raygen" );
+
+   builder.DefineShader( 
+      source.Compile( eShaderType::RtMiss, "SimpleMiss" ),
+      "rt_miss" );
+   
+   uint rchs = builder.DefineShader( 
+      source.Compile( eShaderType::RtAnyHit, "SimpleHit" ),
+      "rt_closesthit" );
+
+   builder.DefineHitGroup( "rt_defaultGroup", 
+                           RayTracingStateBuilder::kInvlidShader,
+                           rchs );
+
+   builder.ConstructRayTracingState( &mRtState );
+   mRtState.InitResourceBinding( mRayTracingBindings );
+}
 
 void Renderer::PrefilterEnvironment() const
 {

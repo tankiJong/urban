@@ -4,10 +4,8 @@
 #include "engine/graphics/program/Program.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/platform/win.hpp"
-#include "engine/graphics/ResourceView.hpp"
-#include "engine/graphics/Resource.hpp"
 #include "engine/graphics/model/vertex.hpp"
-#include "engine/graphics/shaders/equirect2cube_cs.h"
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -232,38 +230,7 @@ void SetD3d12FrameBufferFormats( D3D12_GRAPHICS_PIPELINE_STATE_DESC* desc, const
 ////////////////////////////////////////////////////////////////
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
-
-void FrameBuffer::SetRenderTarget( uint index, const RenderTargetView* rtv )
-{
-   if(rtv == nullptr) {
-      rtv = RenderTargetView::NullView();
-   }
-   mDesc.renderTargets[index] = rtv->Format();
-   mRenderTargets[index] = rtv;
-}
-
-void FrameBuffer::SetDepthStencilTarget( const DepthStencilView* dsv )
-{
-   if(dsv == nullptr) {
-      dsv = DepthStencilView::NullView();
-   }
-   mDesc.depthStencilTarget = dsv->Format();
-   mDepthStencilTarget = dsv;
-}
-
-FrameBuffer::FrameBuffer()
-{
-   for(const RenderTargetView*& renderTarget: mRenderTargets) {
-      renderTarget = RenderTargetView::NullView();
-   }
-   // mDepthStencilTarget = DepthStencilView::NullView()
-}
-
-PipelineState::~PipelineState()
-{
-   Device::Get().RelaseObject( mHandle );
-}
-
+///
 bool ComputeState::Finalize()
 {
    if(!mIsDirty) return false;
@@ -329,4 +296,98 @@ bool GraphicsState::Finalize()
    assert_win( Device::Get().NativeDevice()->CreateGraphicsPipelineState( &desc, IID_PPV_ARGS( &mHandle ) ) );
 
    return true;
+}
+
+void RayTracingStateBuilder::ConstructRayTracingState( RayTracingState* inoutState )
+{
+   std::vector<D3D12_STATE_SUBOBJECT> subobjects;
+   subobjects.reserve( mShaders.size() + mHitGroups.size() );
+
+
+   std::vector<D3D12_EXPORT_DESC> exportDescs;
+   std::vector<D3D12_DXIL_LIBRARY_DESC> shaderDescs;
+   exportDescs.reserve( mShaders.size() );
+   shaderDescs.reserve( mShaders.size() );
+
+   std::vector<const WCHAR*> rayGenAndHitGroups;
+
+   for(NamedShader& shader: mShaders) {
+      auto& desc = exportDescs.emplace_back();
+      desc.Name = shader.name.c_str();
+      desc.Flags = D3D12_EXPORT_FLAG_NONE;
+      desc.ExportToRename = nullptr;
+
+      auto& shaderDesc = shaderDescs.emplace_back();
+      shaderDesc.DXILLibrary.pShaderBytecode = shader.shader.GetDataPtr();
+      shaderDesc.DXILLibrary.BytecodeLength = shader.shader.GetSize();
+      shaderDesc.NumExports = 1;
+      shaderDesc.pExports = &desc;
+
+      auto& shaderSubobject = subobjects.emplace_back();
+      shaderSubobject.Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
+      shaderSubobject.pDesc = &shaderDesc;
+
+      if(shader.shader.GetType() == eShaderType::RtGen) {
+         rayGenAndHitGroups.push_back( shader.name.c_str() );
+      }
+   }
+
+   std::vector<D3D12_HIT_GROUP_DESC> hitGroupDescs;
+   hitGroupDescs.reserve( mHitGroups.size() );
+   for(HitGroup& hitGroup: mHitGroups) {
+      auto& hitGroupDesc = hitGroupDescs.emplace_back();
+      hitGroupDesc.Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;
+
+      hitGroupDesc.ClosestHitShaderImport = nullptr;
+      hitGroupDesc.AnyHitShaderImport = nullptr;
+      if(hitGroup.closestHit != kInvlidShader){
+         NamedShader& shader = mShaders[hitGroup.closestHit];
+         hitGroupDesc.ClosestHitShaderImport = shader.name.c_str();
+      }
+      if(hitGroup.anyHit != kInvlidShader){
+         NamedShader& shader = mShaders[hitGroup.anyHit];
+         hitGroupDesc.AnyHitShaderImport = shader.name.c_str();
+      }
+
+      auto& hitGroupSubobject = subobjects.emplace_back();
+      hitGroupSubobject.Type = D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;
+      hitGroupSubobject.pDesc = &hitGroupDesc;
+
+      rayGenAndHitGroups.push_back( hitGroup.name.c_str() );
+
+   }
+
+   D3D12_RAYTRACING_SHADER_CONFIG shaderConfigDesc = {
+      sizeof(float4), // TODO: should change to reflect the actual payload 
+      D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES
+   };
+
+   auto& shaderConfigSubobject = subobjects.emplace_back();
+   shaderConfigSubobject.Type = D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG;
+   shaderConfigSubobject.pDesc = &shaderConfigDesc;
+
+   D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION assocDesc = {};
+   assocDesc.NumExports = UINT(rayGenAndHitGroups.size());
+   assocDesc.pExports = rayGenAndHitGroups.data();
+   assocDesc.pSubobjectToAssociate = &shaderConfigSubobject;
+
+   auto& assocSubobject = subobjects.emplace_back();
+   assocSubobject.Type = D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
+   assocSubobject.pDesc = &assocDesc;
+
+   // merge the reserved part of all shaders -> Global root signature
+   // the left parts are local root signatures
+
+   D3D12_STATE_OBJECT_DESC rtpsoDesc = {
+      D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE,
+      UINT(subobjects.size()), // will change
+      subobjects.data(),
+   };
+   Device::Get().Handle()->CreateStateObject( &rtpsoDesc, IID_PPV_ARGS( &inoutState->Handle() ) );
+
+}
+
+void RayTracingState::InitResourceBinding( RayTracingBinding& rb ) const
+{
+   
 }

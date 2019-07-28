@@ -97,7 +97,6 @@ CommandList::CommandList( eQueueType type )
 CommandList::~CommandList()
 {
    CleanupDescriptorPools();
-   
 }
 
 void CommandList::Reset()

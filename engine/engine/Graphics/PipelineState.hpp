@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "utils.hpp"
+#include "program/Shader.hpp"
 
 class DepthStencilView;
 class RenderTargetView;
@@ -105,4 +106,43 @@ protected:
    eTopology          mTopology        = eTopology::Unknown;
    RenderState        mRenderState     = {};
    FrameBuffer::Desc  mFrameBufferDesc = {};
+};
+
+////////////////////////////////////////////////////////
+//------------------ RayTracingState -----------------//
+
+class RayTracingState;
+
+class RayTracingStateBuilder {
+public:
+   using rt_shader_handle_t = uint;
+   using hitgroup_handle_t = uint;
+   static constexpr rt_shader_handle_t kInvlidShader = UINT32_MAX;
+
+   rt_shader_handle_t DefineShader(eShaderType type, void* data, size_t size, std::string_view recordName);
+   rt_shader_handle_t DefineShader(const Shader& shader, std::string_view recordName);
+   hitgroup_handle_t  DefineHitGroup(std::string_view name, rt_shader_handle_t anyHit, rt_shader_handle_t closestHit);
+   void ConstructRayTracingState(RayTracingState* inoutState);
+
+protected:
+   struct NamedShader {
+      std::wstring name;
+      Shader shader;
+   };
+
+   struct HitGroup {
+      std::wstring name;
+      rt_shader_handle_t anyHit = kInvlidShader;
+      rt_shader_handle_t closestHit = kInvlidShader;
+   };
+   std::vector<NamedShader> mShaders;
+   std::vector<HitGroup> mHitGroups;
+};
+
+class RayTracingBinding;
+
+class RayTracingState: public WithHandle<stateobject_t> {
+public:
+   void InitResourceBinding( RayTracingBinding& rb ) const;
+protected:
 };

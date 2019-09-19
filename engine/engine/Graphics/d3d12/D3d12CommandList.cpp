@@ -248,7 +248,7 @@ void CommandList::Blit(
 {
    static ComputeState *blitPps = nullptr, *blitArrayPps = nullptr;
    static Program       blitProgram,        blitArrayProgram;
-   if(blitPps == nullptr) {
+   STATIC_BLOCK {
       blitPps = new ComputeState();
       blitProgram.GetStage( eShaderType::Compute ).SetBinary( gBlit_cs, sizeof(gBlit_cs) );
       blitProgram.Finalize();
@@ -258,7 +258,7 @@ void CommandList::Blit(
       blitArrayProgram.GetStage( eShaderType::Compute ).SetBinary( gBlitArray_cs, sizeof(gBlitArray_cs) );
       blitArrayProgram.Finalize();
       blitArrayPps->SetProgram( &blitArrayProgram );
-   }
+   };
 
    // checks
 
@@ -291,8 +291,11 @@ void CommandList::Blit(
       float  gamma;
    };
 
-   S<ConstantBuffer> constants = ConstantBuffer::CreateFor<cBlit>( { dstUniOffset, srcScale, IsSRGBFormat( dstRes->Format() ) ? 1.f : 0.f },
-                                                                   eAllocationType::Temporary );
+   S<ConstantBuffer> constants = 
+      ConstantBuffer::CreateFor<cBlit>( 
+               { dstUniOffset, srcScale, IsSRGBFormat( dstRes->Format() ) ? 1.f : 0.f },
+               eAllocationType::Temporary 
+         );
 
    ResourceBinding bindings( prog->GetBindingLayout() );
    bindings.SetSrv( &src, 0 );

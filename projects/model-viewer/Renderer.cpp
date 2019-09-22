@@ -183,20 +183,20 @@ void Renderer::TraceScene(
    const S<ConstantBuffer>& camera,
    const S<ConstantBuffer>& light )
 {
-   mRayTracingBindings.SetGlobalCbv( camera->Cbv(), 0, 0 );
-   mRayTracingBindings.SetGlobalCbv( light->Cbv(),  1, 0 );
-   mRayTracingBindings.SetGlobalSrv( mEnvIrradiance->Srv(), 0, 0 );
-   mRayTracingBindings.SetGlobalSrv( mEnvSpecular->Srv(),   1, 0 );
-   mRayTracingBindings.SetGlobalSrv( mSplitSumLUT->Srv(),   2, 0 );
-   mRayTracingBindings.SetGlobalSrv( scene.Srv(), 3, 0 );
-   mRayTracingBindings.SetGlobalUav( mColorBuffer->Uav(),   0, 0 );
-   mRayTracingBindings.SetGlobalSampler( Sampler::Bilinear(), 11, 0 );
+   //mRayTracingBindings.SetGlobalCbv( camera->Cbv(), 0, 0 );
+   //mRayTracingBindings.SetGlobalCbv( light->Cbv(),  1, 0 );
+   //mRayTracingBindings.SetGlobalSrv( mEnvIrradiance->Srv(), 0, 0 );
+   //mRayTracingBindings.SetGlobalSrv( mEnvSpecular->Srv(),   1, 0 );
+   //mRayTracingBindings.SetGlobalSrv( mSplitSumLUT->Srv(),   2, 0 );
+   //mRayTracingBindings.SetGlobalSrv( scene.Srv(), 3, 0 );
+   //mRayTracingBindings.SetGlobalUav( mColorBuffer->Uav(),   0, 0 );
+   //mRayTracingBindings.SetGlobalSampler( Sampler::Bilinear(), 11, 0 );
 
-   CommandList list(eQueueType::Compute);
+   //CommandList list(eQueueType::Compute);
 
-   mRayTracingBindings.BindFor(list, 0);
+   //mRayTracingBindings.BindFor(list, 0);
 
-   list.DispatchRays( 1024, 1024, 1 );
+   //list.DispatchRays( 1024, 1024, 1 );
 
 }
 

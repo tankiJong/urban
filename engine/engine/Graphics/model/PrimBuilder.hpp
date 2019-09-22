@@ -39,6 +39,8 @@ public:
    PrimBuilder& Sphere( const float3& center, float size, uint xLevel = 10u, uint yLevel = 10u );
 
    Mesh CreateMesh( eAllocationType type, bool syncGpu ) const;
+
+   span<const vertex_t> CurrentVertices() const { return mVertices;  }
 protected:
    vertex_t mCurrentVertex = {};
    std::vector<vertex_t> mVertices;

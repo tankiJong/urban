@@ -302,7 +302,7 @@ void Texture::UpdateData( const void* data, size_t size, size_t offset, CommandL
    S<Buffer> uploadBuffer = Buffer::Create(uploadBufferSize, eBindingFlag::None, Buffer::eBufferUsage::Upload, eAllocationType::Temporary);
    uploadBuffer->UploadData( data, size, offset );
 
-   size_t pixelSize = GetTextureFormatStride( mFormat ) / 8u;
+   size_t pixelSize = GetTextureFormatBitStride( mFormat ) / 8u;
    D3D12_SUBRESOURCE_DATA textureData = {
       data,
       LONG_PTR(Width() * pixelSize),

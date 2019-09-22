@@ -13,6 +13,8 @@ public:
    size_t GetByteSize() const { return mStride * mCount; }
 
    void SetCache( size_t indexOffset, const void* data, size_t elementCount );
+   span<const byte> GetCache() const { return mCpuCache; }
+
    void UploadGpu( CommandList* list = nullptr);
 
    static S<StructuredBuffer> Create(

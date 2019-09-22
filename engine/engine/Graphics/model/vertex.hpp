@@ -1,9 +1,9 @@
 ﻿#pragma once
 
-#pragma pack (push)
-#pragma pack (1)
 #include "engine/graphics/utils.hpp"
 
+#pragma pack (push)
+#pragma pack (1)
 struct vertex_t {
    float3 position;
    float2 uv;

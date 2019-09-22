@@ -195,6 +195,12 @@ int2 Window::ScreenToClient( int2 pixelPosition ) const
   return { desktopPos.x, desktopPos.y };
 }
 
+void Window::SetTitle( const wchar_t* title )
+{
+	HWND hwnd = (HWND)mHandle;
+	SetWindowTextW(hwnd, title);
+}
+
 Window& Window::Get()
 {
    if(!gWindow) {

@@ -242,6 +242,7 @@
     <ClInclude Include="engine\graphics\program\ShaderReflection.hpp" />
     <ClInclude Include="engine\core\span.hpp" />
     <ClInclude Include="engine\graphics\TopLevelAS.hpp" />
+    <ClInclude Include="engine\math\shapes.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -348,6 +349,7 @@
     <ClCompile Include="engine\graphics\program\ShaderReflection.cpp" />
     <ClCompile Include="engine\graphics\TopLevelAS.cpp" />
     <ClCompile Include="engine\graphics\d3d12\D3d12TopLevelAS.cpp" />
+    <ClCompile Include="engine\math\shapes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl" />

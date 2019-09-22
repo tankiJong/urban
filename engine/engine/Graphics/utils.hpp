@@ -191,5 +191,5 @@ enum class eTopology: uint {
 };
 
 bool IsDepthFormat( eTextureFormat format );
-size_t GetTextureFormatStride(eTextureFormat format);
+size_t GetTextureFormatBitStride(eTextureFormat format);
 bool IsSRGBFormat(eTextureFormat format);

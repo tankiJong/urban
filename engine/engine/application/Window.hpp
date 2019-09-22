@@ -36,6 +36,9 @@ public:
 
    void* Handle() const { return mHandle; }
    int2 ScreenToClient( int2 pixelPosition ) const;
+
+   void SetTitle( const wchar_t* title );
+
    static Window& Get();
 protected:
    

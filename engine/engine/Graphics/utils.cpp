@@ -52,7 +52,7 @@ bool IsDepthFormat( eTextureFormat format )
    return formatDescs[uint(format)].isDepth;
 }
 
-size_t GetTextureFormatStride( eTextureFormat format )
+size_t GetTextureFormatBitStride( eTextureFormat format )
 {
    ASSERT_DIE( formatDescs[uint(format)].format == format);
 

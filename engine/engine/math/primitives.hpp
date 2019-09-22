@@ -18,8 +18,8 @@ struct vec<2, T> {
    constexpr vec(T v): x(v), y(v) {}
    constexpr vec( T x, T y ) : x( x ), y( y ) {}
 
-   template< typename U, typename = std::enable_if_t<!std::is_same_v<T, U>> >
-   explicit operator vec2<U>() { return vec2<U>{ U( x ), U( y ) }; }
+   template<typename U>
+   constexpr explicit vec(const vec2<U>& v): x(v.x), y(v.y) {}
 
    T Dot( const vec2<T>& rhs ) const { return x * rhs.x + y * rhs.y; }
    T Len2() const { return Dot( *this ); }
@@ -65,6 +65,10 @@ struct vec<3, T> {
       };
    };
 
+   vec<2, T> xy() const { return { x, y }; }
+   vec<2, T> xz() const { return { x, z }; }
+   vec<2, T> yz() const { return { y, z }; }
+
    static const vec3<T> Zero;
    static const vec3<T> One;
    static const vec3<T> X;
@@ -99,8 +103,8 @@ struct vec<4, T> {
    T Len2() const { return Dot( *this ); }
 
    vec<3, T> xyz() const { return { x, y, z }; }
-   vec<3, T> xy() const { return { x, y }; }
-   vec<3, T> xz() const { return { x, z }; }
+   vec<2, T> xy() const { return { x, y }; }
+   vec<2, T> xz() const { return { x, z }; }
 };
 
 template<typename T> vec<2, T>    operator - ( const vec<2, T>& rhs ) { return { - rhs.x, - rhs.y }; }
@@ -162,7 +166,11 @@ inline vec<3, bool> operator ||( const vec<3, bool>& lhs, const vec<3, bool>& rh
 inline vec<4, bool> operator &&( const vec<4, bool>& lhs, const vec<4, bool>& rhs ) {  return { lhs.x && rhs.x, lhs.y && rhs.y, lhs.z && rhs.z, lhs.w && rhs.w }; }
 inline vec<4, bool> operator ||( const vec<4, bool>& lhs, const vec<4, bool>& rhs ) {  return { lhs.x || rhs.x, lhs.y || rhs.y, lhs.z || rhs.z, lhs.w || rhs.w }; }
 
-
+template<size_t N, typename T> 
+inline T Dot(const vec<N, T>& a, const vec<N, T>& b)
+{
+	return a.Dot(b);
+}
 // --------------------------------------------------------------- //
 
 using int2   = vec<2, int32_t>;

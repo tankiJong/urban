@@ -78,6 +78,7 @@
     <ClCompile Include="engine\gui\ImGui.cpp" />
     <ClCompile Include="engine\math\cylic.cpp" />
     <ClCompile Include="engine\math\primitives.cpp" />
+    <ClCompile Include="engine\math\shapes.cpp" />
     <ClCompile Include="engine\math\util.cpp" />
     <ClCompile Include="engine\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -176,6 +177,7 @@
     <ClInclude Include="engine\gui\ImGui.hpp" />
     <ClInclude Include="engine\math\cylic.hpp" />
     <ClInclude Include="engine\math\primitives.hpp" />
+    <ClInclude Include="engine\math\shapes.hpp" />
     <ClInclude Include="engine\math\util.hpp" />
     <ClInclude Include="engine\pch.h" />
     <ClInclude Include="engine\application\Window.hpp" />

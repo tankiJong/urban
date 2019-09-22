@@ -33,7 +33,7 @@ const Sampler* Sampler::Bilinear()
 
       sBilinear.reset(new Sampler());
 
-      D3D12_SAMPLER_DESC desc;
+      D3D12_SAMPLER_DESC desc = {};
 
       desc.Filter           = D3D12_FILTER_ANISOTROPIC;
       desc.AddressU         = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -60,7 +60,7 @@ const Sampler* Sampler::Nearest()
 
       sNearest.reset(new Sampler());
 
-      D3D12_SAMPLER_DESC desc;
+      D3D12_SAMPLER_DESC desc = {};
 
       desc.Filter           = D3D12_FILTER_ANISOTROPIC;
       desc.AddressU         = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;

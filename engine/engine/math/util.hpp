@@ -34,11 +34,17 @@ constexpr const T& max(const T& a, const T& b)
 }
 
 template<class T>
-const T& clamp(const T& v, self_t<const T&> vmin, self_t<const T&> vmax)
+constexpr const T& clamp(const T& v, self_t<const T&> vmin, self_t<const T&> vmax)
 {
    return v < vmin 
         ? vmin 
         : (v > vmax ? vmax : v);
+}
+
+template<class T>
+T lerp(const T& from, const T& to, float percent)
+{
+	return from * ( 1.f - percent) + to * percent;
 }
 
 inline float3 Spherical(float r, float thetaDeg, float phiDeg) {
@@ -49,4 +55,10 @@ inline float3 Spherical(float r, float thetaDeg, float phiDeg) {
     r*sinf(phi),
     r*cosf(phi)*sinf(theta),
   };
+}
+
+inline float3 ScreenToWorld(const float3& screen, const mat44& invVp)
+{
+	float4 world = invVp * float4(screen, 1.f);
+	return world.xyz() / world.w;
 }

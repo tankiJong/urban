@@ -5,12 +5,12 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
+  solution: 'urban.sln'
   buildPlatform: 'x64'
   buildConfiguration: 'Release'
 
 steps:
-- task: VSBuild@1
+- task: MSBuild
   inputs:
     solution: '$(solution)'
     platform: '$(buildPlatform)'

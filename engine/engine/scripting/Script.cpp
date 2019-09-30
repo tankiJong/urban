@@ -27,7 +27,7 @@ void Script::FromFile( Script& inOutScript, const fs::path& file )
    v8::ScriptCompiler compiler;
    auto sourceString = 
       v8::String::NewFromUtf8( 
-         isolate, (const char*)sourceByte.Data(), v8::String::kNormalString, sourceByte.Size() );
+         isolate, (const char*)sourceByte.Data(), v8::String::kNormalString, (int)sourceByte.Size() );
    
    using namespace v8;
    ScriptOrigin origin(String::NewFromUtf8(isolate, 

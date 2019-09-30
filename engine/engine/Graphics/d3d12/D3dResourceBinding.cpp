@@ -63,7 +63,7 @@ void BindingLayout::InitRootSignature(rootsignature_t& handle, const BindingLayo
    std::vector<std::vector<D3D12_DESCRIPTOR_RANGE>> d3dranges( tables.size() );
 
    size_t TableCount = 0;
-   for(size_t i = 0; i < tables.size(); i++) {
+   for(int i = 0; i < tables.size(); i++) {
       const auto& table = tables[i];
       if(table.size() > 0) {
          initParamAndRange( rootParams[TableCount], d3dranges[TableCount], table );
@@ -213,12 +213,12 @@ void ResourceBinding::Flattened::BindFor( CommandList& commandList, uint startRo
    }
 
    if(forCompute) {
-      for(size_t i = 0, j = startRootIndex; i < mBindLocations.size(); i++) {
+      for(uint i = 0, j = startRootIndex; i < mBindLocations.size(); i++) {
          if(!mBindLocations[i].Valid()) continue;
          commandList.Handle()->SetComputeRootDescriptorTable( j++, mBindLocations[i].GetGpuHandle( 0 ) );
       }
    } else {
-      for(size_t i = 0, j = startRootIndex; i < mBindLocations.size(); i++) {
+      for(uint i = 0, j = startRootIndex; i < mBindLocations.size(); i++) {
          if(!mBindLocations[i].Valid()) continue;
 
          auto handle =  mBindLocations[i].GetGpuHandle( 0 );

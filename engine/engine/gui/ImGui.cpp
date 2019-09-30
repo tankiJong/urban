@@ -62,7 +62,7 @@ void ig::Startup()
                                    ToDXGIFormat( eTextureFormat::RGBA8Unorm ),
                                    imFontDescriptor->GetCpuHandle( 0 ), imFontDescriptor->GetGpuHandle( 0 ) );
 
-   ASSERT_DIE( re1 && re2, "fail to initialize ImGui" );
+   ASSERT_DIE_M( re1 && re2, "fail to initialize ImGui" );
 
    ImGui::StyleColorsDark();
    ImGui::PushStyleVar( ImGuiStyleVar_FrameRounding, 5.0f );

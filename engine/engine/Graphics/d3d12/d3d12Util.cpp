@@ -61,8 +61,6 @@ DXGI_FORMAT ToDXGITypelessFromDepthFormat( eTextureFormat format )
 
 D3D12_DESCRIPTOR_HEAP_TYPE ToD3d12HeapType( eDescriptorType types )
 {
-   D3D12_DESCRIPTOR_HEAP_TYPE dtype;
-
    if(types == eDescriptorType::Sampler) {
       return D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
    }

@@ -63,7 +63,7 @@ void TopLevelAS::Finalize(CommandList* commandList)
    asInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
    asInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
    asInputs.InstanceDescs = instanceDesc->GpuStartAddress();
-   asInputs.NumDescs = instanceDesc->GetElementCount();
+   asInputs.NumDescs = (UINT)instanceDesc->GetElementCount();
    asInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 
 

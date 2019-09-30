@@ -336,13 +336,13 @@ S<Buffer> CommandList::CreateBottomLevelAS( const StructuredBuffer& vertexBuffer
    geometry.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
    geometry.Triangles.VertexBuffer.StartAddress = vertexBuffer.GpuStartAddress();
    geometry.Triangles.VertexBuffer.StrideInBytes = vertexBuffer.GetStride();
-   geometry.Triangles.VertexCount = vertexBuffer.GetElementCount();
+   geometry.Triangles.VertexCount = (UINT)vertexBuffer.GetElementCount();
 
    if( indexBuffer != nullptr ) {
       geometry.Triangles.IndexBuffer = indexBuffer->GpuStartAddress();
       ASSERT_DIE( sizeof(mesh_index_t) == sizeof(uint32_t) );
       geometry.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
-      geometry.Triangles.IndexCount = indexBuffer->GetElementCount();
+      geometry.Triangles.IndexCount = (UINT)indexBuffer->GetElementCount();
    }
 
    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS asInputs = {};

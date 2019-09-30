@@ -23,6 +23,7 @@
     <ClCompile Include="engine\core\Blob.cpp" />
     <ClCompile Include="engine\core\closure.cpp" />
     <ClCompile Include="engine\core\Image.cpp" />
+    <ClCompile Include="engine\core\random.cpp" />
     <ClCompile Include="engine\core\string.cpp" />
     <ClCompile Include="engine\core\Time.cpp" />
     <ClCompile Include="engine\core\util.cpp" />
@@ -133,6 +134,7 @@
     <ClInclude Include="engine\core\Blob.hpp" />
     <ClInclude Include="engine\core\closure.hpp" />
     <ClInclude Include="engine\core\Image.hpp" />
+    <ClInclude Include="engine\core\random.hpp" />
     <ClInclude Include="engine\core\span.hpp" />
     <ClInclude Include="engine\core\string.hpp" />
     <ClInclude Include="engine\core\Time.hpp" />

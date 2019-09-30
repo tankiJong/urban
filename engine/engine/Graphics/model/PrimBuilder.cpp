@@ -33,7 +33,7 @@ void PrimBuilder::End()
 {
    mIsRecording = false;
    mDrawInstr.startIndex = 0;
-   mDrawInstr.elementCount = mDrawInstr.useIndices ? mIndices.size() : mVertices.size();
+   mDrawInstr.elementCount = uint(mDrawInstr.useIndices ? mIndices.size() : mVertices.size());
 }
 
 void PrimBuilder::Reserve( size_t size )
@@ -47,7 +47,7 @@ mesh_index_t PrimBuilder::Vertex3( const float3& position )
    ASSERT_DIE( mIsRecording );
    mCurrentVertex.position = position;
    mVertices.push_back( mCurrentVertex );
-   return mVertices.size() - 1u;
+   return mesh_index_t(mVertices.size() - 1u);
 }
 
 PrimBuilder& PrimBuilder::Triangle( mesh_index_t a, mesh_index_t b, mesh_index_t c )
@@ -194,7 +194,7 @@ PrimBuilder& PrimBuilder::Sphere( const float3& center, float size, uint xLevel,
    float dTheta = 2 * M_PI / (float)xLevel;
    float dPhi   = M_PI / (float)yLevel;
 
-   uint start = mVertices.size();
+   uint start = (uint)mVertices.size();
 
    for(uint    j = 0; j <= yLevel; j++) {
       for(uint i = 0; i <= xLevel; i++) {

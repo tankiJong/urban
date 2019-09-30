@@ -25,7 +25,7 @@ public:
       : mType( type )
       , mBaseRegisterIndex( baseRegisterIndex )
       , mRegisterSpace( registerSpace )
-      , mTotal( attribs.size() )
+      , mTotal( uint(attribs.size()) )
       , mAttribs( std::move( attribs ) ) {}
 
       eDescriptorType Type() const { return mType; }

@@ -269,7 +269,7 @@ bool Asset<Texture2>::Load( S<Texture2>& res, const void* binary, size_t size )
 {
    int w,h;
    int channelCount;
-   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary, size, &w, &h, &channelCount, 4);
+   unsigned char* imageData = stbi_load_from_memory((const stbi_uc*)binary, (int)size, &w, &h, &channelCount, 4);
    
    res.reset( new Texture2( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
                             1, eTextureFormat::RGBA8UnormS, true, eAllocationType::Persistent ) );
@@ -285,16 +285,6 @@ bool Asset<Texture2>::Load( S<Texture2>& res, const void* binary, size_t size )
    return true;
 }
 
-static uint32_t __builtin_clz(uint32_t x) {
-  unsigned long r = 0;
-  _BitScanReverse(&r, x);
-  return (31-r);
-}
-
-uint64_t next_pow2(uint32_t x) {
-	return x == 1 ? 1 : 1<<(64-__builtin_clz(x-1));
-}
-
 bool Asset<TextureCube>::Load( S<TextureCube>& res, const void* binary, size_t size )
 {
    CommandList list( eQueueType::Compute );
@@ -302,8 +292,8 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const void* binary, size_t s
    int         w, h;
    int         channelCount;
    S<Texture2> tex;
-   if(stbi_is_hdr_from_memory( (const stbi_uc*)binary, size )) {
-      float* imageData = stbi_loadf_from_memory( (const stbi_uc*)binary, size, &w, &h, &channelCount,
+   if(stbi_is_hdr_from_memory( (const stbi_uc*)binary, (int)size )) {
+      float* imageData = stbi_loadf_from_memory( (const stbi_uc*)binary, (int)size, &w, &h, &channelCount,
                                                  4 );
 
       tex = Texture2::Create( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
@@ -312,7 +302,7 @@ bool Asset<TextureCube>::Load( S<TextureCube>& res, const void* binary, size_t s
       tex->UpdateData( imageData, sizeof( float ) * w * h * 4, 0, &list );
       stbi_image_free( imageData );
    } else {
-      unsigned char* imageData = stbi_load_from_memory( (const stbi_uc*)binary, size, &w, &h,
+      unsigned char* imageData = stbi_load_from_memory( (const stbi_uc*)binary, (int)size, &w, &h,
                                                         &channelCount, 4 );
       tex = Texture2::Create( eBindingFlag::ShaderResource | eBindingFlag::UnorderedAccess, w, h,
                               1, eTextureFormat::RGBA32Float, true, eAllocationType::Temporary );

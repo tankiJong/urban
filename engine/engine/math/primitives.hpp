@@ -19,7 +19,7 @@ struct vec<2, T> {
    constexpr vec( T x, T y ) : x( x ), y( y ) {}
 
    template<typename U>
-   constexpr explicit vec(const vec2<U>& v): x(v.x), y(v.y) {}
+   constexpr explicit vec(const vec2<U>& v): x((T)v.x), y((T)v.y) {}
 
    T Dot( const vec2<T>& rhs ) const { return x * rhs.x + y * rhs.y; }
    T Len2() const { return Dot( *this ); }

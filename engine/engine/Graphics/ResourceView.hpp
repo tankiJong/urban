@@ -52,7 +52,7 @@ namespace std {
 template< typename H >
 class ResourceView {
 public:
-   static constexpr uint kMaxPossible = -1;
+   static constexpr uint kMaxPossible = UINT32_MAX;
    using handle_t = H;
 
    virtual ~ResourceView() = default;

@@ -39,10 +39,10 @@ public:
    friend urgba operator*(const urgba& lhs, float rhs)
    {
 	   urgba ret = lhs;
-	   ret.r *= rhs;
-	   ret.g *= rhs;
-	   ret.b *= rhs;
-	   ret.a *= rhs;
+	   ret.r = uint8_t((float)ret.r * rhs);
+	   ret.g = uint8_t((float)ret.g * rhs);
+	   ret.b = uint8_t((float)ret.b * rhs);
+	   ret.a = uint8_t((float)ret.a * rhs);
 	   return ret;
    }
 

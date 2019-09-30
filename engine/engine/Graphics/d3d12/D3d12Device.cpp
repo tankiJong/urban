@@ -10,6 +10,11 @@
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
 
+extern "C" {
+  __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+  __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+
 struct WindowData {
    IDXGIFactory5Ptr dxgiFactory = nullptr;
    IDXGISwapChain4Ptr swapChain = nullptr;

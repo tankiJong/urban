@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "path-tracer", "projects\path-tracer\path-tracer.vcxproj", "{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "es-console", "projects\es-console\es-console.vcxproj", "{F08B45CD-343D-4981-8CBE-CB365C175490}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +39,10 @@ Global
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Debug|x64.Build.0 = Debug|x64
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Release|x64.ActiveCfg = Release|x64
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Release|x64.Build.0 = Release|x64
+		{F08B45CD-343D-4981-8CBE-CB365C175490}.Debug|x64.ActiveCfg = Debug|x64
+		{F08B45CD-343D-4981-8CBE-CB365C175490}.Debug|x64.Build.0 = Debug|x64
+		{F08B45CD-343D-4981-8CBE-CB365C175490}.Release|x64.ActiveCfg = Release|x64
+		{F08B45CD-343D-4981-8CBE-CB365C175490}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +50,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
+		{F08B45CD-343D-4981-8CBE-CB365C175490} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1766A87C-42F1-4988-BF0B-85FB4CB3E022}

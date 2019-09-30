@@ -28,6 +28,7 @@
     <ClCompile Include="engine\core\util.cpp" />
     <ClCompile Include="engine\core\vary.cpp" />
     <ClCompile Include="engine\debug\assert.cpp" />
+    <ClCompile Include="engine\debug\log.cpp" />
     <ClCompile Include="engine\file\utils.cpp" />
     <ClCompile Include="engine\framework\Camera.cpp" />
     <ClCompile Include="engine\framework\Transform.cpp" />
@@ -85,6 +86,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\application\Window.cpp" />
+    <ClCompile Include="engine\scripting\es.cpp" />
+    <ClCompile Include="engine\scripting\Script.cpp" />
     <ClCompile Include="external\imgui\examples\imgui_impl_dx12.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -137,6 +140,7 @@
     <ClInclude Include="engine\core\util.hpp" />
     <ClInclude Include="engine\core\vary.hpp" />
     <ClInclude Include="engine\debug\assert.hpp" />
+    <ClInclude Include="engine\debug\log.hpp" />
     <ClInclude Include="engine\file\utils.hpp" />
     <ClInclude Include="engine\framework\Camera.hpp" />
     <ClInclude Include="engine\framework\Transform.hpp" />
@@ -182,6 +186,8 @@
     <ClInclude Include="engine\pch.h" />
     <ClInclude Include="engine\application\Window.hpp" />
     <ClInclude Include="engine\platform\win.hpp" />
+    <ClInclude Include="engine\scripting\es.hpp" />
+    <ClInclude Include="engine\scripting\Script.hpp" />
     <ClInclude Include="external\assimp\ai_assert.h" />
     <ClInclude Include="external\assimp\anim.h" />
     <ClInclude Include="external\assimp\BaseImporter.h" />

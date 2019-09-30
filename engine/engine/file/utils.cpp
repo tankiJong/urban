@@ -50,11 +50,11 @@ Blob fs::ReadText( const path& filePath )
    if(size == -1) { return Blob(); }
    file.seekg( 0, std::ios::beg );
 
-   char* buffer = new char[(uint)size + 1];
+   char* buffer = new char[(uint)size];
 
    file.read( buffer, size );
-   buffer[size] = 0;
-   Blob b( buffer, (uint)size );
+   buffer[size - 1] = 0;
+   Blob b( buffer, (uint)size+1 );
    delete[] buffer;
    return b;
 }

@@ -1,9 +1,15 @@
 ﻿#pragma once
 
+struct urgba;
 struct rgba {
 public:
    float r = 0.f, g = 0.f, b = 0.f, a = 1.f;
 
+   rgba(const float4& v)
+   {
+      *((float4*)this) = v;
+   }
+   rgba( const urgba& from );
    operator float4() const { return { r, g, b, a }; }
 };
 
@@ -61,6 +67,11 @@ public:
 
 	   return ret;
    }
-
-   
 };
+
+inline rgba::rgba( const urgba& from )
+   : r(float(from.r) / 255.f)
+   , g(float(from.g) / 255.f)
+   , b(float(from.b) / 255.f)
+   , a(float(from.a) / 255.f) {}
+

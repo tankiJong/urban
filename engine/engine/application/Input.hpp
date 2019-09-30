@@ -17,6 +17,8 @@ public:
    bool IsKeyJustDown(keycode_t key) const;
    bool IsKeyJustUp(keycode_t key) const;
 
+   bool IsAnyKeyDown() const;
+
    float2 GetMouseDeltaPosition(bool normalized = false) const;
    float2 GetMouseClientPosition(bool normalized = false) const;
 

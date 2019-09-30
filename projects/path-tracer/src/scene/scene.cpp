@@ -41,7 +41,7 @@ contact Scene::Intersect( const ray& r ) const
 	   uint i = 0;
 	   float t = INFINITY;
    };
-   Hit hit = { INFINITY };
+   Hit hit;
    float3 tuvhit = { INFINITY, 0, 0 };
 	for(uint i = 0; i + 2 < mVertices.size(); i+= 3)
 	{

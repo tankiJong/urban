@@ -56,9 +56,9 @@ size_t GetTextureFormatBitStride( eTextureFormat format )
 {
    ASSERT_DIE( formatDescs[uint(format)].format == format);
 
-   size_t bytePerChannel = formatDescs[uint(format)].bitPerUnit;
+   size_t bitPerChannel = formatDescs[uint(format)].bitPerUnit;
    size_t ChannelCount = formatDescs[uint(format)].channelCount;
-   return bytePerChannel * ChannelCount;
+   return bitPerChannel * ChannelCount;
 }
 
 bool IsSRGBFormat( eTextureFormat format )

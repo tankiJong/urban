@@ -246,6 +246,7 @@
     <ClInclude Include="engine\debug\log.hpp" />
     <ClInclude Include="engine\scripting\es.hpp" />
     <ClInclude Include="engine\scripting\Script.hpp" />
+    <ClInclude Include="engine\core\random.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -356,6 +357,7 @@
     <ClCompile Include="engine\debug\log.cpp" />
     <ClCompile Include="engine\scripting\es.cpp" />
     <ClCompile Include="engine\scripting\Script.cpp" />
+    <ClCompile Include="engine\core\random.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl" />

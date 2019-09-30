@@ -75,6 +75,7 @@ bool Input::IsKeyUp( keycode_t key ) const { return !IsKeyDown( key ); }
 bool Input::IsKeyJustDown( keycode_t key ) const { return mKeyStates[key].justPressed; }
 
 bool Input::IsKeyJustUp( keycode_t key ) const { return mKeyStates[key].justReleased; }
+bool Input::IsAnyKeyDown() const { return std::any_of(mKeyStates, mKeyStates + kNumKey, [](const KeyState& k) { return k.isDown; });}
 
 float2 Input::GetMouseDeltaPosition( bool normalized ) const
 {

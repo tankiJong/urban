@@ -7,10 +7,10 @@ public:
     , mDataSize( size )
     , mBufferSize( size ) { memcpy_s( mBuffer, size, source, size ); }
 
-   Blob( size_t size )
-      : mBuffer( malloc( size ) )
-    , mDataSize( 0 )
-    , mBufferSize( size ) {}
+   Blob( size_t maxBufferSize, size_t contentSize = 0 )
+      : mBuffer( malloc( maxBufferSize ) )
+    , mDataSize( contentSize )
+    , mBufferSize( maxBufferSize - contentSize ) { ASSERT_DIE( contentSize <= maxBufferSize ); }
 
    Blob()
       : mBuffer( malloc( 0 ) )

@@ -24,10 +24,9 @@ Image::Image( uint width, uint height, eTextureFormat format, const void* data, 
    : mDimension( width, height ) 
    , mFormat( format )
 {
-   if(data == nullptr)
-   {
-	   mData = Blob(width * height * GetTextureFormatBitStride(format));
-   } else {
+   size_t buffersize = width * height * (GetTextureFormatBitStride(format) >> 3);
+	mData = Blob(buffersize, buffersize);
+   if(data != nullptr) {
       mData.Set( data, size );
    }
 }

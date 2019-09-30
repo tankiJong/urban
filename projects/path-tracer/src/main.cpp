@@ -15,6 +15,8 @@
 #include "engine/graphics/CommandList.hpp"
 #include "engine/graphics/Device.hpp"
 #include "engine/core/Time.hpp"
+#include "engine/application/Input.hpp"
+#include "engine/core/random.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -119,12 +121,16 @@ void GameApplication::OnInit()
 {
 	mScene.Init();
 	auto size = Window::Get().BackBufferSize();
-	mFrameColor = Image(size.x, size.y, eTextureFormat::RGBA8Unorm);
+	mFrameColor = Image(size.x, size.y, eTextureFormat::RGBA32Float);
+   memset( mFrameColor.Data(), 0, mFrameColor.Size() );
 	mCamera.SetProjection(mat44::Perspective(70, 1.77f, .1f, 200.f));
 }
 
 void GameApplication::OnUpdate()
 {
+   if(Input::Get().IsAnyKeyDown()) {
+      Clock::Main().frameCount = 0;
+   }
 	mCamera.OnUpdate();
 	auto frameMs = Clock::Main().frame.millisecond;
 	Window::Get().SetTitle(std::to_wstring(frameMs).c_str());
@@ -137,10 +143,14 @@ void GameApplication::OnRender() const
 	mat44 invVp = cameraBlock.invView * cameraBlock.invProj;
    for(uint j = 0; j < mFrameColor.Dimension().y; j++)
    for(uint i = 0; i < mFrameColor.Dimension().x; i++)
+   
    {
-	   urgba* pixel = (urgba*)mFrameColor.At(i, j);
+	   rgba* pixel = (rgba*)mFrameColor.At(i, j);
 
-	   float3 uvd = { float(i) / mFrameColor.Dimension().x, float(j) / mFrameColor.Dimension().y, 0 };
+	   float3 uvd1 = { float(i) / mFrameColor.Dimension().x, float(j) / mFrameColor.Dimension().y, 0 };
+	   float3 uvd2 = { float(i+1) / mFrameColor.Dimension().x, float(j+1) / mFrameColor.Dimension().y, 0 };
+
+      float3 uvd = lerp(uvd1, uvd2, random::Between01());
 
 	   uvd = uvd * 2.f - 1.f;
 
@@ -154,7 +164,13 @@ void GameApplication::OnRender() const
 
       if(c.t < INFINITY && c.t > 0)
       {
-		   *pixel = mScene.Sample(c.uv);
+         float4 color = *pixel;
+         color *= float4(Clock::Main().frameCount);
+         color += (float4)rgba(mScene.Sample(c.uv));
+         color /= float4(float(Clock::Main().frameCount + 1));
+
+         
+         *pixel = color;
          //pixel->r = uint8_t(tuv.y * 256.f);
          //pixel->g = uint8_t(tuv.z * 256.f);
          //pixel->b = uint8_t((1 - tuv.y - tuv.z) * 256.f);
@@ -164,7 +180,7 @@ void GameApplication::OnRender() const
          pixel->r = 0;
          pixel->g = 0;
          pixel->b = 0;
-         pixel->a = 255;
+         pixel->a = 1.f;
       }
    }
 
@@ -172,11 +188,17 @@ void GameApplication::OnRender() const
 	   eBindingFlag::ShaderResource,
 	   mFrameColor.Dimension().x, mFrameColor.Dimension().y, 1, mFrameColor.Format(), false, eAllocationType::Temporary);
 
+   auto& backBuffer = Window::Get().BackBuffer();
+   auto frameTex = Texture2::Create( 
+      eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
+      backBuffer.size().x, backBuffer.size().y, 1, backBuffer.Format(), false, eAllocationType::Temporary);
+
    CommandList list(eQueueType::Direct);
    finalColor->UpdateData(mFrameColor.Data(), mFrameColor.Size(), 0, &list);
 
-   ASSERT_DIE(Window::Get().BackBuffer().Format() == finalColor->Format());
-   list.CopyResource(*finalColor, Window::Get().BackBuffer());
+   // ASSERT_DIE(Window::Get().BackBuffer().Format() == finalColor->Format());
+   list.Blit( *finalColor->Srv(), *frameTex->Uav() );
+   list.CopyResource(*frameTex, Window::Get().BackBuffer());
    list.Flush();
 }
 

@@ -33,4 +33,6 @@ Urban is a personal rendering framework based on D3D12(for now). It's still very
 # Third Libraries
 * Dear ImGui [https://github.com/ocornut/imgui](https://github.com/ocornut/imgui)
 * stb image [http://nothings.org/stb](http://nothings.org/stb)
+* assimp [http://www.assimp.org/](http://www.assimp.org/)
+* yaml-cpp [https://github.com/jbeder/yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * v8 [https://v8.dev/](https://v8.dev/)

@@ -57,8 +57,16 @@ inline float3 Spherical(float r, float thetaDeg, float phiDeg) {
   };
 }
 
-inline float3 ScreenToWorld(const float3& screen, const mat44& invVp)
+inline float3 NdcToWorld( const float3& ndc, const mat44& invVp )
 {
-	float4 world = invVp * float4(screen, 1.f);
-	return world.xyz() / world.w;
+   float4 world = invVp * float4( ndc, 1.f );
+   return world.xyz() / world.w;
+}
+
+inline float3 PixelToWorld( const uint2& coords, const uint2& size, const mat44& invVp, float depth = 0.f )
+{
+   float3 uvd = { float( coords.x ) / float( size.x ), float( coords.y ) / float( size.y ), depth };
+   uvd        = uvd * 2.f - 1.f;
+
+   return NdcToWorld( uvd, invVp );
 }

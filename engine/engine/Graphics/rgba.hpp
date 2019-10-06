@@ -5,11 +5,9 @@ struct rgba {
 public:
    float r = 0.f, g = 0.f, b = 0.f, a = 1.f;
 
-   rgba(const float4& v)
-   {
-      *((float4*)this) = v;
-   }
-   rgba( const urgba& from );
+   explicit rgba(const float4& v)
+   : r(v.x), g(v.y), b(v.z), a(v.w){}
+   explicit rgba( const urgba& from );
    operator float4() const { return { r, g, b, a }; }
 };
 
@@ -19,11 +17,18 @@ struct urgba
 public:
 	uint8_t r = 0, g = 0, b = 0, a = 255;
 	urgba() = default;
-	urgba(const rgba& v)
+	explicit urgba(const rgba& v)
 		: r(uint8_t(v.r * 255))
 		, g(uint8_t(v.g * 255))
 		, b(uint8_t(v.b * 255))
 		, a(uint8_t(v.a * 255)) {}
+
+   urgba(const uchar4& v)
+      : r(v.x)
+      , g(v.y)
+      , b(v.z)
+      , a(v.w) {}
+
    uint32_t Pack() const
    {
 	   uint32_t ret = 0;

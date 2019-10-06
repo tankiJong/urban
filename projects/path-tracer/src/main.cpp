@@ -7,7 +7,7 @@
 #include "engine/application/Application.hpp"
 #include "engine/core/Image.hpp"
 #include "engine/application/Window.hpp"
-#include "engine/Graphics/utils.hpp"
+#include "engine/graphics/utils.hpp"
 #include "scene/scene.hpp"
 #include "scene/MvCamera.hpp"
 #include "engine/math/shapes.hpp"
@@ -17,6 +17,8 @@
 #include "engine/core/Time.hpp"
 #include "engine/application/Input.hpp"
 #include "engine/core/random.hpp"
+#include "engine/gui/ImGui.hpp"
+#include "util/util.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -111,100 +113,103 @@ public:
    void OnInit() override;
    void OnUpdate() override;
    void OnRender() const override;
+   void OnGui() override;
 protected:
-	Scene mScene;
-	Image mFrameColor;
-	MvCamera mCamera;
+   Scene    mScene;
+   Image    mFrameColor;
+   MvCamera mCamera;
 };
 
 void GameApplication::OnInit()
 {
-	mScene.Init();
-	auto size = Window::Get().BackBufferSize();
-	mFrameColor = Image(size.x, size.y, eTextureFormat::RGBA32Float);
+   mScene.Init();
+   auto size   = Window::Get().BackBufferSize();
+   mFrameColor = Image( size.x, size.y, eTextureFormat::RGBA32Float );
    memset( mFrameColor.Data(), 0, mFrameColor.Size() );
-	mCamera.SetProjection(mat44::Perspective(70, 1.77f, .1f, 200.f));
+   mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
 }
 
 void GameApplication::OnUpdate()
 {
-   if(Input::Get().IsAnyKeyDown()) {
-      Clock::Main().frameCount = 0;
-   }
-	mCamera.OnUpdate();
-	auto frameMs = Clock::Main().frame.millisecond;
-	Window::Get().SetTitle(std::to_wstring(frameMs).c_str());
+   if(Input::Get().IsAnyKeyDown()) { Clock::Main().frameCount = 0; }
+   mCamera.OnUpdate();
+   auto frameMs = Clock::Main().frame.millisecond;
+   Window::Get().SetTitle( std::to_wstring( frameMs ).c_str() );
 }
 
 void GameApplication::OnRender() const
 {
-	auto cameraBlock = mCamera.ComputeCameraBlock();
-	auto cameraWorld = mCamera.WorldPosition();
-	mat44 invVp = cameraBlock.invView * cameraBlock.invProj;
+   auto  cameraBlock = mCamera.ComputeCameraBlock();
+   auto  cameraWorld = mCamera.WorldPosition();
+   mat44 invVp       = cameraBlock.invView * cameraBlock.invProj;
+
+   float3 screenX = mCamera.WorldTransform().X();
+   float3 screenY = -mCamera.WorldTransform().Y();
    for(uint j = 0; j < mFrameColor.Dimension().y; j++)
-   for(uint i = 0; i < mFrameColor.Dimension().x; i++)
-   
-   {
-	   rgba* pixel = (rgba*)mFrameColor.At(i, j);
+      for(uint i = 0; i < mFrameColor.Dimension().x; i++) {
+         rgba* pixel = (rgba*)mFrameColor.At( i, j );
 
-	   float3 uvd1 = { float(i) / mFrameColor.Dimension().x, float(j) / mFrameColor.Dimension().y, 0 };
-	   float3 uvd2 = { float(i+1) / mFrameColor.Dimension().x, float(j+1) / mFrameColor.Dimension().y, 0 };
+         rayd r;
+         {
+            float3 origin = PixelToWorld( {i, j}, mFrameColor.Dimension(), invVp );
+            r.origin      = origin;
+            r.dir         = (origin - cameraWorld).Norm();
 
-      float3 uvd = lerp(uvd1, uvd2, random::Between01());
+            r.rayx.origin = PixelToWorld( {i+1, j}, mFrameColor.Dimension(), invVp );
+            r.rayx.dir    = (r.rayx.origin - cameraWorld).Norm();
+            
 
-	   uvd = uvd * 2.f - 1.f;
+            r.rayy.origin = PixelToWorld( {i, j+1}, mFrameColor.Dimension(), invVp );
+            r.rayy.dir    = (r.rayy.origin - cameraWorld).Norm();
 
-	   float3 origin = ScreenToWorld(uvd, invVp);
+         }
 
-	   ray r;
-	   r.origin = origin;
-	   r.dir = (origin - cameraWorld).Norm();
+         contact c = mScene.Intersect( r, screenX, screenY );
 
-	   contact c = mScene.Intersect(r);
+         if(c.t < INFINITY && c.t > 0) {
+            float4 color = *pixel;
+            color *= float4( Clock::Main().frameCount );
+            color += (float4)rgba( mScene.Sample( c.uv, c.dd ) );
+            // color += float4( c.dd.x, c.dd.y, 0, 1 );
+            color /= float4( float( Clock::Main().frameCount + 1 ) );
 
-      if(c.t < INFINITY && c.t > 0)
-      {
-         float4 color = *pixel;
-         color *= float4(Clock::Main().frameCount);
-         color += (float4)rgba(mScene.Sample(c.uv));
-         color /= float4(float(Clock::Main().frameCount + 1));
-
-         
-         *pixel = color;
-         //pixel->r = uint8_t(tuv.y * 256.f);
-         //pixel->g = uint8_t(tuv.z * 256.f);
-         //pixel->b = uint8_t((1 - tuv.y - tuv.z) * 256.f);
-         //pixel->a = 255;
-      } else
-      {
-         pixel->r = 0;
-         pixel->g = 0;
-         pixel->b = 0;
-         pixel->a = 1.f;
+            *pixel = (rgba)color;
+            //pixel->r = uint8_t(tuv.y * 256.f);
+            //pixel->g = uint8_t(tuv.z * 256.f);
+            //pixel->b = uint8_t((1 - tuv.y - tuv.z) * 256.f);
+            //pixel->a = 255;
+         } else {
+            pixel->r = 0;
+            pixel->g = 0;
+            pixel->b = 0;
+            pixel->a = 1.f;
+         }
       }
-   }
 
    auto finalColor = Texture2::Create(
-	   eBindingFlag::ShaderResource,
-	   mFrameColor.Dimension().x, mFrameColor.Dimension().y, 1, mFrameColor.Format(), false, eAllocationType::Temporary);
+                                      eBindingFlag::ShaderResource,
+                                      mFrameColor.Dimension().x, mFrameColor.Dimension().y, 1, mFrameColor.Format(),
+                                      false, eAllocationType::Temporary );
 
    auto& backBuffer = Window::Get().BackBuffer();
-   auto frameTex = Texture2::Create( 
-      eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
-      backBuffer.size().x, backBuffer.size().y, 1, backBuffer.Format(), false, eAllocationType::Temporary);
+   auto  frameTex   = Texture2::Create(
+                                       eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
+                                       backBuffer.size().x, backBuffer.size().y, 1, backBuffer.Format(), false,
+                                       eAllocationType::Temporary );
 
-   CommandList list(eQueueType::Direct);
-   finalColor->UpdateData(mFrameColor.Data(), mFrameColor.Size(), 0, &list);
+   CommandList list( eQueueType::Direct );
+   finalColor->UpdateData( mFrameColor.Data(), mFrameColor.Size(), 0, &list );
 
    // ASSERT_DIE(Window::Get().BackBuffer().Format() == finalColor->Format());
    list.Blit( *finalColor->Srv(), *frameTex->Uav() );
-   list.CopyResource(*frameTex, Window::Get().BackBuffer());
+   list.CopyResource( *frameTex, Window::Get().BackBuffer() );
    list.Flush();
 }
 
+void GameApplication::OnGui() {}
+
 int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
 {
-
    auto id = GetCurrentProcessId();
    AllocConsole();
    GameApplication app;

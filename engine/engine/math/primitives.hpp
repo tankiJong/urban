@@ -48,7 +48,7 @@ struct vec<3, T> {
    constexpr vec( const vec<2, T>& xy, T z ): x( xy.x ), y( xy.y ), z( z ) {}
 
    template< typename U, typename = std::enable_if_t<!std::is_same_v<T, U>> >
-   explicit operator vec3<U>() { return vec3<U>{ U( x ), U( y ), U( z ) }; }
+   explicit operator vec3<U>() const { return vec3<U>{ U( x ), U( y ), U( z ) }; }
 
    T Dot( const vec3<T>& rhs ) const { return x * rhs.x + y * rhs.y + z * rhs.z; }
    T Len2() const { return Dot( *this ); }
@@ -97,7 +97,7 @@ struct vec<4, T> {
    constexpr vec( const vec<3, T>& xyz, T w ): x( xyz.x ), y( xyz.y ), z( xyz.z ), w( w ) {}
 
    template< typename U, typename = std::enable_if_t<!std::is_same_v<T, U>> >
-   explicit operator vec4<U>() { return vec4<U>{ U( x ), U( y ), U( z ), U( w ) }; }
+   explicit operator vec4<U>() const { return vec4<U>{ U( x ), U( y ), U( z ), U( w ) }; }
 
    T Dot( const vec4<T>& rhs ) const { return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w; }
    T Len2() const { return Dot( *this ); }
@@ -175,6 +175,12 @@ inline T Dot(const vec<N, T>& a, const vec<N, T>& b)
 {
 	return a.Dot(b);
 }
+
+template<typename T>
+inline T Dot(const T& a, const T& b)
+{
+   return a * b;
+}
 // --------------------------------------------------------------- //
 
 using int2   = vec<2, int32_t>;
@@ -187,7 +193,7 @@ using euler  = float3;
 
 using uint4  = vec<4, uint32_t>;
 using float4 = vec<4, float>;
-
+using uchar4 = vec<4, uint8_t>;
 
 ///////////////////////////// matrix /////////////////////////////
 

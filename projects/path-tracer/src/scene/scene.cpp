@@ -1,14 +1,36 @@
+#include "engine/pch.h"
 #include "scene.hpp"
 #include "engine/graphics/model/PrimBuilder.hpp"
 #include "engine/math/shapes.hpp"
 #include "engine/graphics/model/ModelImporter.hpp"
 #include "engine/core/Image.hpp"
-
+#include "engine/graphics/Texture.hpp"
+#include "../util/util.hpp"
 
 template<typename T>
 T Barycentric(const T& a, const T& b, const T& c, float2 weight)
 {
 	return a * (1 - weight.x - weight.y) + b * weight.x + c * weight.y;
+}
+
+float2 Differential( const rayd& ray, float t, const float3& screenX, const float3& screenY, const float2& barycentric, const float3& a, const float3& b, const float3& c )
+{
+   // b -> bary.x, c->bary.y
+   float3 e2 = c - a; // b u
+   float3 e1 = b - a; // c v
+
+   auto cu = e2.Cross( ray.dir );
+   auto cv = ray.dir.Cross( e1 );
+
+   auto alongx = ray.doriginx() + ray.ddirx() * t;
+   auto alongy = ray.doriginy() + ray.ddiry() * t;
+
+   auto k = e1.Cross( e2 ).Dot( ray.dir );
+
+   float2 ddx = { cu.Dot( alongx ) / k, cv.Dot( alongx ) / k };
+   float2 ddy = { cu.Dot( alongy ) / k, cv.Dot( alongy ) / k };
+
+   return { ddx.Len(), ddy.Len() };
 }
 
 
@@ -30,10 +52,13 @@ void Scene::Init()
 	auto vertices = builder.CurrentVertices();
 	mVertices.insert(mVertices.begin(), vertices.begin(), vertices.end());
 	Asset<Image>::LoadAndRegister("engine/resource/uvgrid.jpg", true);
-	mTestTexture = Asset<Image>::Get("engine/resource/uvgrid.jpg");
+	auto tex = Asset<Image>::Get("engine/resource/uvgrid.jpg");
+
+   mTestTexture = MipMap(tex->Dimension().x, tex->Dimension().y);
+   mTestTexture.GenerateMip( tex->Data(), tex->Size() );
 }
 
-contact Scene::Intersect( const ray& r ) const
+contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& screenY ) const
 {
 
    struct Hit
@@ -61,31 +86,14 @@ contact Scene::Intersect( const ray& r ) const
 	c.t = hit.t;
 	c.barycentric = tuvhit.yz();
 	c.uv = Barycentric(mVertices[hit.i].uv, mVertices[hit.i+1].uv, mVertices[hit.i+2].uv, c.barycentric);
-
+   c.dd = Differential( r, hit.t, screenX, screenY, c.barycentric, mVertices[hit.i].position, mVertices[hit.i + 1].position, mVertices[hit.i + 2].position );
+   c.world = r.origin + r.dir * hit.t;
 	return c;
 }
 
-urgba Scene::Sample( const float2& uv ) const
+urgba Scene::Sample( const float2& uv, const float2& dd ) const
 {
-	// return rgba{ uv.x, uv.y, 0, 1 };
-	auto dim = float2(mTestTexture->Dimension());
-	float2 coords = uv * dim;
-	coords.x = clamp(coords.x, 0.f, dim.x);
-	coords.y = clamp(coords.y, 0.f, dim.y);
-
-	float l = floorf(coords.x);
-	float r = ceilf(coords.x);
-
-	float t = floorf(coords.y);
-	float b = ceilf(coords.y);
-
-	urgba* lt = (urgba*)mTestTexture->At(l, t);
-	urgba* lb = (urgba*)mTestTexture->At(l, b);
-	urgba* rt = (urgba*)mTestTexture->At(r, t);
-	urgba* rb = (urgba*)mTestTexture->At(r, b);
-
-	urgba ll = lerp(*lt, *lb, coords.y - t);
-	urgba rr = lerp(*rt, *rb, coords.y - t);
-
-	return lerp(ll, rr, coords.x - l);
+   return mTestTexture.Sample( uv, dd );
+   // return mTestTexture.SampleMip( uv, 4 );
 }
+

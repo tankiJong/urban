@@ -10,7 +10,7 @@ std::string Stringf( const int maxLength, const char* format, ... );
 
 std::wstring ToWString(const std::string_view str);
 
-namespace str
-{
-   using namespace fmt;
-}
+// namespace str
+// {
+//    using namespace fmt;
+// }

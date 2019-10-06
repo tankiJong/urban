@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "fmt/core.h"
-
-#pragma comment(lib, "external/fmt/fmtd.lib")
+// #include "fmt/core.h"
+//
+// #pragma comment(lib, "external/fmt/fmtd.lib")
 
 std::string Stringv(const char* format, va_list args);
 std::string Stringf( const char* format, ... );

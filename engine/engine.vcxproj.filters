@@ -247,6 +247,8 @@
     <ClInclude Include="engine\scripting\es.hpp" />
     <ClInclude Include="engine\scripting\Script.hpp" />
     <ClInclude Include="engine\core\random.hpp" />
+    <ClInclude Include="engine\async\async.hpp" />
+    <ClInclude Include="engine\platform\platform.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -358,6 +360,8 @@
     <ClCompile Include="engine\scripting\es.cpp" />
     <ClCompile Include="engine\scripting\Script.cpp" />
     <ClCompile Include="engine\core\random.cpp" />
+    <ClCompile Include="engine\async\async.cpp" />
+    <ClCompile Include="engine\platform\platform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl" />

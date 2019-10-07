@@ -6,6 +6,7 @@
 #include "engine/core/Time.hpp"
 #include "engine/gui/ImGui.hpp"
 #include "Input.hpp"
+#include "engine/async/async.hpp"
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -53,6 +54,9 @@ bool Application::runFrame()
 
 void Application::_init()
 {
+
+   Scheduler::Init();
+
    Window::Get().Init( { uint(1000.f * 1.77f), 1000 }, "hello" );
 
    Window::Get().Subscribe( [this]( uint msg, size_t wparam, size_t lparam )
@@ -69,6 +73,8 @@ void Application::_destroy()
 {
    ig::Shutdown();
    OnDestroy();
+
+   Scheduler::Cleanup();
 }
 
 void Application::_update()

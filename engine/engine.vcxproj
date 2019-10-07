@@ -14,6 +14,7 @@
   <ItemGroup>
     <ClCompile Include="engine\application\Application.cpp" />
     <ClCompile Include="engine\application\Input.cpp" />
+    <ClCompile Include="engine\async\async.cpp" />
     <ClCompile Include="engine\async\event\EventEmitter.cpp" />
     <ClCompile Include="engine\async\event\EventListener.cpp" />
     <ClCompile Include="engine\async\event\EventTarget.cpp" />
@@ -87,6 +88,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="engine\application\Window.cpp" />
+    <ClCompile Include="engine\platform\platform.cpp" />
     <ClCompile Include="engine\scripting\es.cpp" />
     <ClCompile Include="engine\scripting\Script.cpp" />
     <ClCompile Include="external\imgui\examples\imgui_impl_dx12.cpp">
@@ -125,6 +127,7 @@
   <ItemGroup>
     <ClInclude Include="engine\application\Application.hpp" />
     <ClInclude Include="engine\application\Input.hpp" />
+    <ClInclude Include="engine\async\async.hpp" />
     <ClInclude Include="engine\async\event\EventEmitter.hpp" />
     <ClInclude Include="engine\async\event\EventListener.hpp" />
     <ClInclude Include="engine\async\event\EventTarget.hpp" />
@@ -187,6 +190,7 @@
     <ClInclude Include="engine\math\util.hpp" />
     <ClInclude Include="engine\pch.h" />
     <ClInclude Include="engine\application\Window.hpp" />
+    <ClInclude Include="engine\platform\platform.hpp" />
     <ClInclude Include="engine\platform\win.hpp" />
     <ClInclude Include="engine\scripting\es.hpp" />
     <ClInclude Include="engine\scripting\Script.hpp" />
@@ -452,6 +456,7 @@
       <SupportJustMyCode>true</SupportJustMyCode>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

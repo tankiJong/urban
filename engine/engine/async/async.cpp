@@ -4,7 +4,6 @@
 #include "engine/platform/platform.hpp"
 #include "engine/core/string.hpp"
 #include <atomic>
-#include <Optick/include/optick.h>
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -39,7 +38,6 @@ public:
    {
       using namespace std::chrono_literals;
       printf( "worker %u Run\n", mId );
-      OPTICK_THREAD( fmt::format( L"Job Thread {}", mId ).c_str() );
       while( mIsRunning ) {
          std::this_thread::sleep_for( 1000ms );
       }

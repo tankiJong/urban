@@ -6,7 +6,7 @@
 #include "engine/core/Image.hpp"
 #include "engine/graphics/Texture.hpp"
 #include "../util/util.hpp"
-
+#include <execution>
 template<typename T>
 T Barycentric(const T& a, const T& b, const T& c, float2 weight)
 {
@@ -68,6 +68,7 @@ contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& sc
    };
    Hit hit;
    float3 tuvhit = { INFINITY, 0, 0 };
+
 	for(uint i = 0; i + 2 < mVertices.size(); i+= 3)
 	{
 		float3 tuv = 
@@ -76,7 +77,7 @@ contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& sc
 				mVertices[i+1].position, 
 				mVertices[i+2].position);
 
-		bool valid = (tuv.x < hit.t && tuv.x > 0);
+		bool valid = (tuv.x < hit.t) & (tuv.x > 0);
 		//tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };
 		hit = valid ? Hit{ i, tuv.x } : hit;
 		tuvhit = valid ? tuv : tuvhit;

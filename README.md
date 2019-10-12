@@ -22,7 +22,7 @@ Urban is a personal rendering framework based on D3D12(for now). It's still very
 - Win SDK 10.17763
 - visual studio 2019
 
-## build steps
+## Build steps
 - `git clone https://github.com/tankiJong/urban.git`
 - open `.sln` file
 - run projects
@@ -36,3 +36,5 @@ Urban is a personal rendering framework based on D3D12(for now). It's still very
 * assimp [http://www.assimp.org/](http://www.assimp.org/)
 * yaml-cpp [https://github.com/jbeder/yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * v8 [https://v8.dev/](https://v8.dev/)
+* easy profiler[https://github.com/yse/easy_profiler](https://github.com/yse/easy_profiler)
+* fmt[https://github.com/fmtlib/fmt](https://github.com/fmtlib/fmt)

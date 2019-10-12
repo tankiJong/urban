@@ -19,6 +19,7 @@
 #include "engine/core/random.hpp"
 #include "engine/gui/ImGui.hpp"
 #include "util/util.hpp"
+#include <easy/profiler.h>
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -212,11 +213,23 @@ int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
 {
    auto id = GetCurrentProcessId();
    AllocConsole();
+
    GameApplication app;
    // BindCrtHandlesToStdHandles(true, true, true);
    freopen_s( (FILE**)stdout, "CONOUT$", "w", stdout ); //just works
+
+   auto stdinfo =  GetStdHandle(STD_OUTPUT_HANDLE);
+
+   DWORD mode;
+   GetConsoleMode( stdinfo, &mode );
+
+   mode = mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+   SetConsoleMode( stdinfo, mode );
+
    while(app.runFrame());
 
    FreeConsole();
+
+   profiler::dumpBlocksToFile( "test_profile.prof" );
    return 0;
 }

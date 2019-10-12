@@ -24,6 +24,13 @@ public:
   }
 };
 
+struct NonCopyable
+{
+   NonCopyable() = default;
+   NonCopyable( const NonCopyable& ) = delete;
+   auto operator=( const NonCopyable& ) = delete;
+};
+
 #define KB * 1024
 #define MB KB * 1024
 #define GB MB * 1024

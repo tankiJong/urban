@@ -7,6 +7,9 @@
 #include "engine/gui/ImGui.hpp"
 #include "Input.hpp"
 #include "engine/async/async.hpp"
+
+#include "external/easy-profiler/include/easy/profiler.h"
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -54,7 +57,10 @@ bool Application::runFrame()
 
 void Application::_init()
 {
+   EASY_PROFILER_ENABLE;
+   profiler::startListen();
 
+   EASY_THREAD( "MainThread" );
    Scheduler::Init();
 
    Window::Get().Init( { uint(1000.f * 1.77f), 1000 }, "hello" );
@@ -79,6 +85,7 @@ void Application::_destroy()
 
 void Application::_update()
 {
+   EASY_BLOCK("Frame");
    runMessagePump();
    ig::BeginFrame();
 

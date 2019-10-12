@@ -1,16 +1,40 @@
 ﻿#include "engine/pch.h"
 #include "async.hpp"
-#include <thread>
 #include "engine/platform/platform.hpp"
 #include "engine/core/string.hpp"
+#include <thread>
 #include <atomic>
+#include <deque>
+#include <easy/profiler.h>
+#include <fmt/color.h>
+#include <fmt/printf.h>
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
 
+class SchedulerImp;
+
+/**
+ * \brief Lock based work queue, not gonna be fast, but should be nice as the first path
+ */
+class JobQueue
+{
+
+   std::deque<BaseJob*> mJobs;
+};
+
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Static ////////////////////////////
 ////////////////////////////////////////////////////////////////
+
+template<typename W>
+static void StartWorker(W* worker)
+{
+   ASSERT_DIE( worker->Init() );
+   ASSERT_DIE( worker->Run() );
+   ASSERT_DIE( worker->Exit() );
+}
 
 ////////////////////////////////////////////////////////////////
 /////////////////////// Standalone Function ////////////////////
@@ -20,30 +44,33 @@
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
-class SchedulerImp;
-template<typename W>
-static void StartWorker(W* worker)
-{
-   ASSERT_DIE( worker->Init() );
-   ASSERT_DIE( worker->Run() );
-   ASSERT_DIE( worker->Exit() );
-}
+
 
 class Worker
 {
 public:
    Worker(Scheduler* owner, uint id): mOwner( owner ), mId( id ) {}
-   bool Init() { printf( "worker %u init\n", mId ); return true; }
+   bool Init()
+   {
+      profiler::registerThread( fmt::format( "Job Thread {}", mId ).c_str() );
+
+      fmt::print( fmt::fg( fmt::color::blue ), "worker {} init\n", mId );
+      return true;
+   }
    bool Run()
    {
       using namespace std::chrono_literals;
-      printf( "worker %u Run\n", mId );
+      fmt::print( fmt::fg(fmt::color::green), "worker {} Run\n", mId );
       while( mIsRunning ) {
          std::this_thread::sleep_for( 1000ms );
       }
       return true;
    }
-   bool Stop() { mIsRunning = false; printf( "worker %u is requested to stop\n", mId ); return true; }
+   bool Stop() {
+      mIsRunning = false;
+      fmt::print( fmt::fg(fmt::color::red),"worker {} is requested to stop\n", mId );
+      return true;
+   }
    bool Exit() { printf( "worker %u exit\n", mId ); return true; }
 
    Scheduler* mOwner;
@@ -79,7 +106,7 @@ public:
          SAFE_DELETE( worker );
       }
    }
-   virtual void Issue(JobBase* job)
+   virtual void Issue(BaseJob* job)
    {
       
    }

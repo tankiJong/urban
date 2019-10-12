@@ -7,6 +7,8 @@
 #include "engine/graphics/Texture.hpp"
 #include "../util/util.hpp"
 #include <execution>
+#include <easy/profiler.h>
+
 template<typename T>
 T Barycentric(const T& a, const T& b, const T& c, float2 weight)
 {
@@ -60,6 +62,7 @@ void Scene::Init()
 
 contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& screenY ) const
 {
+      EASY_FUNCTION( profiler::colors::Magenta );
 
    struct Hit
    {

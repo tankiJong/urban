@@ -8,6 +8,7 @@
 #include <easy/profiler.h>
 #include <fmt/color.h>
 #include <fmt/printf.h>
+#include <mutex>
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -19,8 +20,30 @@ class SchedulerImp;
  */
 class JobQueue
 {
+public:
+   void Enqueue( BaseJob* job )
+   {
+      std::scoped_lock lock( mQueueLock );
+      mJobs.push_back( job );
+   }
 
+   BaseJob* Dispatch()
+   {
+      BaseJob* job;
+      {
+         std::scoped_lock lock( mQueueLock );
+         if( mJobs.empty() ) return nullptr;
+         job = mJobs.front();
+         mJobs.pop_front();
+         ASSERT_DIE( job->jobStatus == BaseJob::JOB_ENQUEUE );
+      }
+
+      return job;
+   }
+
+protected:
    std::deque<BaseJob*> mJobs;
+   std::mutex           mQueueLock;
 };
 
 
@@ -59,10 +82,15 @@ public:
    }
    bool Run()
    {
-      using namespace std::chrono_literals;
       fmt::print( fmt::fg(fmt::color::green), "worker {} Run\n", mId );
       while( mIsRunning ) {
-         std::this_thread::sleep_for( 1000ms );
+         BaseJob* job = Scheduler::Get().Request( mId );
+         if(job == nullptr) {
+            std::this_thread::yield();
+         } else {
+            job->jobStatus = BaseJob::JOB_SCHEDULED;
+            job->Run( mId );
+         }
       }
       return true;
    }
@@ -106,15 +134,22 @@ public:
          SAFE_DELETE( worker );
       }
    }
-   virtual void Issue(BaseJob* job)
+
+   virtual void Issue(BaseJob* job) override
    {
-      
+      mJobQueue.Enqueue( job );
    }
+
+   virtual BaseJob* Request( eWorkerThread id ) override
+   {
+      BaseJob* job = mJobQueue.Dispatch();
+      return job;
+   }
+
    std::vector<std::thread> mWorkerThreads;
    std::vector<Worker*> mWorkers;
+   JobQueue mJobQueue;
 };
-
-
 
 
 SchedulerImp* gScheduler;

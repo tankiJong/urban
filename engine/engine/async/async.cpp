@@ -1,14 +1,15 @@
 ﻿#include "engine/pch.h"
 #include "async.hpp"
-#include "engine/platform/platform.hpp"
-#include "engine/core/string.hpp"
 #include <thread>
 #include <atomic>
-#include <deque>
+#include <mutex>
 #include <easy/profiler.h>
 #include <fmt/color.h>
 #include <fmt/printf.h>
-#include <mutex>
+#include "types.hpp"
+#include "semantics.hpp"
+#include "engine/platform/platform.hpp"
+
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Define ////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -18,38 +19,24 @@ class SchedulerImp;
 /**
  * \brief Lock based work queue, not gonna be fast, but should be nice as the first path
  */
-class JobQueue
+class JobQueue: public LockQueue<BaseJob*>
 {
 public:
-   void Enqueue( BaseJob* job )
-   {
-      std::scoped_lock lock( mQueueLock );
-      mJobs.push_back( job );
-   }
-
    BaseJob* Dispatch()
    {
       BaseJob* job;
-      {
-         std::scoped_lock lock( mQueueLock );
-         if( mJobs.empty() ) return nullptr;
-         job = mJobs.front();
-         mJobs.pop_front();
-         ASSERT_DIE( job->jobStatus == BaseJob::JOB_ENQUEUE );
-      }
-
+      if(!Dequeue(job)) job = nullptr;
       return job;
    }
-
-protected:
-   std::deque<BaseJob*> mJobs;
-   std::mutex           mQueueLock;
 };
 
 
 ////////////////////////////////////////////////////////////////
 //////////////////////////// Static ////////////////////////////
 ////////////////////////////////////////////////////////////////
+
+static thread_local eWorkerThread ThreadId;
+static SchedulerImp* gScheduler;
 
 template<typename W>
 static void StartWorker(W* worker)
@@ -75,9 +62,9 @@ public:
    Worker(Scheduler* owner, uint id): mOwner( owner ), mId( id ) {}
    bool Init()
    {
+      ThreadId = mId;
       profiler::registerThread( fmt::format( "Job Thread {}", mId ).c_str() );
-
-      fmt::print( fmt::fg( fmt::color::blue ), "worker {} init\n", mId );
+      print( fg( fmt::color::blue ), "worker {} init\n", mId );
       return true;
    }
    bool Run()
@@ -90,6 +77,7 @@ public:
          } else {
             job->jobStatus = BaseJob::JOB_SCHEDULED;
             job->Run( mId );
+            
          }
       }
       return true;
@@ -107,15 +95,19 @@ public:
 };
 
 
+
 class SchedulerImp: public Scheduler
 {
 public:
+   SchedulerImp() { ASSERT_DIE( gScheduler == nullptr ); }
    void Start(uint workerCount)
    {
       mWorkers.reserve( workerCount );
       mWorkerThreads.reserve( workerCount );
 
-      for(uint i = 0; i < workerCount; i++) {
+      ThreadId = 0;
+
+      for(uint i = 1; i < workerCount; i++) {
          mWorkers.emplace_back( new Worker(this, i) );
          mWorkerThreads.emplace_back( StartWorker<Worker>, mWorkers.back());
          SetThreadName( mWorkerThreads.back(), fmt::format( L"Job Thread {}", i ).c_str() );
@@ -152,7 +144,6 @@ public:
 };
 
 
-SchedulerImp* gScheduler;
 
 void Scheduler::Init()
 {
@@ -164,3 +155,17 @@ void Scheduler::Cleanup()
    gScheduler->Terminate();
 }
 Scheduler& Scheduler::Get() { return *gScheduler; }
+
+void Scheduler::Wait( JobHandleArray& jobs )
+{
+   ASSERT_DIE( gScheduler != nullptr );
+
+   SysEvent waitEvent;
+   Job<TriggerEventJob>::Allocate( jobs, ~0 ).InitAndDispatch( &waitEvent );
+   waitEvent.Wait();
+}
+
+eWorkerThread Scheduler::CurrentThreadId()
+{
+   return ThreadId;
+}

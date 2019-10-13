@@ -62,7 +62,6 @@ void Scene::Init()
 
 contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& screenY ) const
 {
-      EASY_FUNCTION( profiler::colors::Magenta );
 
    struct Hit
    {

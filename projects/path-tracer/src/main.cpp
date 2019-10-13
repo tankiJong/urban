@@ -20,7 +20,9 @@
 #include "engine/gui/ImGui.hpp"
 #include "util/util.hpp"
 #include <easy/profiler.h>
-
+#include "engine/async/async.hpp"
+#include "fmt/format.h"
+#include <future>
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
    // Re-initialize the C runtime "FILE" handles with clean handles bound to "nul". We do this because it has been
@@ -146,46 +148,54 @@ void GameApplication::OnRender() const
 
    float3 screenX = mCamera.WorldTransform().X();
    float3 screenY = -mCamera.WorldTransform().Y();
-   for(uint j = 0; j < mFrameColor.Dimension().y; j++)
-      for(uint i = 0; i < mFrameColor.Dimension().x; i++) {
-         rgba* pixel = (rgba*)mFrameColor.At( i, j );
 
-         rayd r;
+   JobHandleArray frameJobs;
+   for( uint j = 0; j < mFrameColor.Dimension().y; j++ ) {
+         auto handle = CreateAndDispatchFunctionJob( {}, [j, &invVp, &cameraWorld, &screenX, &screenY, this]( eWorkerThread )
          {
-            float3 origin = PixelToWorld( {i, j}, mFrameColor.Dimension(), invVp );
-            r.origin      = origin;
-            r.dir         = (origin - cameraWorld).Norm();
+            EASY_FUNCTION( profiler::colors::Red );
+            for(uint i = 0; i < mFrameColor.Dimension().x; i++) {
+               rgba* pixel = (rgba*)mFrameColor.At( i, j );
+               rayd r;
+               {
+                  float3 origin = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
+                  r.origin      = origin;
+                  r.dir         = (origin - cameraWorld).Norm();
 
-            r.rayx.origin = PixelToWorld( {i+1, j}, mFrameColor.Dimension(), invVp );
-            r.rayx.dir    = (r.rayx.origin - cameraWorld).Norm();
-            
+                  r.rayx.origin = PixelToWorld( { i + 1, j }, mFrameColor.Dimension(), invVp );
+                  r.rayx.dir    = (r.rayx.origin - cameraWorld).Norm();
 
-            r.rayy.origin = PixelToWorld( {i, j+1}, mFrameColor.Dimension(), invVp );
-            r.rayy.dir    = (r.rayy.origin - cameraWorld).Norm();
+                  r.rayy.origin = PixelToWorld( { i, j + 1 }, mFrameColor.Dimension(), invVp );
+                  r.rayy.dir    = (r.rayy.origin - cameraWorld).Norm();
+               }
 
-         }
+               contact c = mScene.Intersect( r, screenX, screenY );
 
-         contact c = mScene.Intersect( r, screenX, screenY );
+               if(c.t < INFINITY && c.t > 0) {
+                  float4 color = *pixel;
+                  color *= float4( Clock::Main().frameCount );
+                  color += (float4)rgba( mScene.Sample( c.uv, c.dd ) );
+                  // color += float4( c.dd.x, c.dd.y, 0, 1 );
+                  color /= float4( float( Clock::Main().frameCount + 1 ) );
 
-         if(c.t < INFINITY && c.t > 0) {
-            float4 color = *pixel;
-            color *= float4( Clock::Main().frameCount );
-            color += (float4)rgba( mScene.Sample( c.uv, c.dd ) );
-            // color += float4( c.dd.x, c.dd.y, 0, 1 );
-            color /= float4( float( Clock::Main().frameCount + 1 ) );
+                  *pixel = (rgba)color;
+                  //pixel->r = uint8_t(tuv.y * 256.f);
+                  //pixel->g = uint8_t(tuv.z * 256.f);
+                  //pixel->b = uint8_t((1 - tuv.y - tuv.z) * 256.f);
+                  //pixel->a = 255;
+               } else {
+                  pixel->r = 0;
+                  pixel->g = 0;
+                  pixel->b = 0;
+                  pixel->a = 1.f;
+               }
+            }
+         } );
 
-            *pixel = (rgba)color;
-            //pixel->r = uint8_t(tuv.y * 256.f);
-            //pixel->g = uint8_t(tuv.z * 256.f);
-            //pixel->b = uint8_t((1 - tuv.y - tuv.z) * 256.f);
-            //pixel->a = 255;
-         } else {
-            pixel->r = 0;
-            pixel->g = 0;
-            pixel->b = 0;
-            pixel->a = 1.f;
-         }
-      }
+         frameJobs.push_back( handle );
+   }
+
+   Scheduler::Wait( frameJobs );
 
    auto finalColor = Texture2::Create(
                                       eBindingFlag::ShaderResource,

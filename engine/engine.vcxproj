@@ -19,6 +19,8 @@
     <ClCompile Include="engine\async\event\EventListener.cpp" />
     <ClCompile Include="engine\async\event\EventTarget.cpp" />
     <ClCompile Include="engine\async\event\Observable.cpp" />
+    <ClCompile Include="engine\async\semantics.cpp" />
+    <ClCompile Include="engine\async\types.cpp" />
     <ClCompile Include="engine\core\any_func.cpp" />
     <ClCompile Include="engine\core\Asset.cpp" />
     <ClCompile Include="engine\core\Blob.cpp" />
@@ -132,6 +134,8 @@
     <ClInclude Include="engine\async\event\EventListener.hpp" />
     <ClInclude Include="engine\async\event\EventTarget.hpp" />
     <ClInclude Include="engine\async\event\Observable.hpp" />
+    <ClInclude Include="engine\async\semantics.hpp" />
+    <ClInclude Include="engine\async\types.hpp" />
     <ClInclude Include="engine\core\any_func.hpp" />
     <ClInclude Include="engine\core\Asset.hpp" />
     <ClInclude Include="engine\core\Blob.hpp" />

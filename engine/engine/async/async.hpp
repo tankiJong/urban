@@ -3,6 +3,7 @@
 #include "types.hpp"
 #include "semantics.hpp"
 #include <easy/profiler.h>
+#include "engine/core/memory.hpp"
 
 using eWorkerThread = uint;
 
@@ -43,7 +44,7 @@ struct BaseJob
    static constexpr uint kMaxSubsequentCount = 1024;
 
    BaseJob( uint subsequentCount ): mSubsequentCount( subsequentCount ) {}
-
+   ~BaseJob() = default;
    virtual void Run( eWorkerThread threadId ) = 0;
 
    void DecrementAndTryIssue()
@@ -69,6 +70,8 @@ protected:
    }
 
    std::atomic<uint> mSubsequentCount = 0;
+
+   static LinearBuffer<1 GB> sBuffer;
 };
 
 class JobHandle
@@ -125,13 +128,19 @@ struct Job: public BaseJob, public NonCopyable
    {
       EASY_BLOCK( "Run Job" );
       (*((TJob*)((void*)(&mStorage))))( threadId );
+      ((TJob*)((void*)(&mStorage)))->~TJob();
       mSubsequents->DispatchSubsequents();
-      delete this;
+
+      BaseJob* base = this;
+      // delete base;
+      base->~BaseJob();
    }
 
    static Constructor Allocate( span<JobHandleRef> dependencies, eWorkerThread threadMask )
    {
-      Job<TJob>* job = new Job<TJob>( JobHandle::Create(), dependencies.size() );
+      constexpr auto size = sizeof( Job<TJob> );
+      void* mem = sBuffer.Acquire( size );
+      Job<TJob>* job = new (mem)Job<TJob>( JobHandle::Create(), dependencies.size() );
       return Constructor( job, dependencies );
    };
 
@@ -177,7 +186,6 @@ public:
    }
    SysEvent* mEvent;
 };
-
 
 template<typename F>
 static JobHandleRef CreateAndDispatchFunctionJob(span<JobHandleRef> dependencies, F&& func, eWorkerThread threadMask = ~0)

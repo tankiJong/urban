@@ -58,6 +58,11 @@ void Scene::Init()
 
    mTestTexture = MipMap(tex->Dimension().x, tex->Dimension().y);
    mTestTexture.GenerateMip( tex->Data(), tex->Size() );
+
+   mPositions.resize( mVertices.size() );
+   for(int i = 0; i < mVertices.size(); ++i) {
+      mPositions[i] = float4(mVertices[i].position, 1.f);
+   }
 }
 
 contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& screenY ) const
@@ -71,13 +76,13 @@ contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& sc
    Hit hit;
    float3 tuvhit = { INFINITY, 0, 0 };
 
-	for(uint i = 0; i + 2 < mVertices.size(); i+= 3)
+	for(uint i = 0; i + 2 < mPositions.size(); i+= 3)
 	{
 		float3 tuv = 
 			r.Intersect(
-				mVertices[i].position, 
-				mVertices[i+1].position, 
-				mVertices[i+2].position);
+				*(float3*)&mPositions[i], 
+				*(float3*)&mPositions[i+1], 
+				*(float3*)&mPositions[i+2]);
 
 		bool valid = (tuv.x < hit.t) & (tuv.x > 0);
 		//tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };

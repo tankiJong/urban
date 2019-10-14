@@ -121,6 +121,8 @@ protected:
    Scene    mScene;
    Image    mFrameColor;
    MvCamera mCamera;
+   mutable std::vector<ray> mRays;
+
 };
 
 void GameApplication::OnInit()
@@ -130,6 +132,9 @@ void GameApplication::OnInit()
    mFrameColor = Image( size.x, size.y, eTextureFormat::RGBA32Float );
    memset( mFrameColor.Data(), 0, mFrameColor.Size() );
    mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
+
+   auto dim = mFrameColor.Dimension();
+   mRays.resize( (dim.x + 1) * (dim.x + 1) );
 }
 
 void GameApplication::OnUpdate()
@@ -142,6 +147,8 @@ void GameApplication::OnUpdate()
 
 void GameApplication::OnRender() const
 {
+   EASY_FUNCTION( profiler::colors::Brown );
+
    auto  cameraBlock = mCamera.ComputeCameraBlock();
    auto  cameraWorld = mCamera.WorldPosition();
    mat44 invVp       = cameraBlock.invView * cameraBlock.invProj;
@@ -149,24 +156,48 @@ void GameApplication::OnRender() const
    float3 screenX = mCamera.WorldTransform().X();
    float3 screenY = -mCamera.WorldTransform().Y();
 
-   JobHandleArray frameJobs;
-   for( uint j = 0; j < mFrameColor.Dimension().y; j++ ) {
-         auto handle = CreateAndDispatchFunctionJob( {}, [j, &invVp, &cameraWorld, &screenX, &screenY, this]( eWorkerThread )
+
+   auto dim = mFrameColor.Dimension();
+   JobHandleArray pixelJobs;
+   pixelJobs.reserve(dim.y+1);
+   auto& rays = mRays;
+
+   for( uint j = 0; j <=dim.y; j++ ) {
+      EASY_BLOCK( "Setup Ray Gen Job" );
+      auto handle = CreateAndDispatchFunctionJob( {}, 
+         [j, &invVp, &cameraWorld, &rays, &dim, this]( eWorkerThread )
          {
             EASY_FUNCTION( profiler::colors::Red );
-            for(uint i = 0; i < mFrameColor.Dimension().x; i++) {
+            for(uint i = 0; i <= dim.x; i++) {
+               ray r;
+               float3 origin = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
+               r.origin      = origin;
+               r.dir         = (origin - cameraWorld).Norm();
+               rays[i + (dim.x + 1) * j] = r;
+            }
+         } );
+
+      pixelJobs.push_back( handle );
+   }
+
+   JobHandleArray frameJobs;
+   pixelJobs.reserve(dim.y);
+
+   for( uint j = 0; j < dim.y; j++ ) {
+      EASY_BLOCK( "Setup Ray Trace Job" );
+      auto handle = CreateAndDispatchFunctionJob( {pixelJobs.data() + j, 2},
+         [j, &invVp, &cameraWorld, &screenX, &screenY, &rays, &dim, this]( eWorkerThread )
+         {
+            EASY_FUNCTION( profiler::colors::Blue );
+            for(uint i = 0; i < dim.x; i++) {
                rgba* pixel = (rgba*)mFrameColor.At( i, j );
                rayd r;
+
+               ray& ray = r;
+               ray = rays[i + (dim.x + 1) * j];
                {
-                  float3 origin = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
-                  r.origin      = origin;
-                  r.dir         = (origin - cameraWorld).Norm();
-
-                  r.rayx.origin = PixelToWorld( { i + 1, j }, mFrameColor.Dimension(), invVp );
-                  r.rayx.dir    = (r.rayx.origin - cameraWorld).Norm();
-
-                  r.rayy.origin = PixelToWorld( { i, j + 1 }, mFrameColor.Dimension(), invVp );
-                  r.rayy.dir    = (r.rayy.origin - cameraWorld).Norm();
+                  r.rayx = rays[i + 1 + (dim.x + 1) * j];
+                  r.rayy = rays[i + 1 + (dim.x + 1) * (j + 1)];
                }
 
                contact c = mScene.Intersect( r, screenX, screenY );
@@ -192,11 +223,16 @@ void GameApplication::OnRender() const
             }
          } );
 
-         frameJobs.push_back( handle );
+      frameJobs.push_back( handle );
+   }
+   {
+      EASY_BLOCK( "Wait" )
+      Scheduler::Wait( frameJobs );
    }
 
-   Scheduler::Wait( frameJobs );
-
+      
+   EASY_BLOCK( "Upload to GPU" );
+   EASY_BLOCK( "Create Tex" );
    auto finalColor = Texture2::Create(
                                       eBindingFlag::ShaderResource,
                                       mFrameColor.Dimension().x, mFrameColor.Dimension().y, 1, mFrameColor.Format(),
@@ -207,6 +243,8 @@ void GameApplication::OnRender() const
                                        eBindingFlag::UnorderedAccess | eBindingFlag::ShaderResource,
                                        backBuffer.size().x, backBuffer.size().y, 1, backBuffer.Format(), false,
                                        eAllocationType::Temporary );
+   EASY_END_BLOCK;
+   EASY_BLOCK( "Issue Commands" );
 
    CommandList list( eQueueType::Direct );
    finalColor->UpdateData( mFrameColor.Data(), mFrameColor.Size(), 0, &list );
@@ -215,6 +253,8 @@ void GameApplication::OnRender() const
    list.Blit( *finalColor->Srv(), *frameTex->Uav() );
    list.CopyResource( *frameTex, Window::Get().BackBuffer() );
    list.Flush();
+   EASY_END_BLOCK;
+   EASY_END_BLOCK;
 }
 
 void GameApplication::OnGui() {}

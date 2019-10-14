@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <xmmintrin.h>
 
 ///////////////////////////// vector /////////////////////////////
 
@@ -56,14 +57,7 @@ struct vec<3, T> {
    vec3<T> Norm() { return *this / vec3<T>{ Len() }; }
 
    // left hand, x.cross(y) == z
-   vec3<T> Cross( const vec3<T>& rhs ) const
-   {
-      return {
-         y * rhs.z - z * rhs.y,
-         z * rhs.x - x * rhs.z,
-         x * rhs.y - y * rhs.x,
-      };
-   };
+   vec3<T> Cross( const vec3<T>& rhs ) const;;
 
    vec<2, T> xy() const { return { x, y }; }
    vec<2, T> xz() const { return { x, z }; }
@@ -181,6 +175,17 @@ inline T Dot(const T& a, const T& b)
 {
    return a * b;
 }
+
+template<typename T>
+vec<3,T> Cross(const vec<3, T>& lhs, const vec<3, T>& rhs)
+{
+   return {
+      lhs.y * rhs.z - lhs.z * rhs.y,
+      lhs.z * rhs.x - lhs.x * rhs.z,
+      lhs.x * rhs.y - lhs.y * rhs.x,
+   };
+}
+
 // --------------------------------------------------------------- //
 
 using int2   = vec<2, int32_t>;
@@ -194,6 +199,8 @@ using euler  = float3;
 using uint4  = vec<4, uint32_t>;
 using float4 = vec<4, float>;
 using uchar4 = vec<4, uint8_t>;
+
+template< typename T > __forceinline vec<3, T> vec<3, T>::Cross( const vec3<T>& rhs ) const { return ::Cross( *this, rhs ); }
 
 ///////////////////////////// matrix /////////////////////////////
 

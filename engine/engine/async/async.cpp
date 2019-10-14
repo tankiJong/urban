@@ -54,6 +54,7 @@ static void StartWorker(W* worker)
 ///////////////////////// Member Function //////////////////////
 ////////////////////////////////////////////////////////////////
 
+LinearBuffer<1 GB> BaseJob::sBuffer;
 
 
 class Worker
@@ -107,7 +108,7 @@ public:
 
       ThreadId = 0;
 
-      for(uint i = 1; i < workerCount; i++) {
+      for(uint i = 1; i <= workerCount; i++) {
          mWorkers.emplace_back( new Worker(this, i) );
          mWorkerThreads.emplace_back( StartWorker<Worker>, mWorkers.back());
          SetThreadName( mWorkerThreads.back(), fmt::format( L"Job Thread {}", i ).c_str() );

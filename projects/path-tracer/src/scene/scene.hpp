@@ -29,5 +29,6 @@ public:
 protected:
 	Model mModel;
 	std::vector<vertex_t> mVertices;
+	std::vector<float4>   mPositions;
    MipMap mTestTexture;
 };

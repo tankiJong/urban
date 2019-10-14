@@ -251,6 +251,7 @@
     <ClInclude Include="engine\platform\platform.hpp" />
     <ClInclude Include="engine\async\types.hpp" />
     <ClInclude Include="engine\async\semantics.hpp" />
+    <ClInclude Include="engine\core\memory.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\pch.cpp" />
@@ -366,6 +367,7 @@
     <ClCompile Include="engine\platform\platform.cpp" />
     <ClCompile Include="engine\async\types.cpp" />
     <ClCompile Include="engine\async\semantics.cpp" />
+    <ClCompile Include="engine\core\memory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="engine\graphics\shaders\Equirect2Cube_cs.hlsl" />

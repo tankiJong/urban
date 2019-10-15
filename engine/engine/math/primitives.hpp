@@ -136,6 +136,10 @@ template<typename T> vec<3, T>    operator +  ( const vec<3, T>& lhs, T v )  {  
 template<typename T> vec<3, T>    operator -  ( const vec<3, T>& lhs, T v )  {  return { lhs.x - v, lhs.y - v, lhs.z - v }; }
 template<typename T> vec<3, T>    operator *  ( const vec<3, T>& lhs, T v )  {  return { lhs.x * v, lhs.y * v, lhs.z * v }; }
 template<typename T> vec<3, T>    operator /  ( const vec<3, T>& lhs, T v )  {  return { lhs.x / v, lhs.y / v, lhs.z / v }; }
+template<typename T> vec<3, T>    operator +  ( T v, const vec<3, T>& rhs )  {  return { v + rhs.x, v + rhs.y, v + rhs.z }; }
+template<typename T> vec<3, T>    operator -  ( T v, const vec<3, T>& rhs )  {  return { v - rhs.x, v - rhs.y, v - rhs.z }; }
+template<typename T> vec<3, T>    operator *  ( T v, const vec<3, T>& rhs )  {  return { v * rhs.x, v * rhs.y, v * rhs.z }; }
+template<typename T> vec<3, T>    operator /  ( T v, const vec<3, T>& rhs )  {  return { v / rhs.x, v / rhs.y, v / rhs.z }; }
 
 template<typename T> vec<4, T>    operator - ( const vec<4, T>& rhs ) { return { - rhs.x, - rhs.y, - rhs.z, - rhs.w }; }
 template<typename T> vec<4, T>    operator + ( const vec<4, T>& lhs, const vec<4, T>& rhs )  {  return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z, lhs.w + rhs.w }; }
@@ -163,6 +167,8 @@ inline vec<3, bool> operator ||( const vec<3, bool>& lhs, const vec<3, bool>& rh
 
 inline vec<4, bool> operator &&( const vec<4, bool>& lhs, const vec<4, bool>& rhs ) {  return { lhs.x && rhs.x, lhs.y && rhs.y, lhs.z && rhs.z, lhs.w && rhs.w }; }
 inline vec<4, bool> operator ||( const vec<4, bool>& lhs, const vec<4, bool>& rhs ) {  return { lhs.x || rhs.x, lhs.y || rhs.y, lhs.z || rhs.z, lhs.w || rhs.w }; }
+
+
 
 template<size_t N, typename T> 
 inline T Dot(const vec<N, T>& a, const vec<N, T>& b)

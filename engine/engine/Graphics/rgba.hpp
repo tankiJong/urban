@@ -5,6 +5,7 @@ struct rgba {
 public:
    float r = 0.f, g = 0.f, b = 0.f, a = 1.f;
 
+   rgba(float r, float g, float b, float a): r(r), g(g), b(b), a(a) {}
    explicit rgba(const float4& v)
    : r(v.x), g(v.y), b(v.z), a(v.w){}
    explicit rgba( const urgba& from );

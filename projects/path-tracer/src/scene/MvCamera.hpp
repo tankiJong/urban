@@ -6,8 +6,8 @@ public:
    void OnUpdate();
 
 protected:
-   float3 mOrbitCenter = {};
-   float  mTheta = -90;
+   float3 mOrbitCenter = .002f * float3{ 250, 250, 250 };
+   float  mTheta = -180;
    float  mPhi = 0;
-   float  mRadius = 10.f;
+   float  mRadius = 3.f;
 };

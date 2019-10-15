@@ -248,7 +248,6 @@ void GameApplication::OnRender() const
 
    CommandList list( eQueueType::Direct );
    finalColor->UpdateData( mFrameColor.Data(), mFrameColor.Size(), 0, &list );
-
    // ASSERT_DIE(Window::Get().BackBuffer().Format() == finalColor->Format());
    list.Blit( *finalColor->Srv(), *frameTex->Uav() );
    list.CopyResource( *frameTex, Window::Get().BackBuffer() );

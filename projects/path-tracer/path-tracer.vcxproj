@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\scene\Light.cpp" />
     <ClCompile Include="src\scene\MvCamera.cpp" />
     <ClCompile Include="src\scene\scene.cpp" />
     <ClCompile Include="src\util\MipMap.cpp" />
@@ -142,6 +143,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\scene\Light.hpp" />
     <ClInclude Include="src\scene\MvCamera.hpp" />
     <ClInclude Include="src\scene\scene.hpp" />
     <ClInclude Include="src\util\MipMap.hpp" />

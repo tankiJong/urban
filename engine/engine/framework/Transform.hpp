@@ -30,7 +30,7 @@ public:
    mat44 LocalToWorld() const;
    mat44 WorldToLocal() const;
 
-   void TranslateLocal( const float3& translation );
+   void TranslateLocal(const float3& translation) { mLocalTransform.position += translation; };
    void RotateLocal( const euler& rotation );
    void ScaleLocal( const float3& scale );
 

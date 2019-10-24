@@ -28,3 +28,9 @@ struct ray
       return float3( t, u, v );
    }
 };
+
+struct aabb
+{
+   float3 mins;
+   float3 maxs;
+};

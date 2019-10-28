@@ -27,6 +27,8 @@ struct ray
       t = valid ? t : INFINITY;
       return float3( t, u, v );
    }
+
+   void SetAndOffset( const float3& origin, const float3& dir );
 };
 
 struct aabb

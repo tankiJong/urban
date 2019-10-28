@@ -171,8 +171,7 @@ void GameApplication::OnRender() const
             for(uint i = 0; i <= dim.x; i++) {
                ray r;
                float3 origin = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
-               r.origin      = origin;
-               r.dir         = (origin - cameraWorld).Norm();
+               r.SetAndOffset( origin, (origin - cameraWorld).Norm() );
                rays[i + (dim.x + 1) * j] = r;
             }
          } );
@@ -202,22 +201,29 @@ void GameApplication::OnRender() const
 
                contact c = mScene.Intersect( r, screenX, screenY );
 
-               if(c.t < INFINITY && c.t > 0) {
+               if(c.Valid(r)) {
+                  rayd bounce;
+                  bounce.SetAndOffset( c.world, UniformSampleHemisphere( c.normal ) );
+
+                  contact ao = mScene.Intersect( bounce, screenX, screenY );
+
                   float4 color = *pixel;
                   color *= float4( Clock::Main().frameCount );
-                  color += (float4)rgba( mScene.Sample( c.uv, c.dd ) );
-                  // color += float4( c.dd.x, c.dd.y, 0, 1 );
+                  if(!ao.Valid( bounce ) || ao.t >= 1.5f) {
+                     color += (float4)rgba( mScene.Sample( c.uv, { c.dd.xy().Len(), c.dd.zw().Len() } ) ) * c.color * 2.4f;
+                  }
+                  // color += float4( bounce.dir * .5f + .5f, 1.f );
+                  // color += float4( c.normal * .5f + .5f, 1.f );
+                  
+                  // color += float4( c.dd.xy().Len() * 10, c.dd.zw().Len() * 10, 0, 1 );
                   color /= float4( float( Clock::Main().frameCount + 1 ) );
 
                   *pixel = (rgba)color;
-                  //pixel->r = uint8_t(tuv.y * 256.f);
-                  //pixel->g = uint8_t(tuv.z * 256.f);
-                  //pixel->b = uint8_t((1 - tuv.y - tuv.z) * 256.f);
-                  //pixel->a = 255;
-               } else {
-                  pixel->r = 0;
-                  pixel->g = 0;
-                  pixel->b = 0;
+               }
+               else {
+                  pixel->r = 1.f;
+                  pixel->g = 1.f;
+                  pixel->b = 1.f;
                   pixel->a = 1.f;
                }
             }

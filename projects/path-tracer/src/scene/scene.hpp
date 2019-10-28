@@ -5,6 +5,7 @@
 #include "engine/graphics/model/Model.hpp"
 #include "engine/graphics/rgba.hpp"
 #include "../util/MipMap.hpp"
+#include "engine/math/shapes.hpp"
 
 struct rayd;
 struct ray;
@@ -15,8 +16,13 @@ struct contact
 	float t;
 	float2 barycentric;
 	float2 uv;
-   float2 dd;
+   // texture space differential
+   float4 dd;
 	float3 world;
+   float4 color;
+   float3 normal;
+
+   bool Valid(const ray& r) const { return t < r.maxt && t >= r.mint; }
 };
 
 class Scene

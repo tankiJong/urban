@@ -29,6 +29,8 @@ Urban is a personal rendering framework based on D3D12(for now). It's still very
 
 # Notice
 * Be aware that the `.vcproj` is manually edited with several customized build steps, so the best way to create a new project for now is to copy the project structure and manually rename it with a code editor and remove all source files.
+* When running the build through visual studio, make sure you set the working directory to `${TargetDir}` as it's a user setting and is default to `${ProjectDir}`.
+* Because of the limit of github repository size, I cannot upload the model asset file. For example, you can find `DamagedHelmet.gltf` [here](https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/DamagedHelmet/glTF-Embedded)
 
 # Third Libraries
 * Dear ImGui [https://github.com/ocornut/imgui](https://github.com/ocornut/imgui)

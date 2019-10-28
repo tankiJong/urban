@@ -15,7 +15,8 @@ T Barycentric(const T& a, const T& b, const T& c, float2 weight)
 	return a * (1 - weight.x - weight.y) + b * weight.x + c * weight.y;
 }
 
-float2 Differential( const rayd& ray, float t, const float3& screenX, const float3& screenY, const float2& barycentric, const float3& a, const float3& b, const float3& c )
+// return Barycentric differential (du/dx, dv/dx, du/dy, dv/dy)
+float4 Differential( const rayd& ray, float t, const float3& a, const float3& b, const float3& c )
 {
    // b -> bary.x, c->bary.y
    float3 e2 = c - a; // b u
@@ -32,7 +33,30 @@ float2 Differential( const rayd& ray, float t, const float3& screenX, const floa
    float2 ddx = { cu.Dot( alongx ) / k, cv.Dot( alongx ) / k };
    float2 ddy = { cu.Dot( alongy ) / k, cv.Dot( alongy ) / k };
 
-   return { ddx.Len(), ddy.Len() };
+   return { ddx.x, ddx.y, ddy.x, ddy.y };
+}
+
+// a - w, b - u, c - v
+float4 UvDifferential(float4 dd, const float2& a, const float2& b, const float2& c)
+{
+   float2 g2 = c - a;
+   float2 g1 = b - a;
+   float2 ddx = {
+      dd.x * g1.x + dd.y * g2.x,
+      dd.x * g1.y + dd.y * g2.y,
+   };
+
+   float2 ddy = {
+      dd.z * g1.x + dd.w * g2.x,
+      dd.z * g1.y + dd.w * g2.y,
+   };
+
+   return { ddx.x, ddx.y, ddy.x, ddy.y };
+}
+
+float3 TriNormal(const float3& a, const float3& b, const float3& c)
+{
+   return (b - a).Cross( c - a ).Norm();
 }
 
 static float SCENE_SCALE = .002f;
@@ -138,8 +162,11 @@ contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& sc
 	c.t = hit.t;
 	c.barycentric = tuvhit.yz();
 	c.uv = Barycentric(mVertices[hit.i].uv, mVertices[hit.i+1].uv, mVertices[hit.i+2].uv, c.barycentric);
-   c.dd = Differential( r, hit.t, screenX, screenY, c.barycentric, mVertices[hit.i].position, mVertices[hit.i + 1].position, mVertices[hit.i + 2].position );
+   c.color = Barycentric( mVertices[hit.i].color, mVertices[hit.i + 1].color, mVertices[hit.i + 2].color, c.barycentric );
+   c.dd = Differential( r, hit.t, mVertices[hit.i].position, mVertices[hit.i + 1].position, mVertices[hit.i + 2].position );
+   c.dd = UvDifferential( c.dd, mVertices[hit.i].uv, mVertices[hit.i + 1].uv, mVertices[hit.i + 2].uv );
    c.world = r.origin + r.dir * hit.t;
+   c.normal = Barycentric( mVertices[hit.i].normal, mVertices[hit.i + 1].normal, mVertices[hit.i + 2].normal, c.barycentric );
 	return c;
 }
 

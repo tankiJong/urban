@@ -99,6 +99,7 @@ struct vec<4, T> {
    vec<3, T> xyz() const { return { x, y, z }; }
    vec<2, T> xy() const { return { x, y }; }
    vec<2, T> xz() const { return { x, z }; }
+   vec<2, T> zw() const { return { z, w }; }
 };
 
 template<typename T> vec<2, T>    operator - ( const vec<2, T>& rhs ) { return { - rhs.x, - rhs.y }; }

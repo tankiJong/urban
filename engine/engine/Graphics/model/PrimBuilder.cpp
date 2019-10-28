@@ -113,8 +113,8 @@ PrimBuilder& PrimBuilder::Quad( mesh_index_t a, mesh_index_t b, mesh_index_t c, 
 
 PrimBuilder& PrimBuilder::Quad( const float3& a, const float3& b, const float3& c, const float3& d )
 {
-   Tangent( b - a, 1 );
-   Normal( (d - a).Cross( b - a ) );
+   Tangent( (b - a).Norm(), 1 );
+   Normal( (d - a).Cross( b - a ).Norm() );
 
    if(mDrawInstr.useIndices) {
       uint start =

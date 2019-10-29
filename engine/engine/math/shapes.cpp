@@ -19,6 +19,7 @@
 
 void ray::SetAndOffset( const float3& o, const float3& d )
 {
+   static_assert(sizeof( float ) == sizeof( int32_t ));
    // Ray tracing Gem Ch20
    constexpr float scaleInt = 256.f;
    constexpr float scaleFloat = 1.f / 65536.f;

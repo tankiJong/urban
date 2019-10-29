@@ -185,7 +185,7 @@ void GameApplication::OnRender() const
    for( uint j = 0; j < dim.y; j++ ) {
       EASY_BLOCK( "Setup Ray Trace Job" );
       auto handle = CreateAndDispatchFunctionJob( {pixelJobs.data() + j, 2},
-         [j, &invVp, &cameraWorld, &screenX, &screenY, &rays, &dim, this]( eWorkerThread )
+         [j, &invVp, &cameraWorld, &rays, &dim, this]( eWorkerThread )
          {
             EASY_FUNCTION( profiler::colors::Blue );
             for(uint i = 0; i < dim.x; i++) {
@@ -199,33 +199,12 @@ void GameApplication::OnRender() const
                   r.rayy = rays[i + 1 + (dim.x + 1) * (j + 1)];
                }
 
-               contact c = mScene.Intersect( r, screenX, screenY );
-
-               if(c.Valid(r)) {
-                  rayd bounce;
-                  bounce.SetAndOffset( c.world, UniformSampleHemisphere( c.normal ) );
-
-                  contact ao = mScene.Intersect( bounce, screenX, screenY );
-
-                  float4 color = *pixel;
-                  color *= float4( Clock::Main().frameCount );
-                  if(!ao.Valid( bounce ) || ao.t >= 1.5f) {
-                     color += (float4)rgba( mScene.Sample( c.uv, { c.dd.xy().Len(), c.dd.zw().Len() } ) ) * c.color * 2.4f;
-                  }
-                  // color += float4( bounce.dir * .5f + .5f, 1.f );
-                  // color += float4( c.normal * .5f + .5f, 1.f );
-                  
-                  // color += float4( c.dd.xy().Len() * 10, c.dd.zw().Len() * 10, 0, 1 );
-                  color /= float4( float( Clock::Main().frameCount + 1 ) );
-
-                  *pixel = (rgba)color;
-               }
-               else {
-                  pixel->r = 1.f;
-                  pixel->g = 1.f;
-                  pixel->b = 1.f;
-                  pixel->a = 1.f;
-               }
+               float4 sampleColor = mScene.Trace( r );
+               float4 color = *pixel;
+               color *= float4( Clock::Main().frameCount );
+               color += sampleColor;
+               color /= float4( float( Clock::Main().frameCount + 1 ) );
+               *pixel = (rgba)color;
             }
          } );
 

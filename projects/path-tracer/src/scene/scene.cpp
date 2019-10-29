@@ -133,7 +133,7 @@ void Scene::Init()
    }
 }
 
-contact Scene::Intersect( const rayd& r, const float3& screenX, const float3& screenY ) const
+contact Scene::Intersect( const rayd& r ) const
 {
 
    struct Hit
@@ -174,5 +174,29 @@ urgba Scene::Sample( const float2& uv, const float2& dd ) const
 {
    return mTestTexture.Sample( uv, dd );
    // return mTestTexture.SampleMip( uv, 4 );
+}
+
+rgba Scene::Trace( const rayd& r ) const
+{
+   contact c = Intersect( r );
+
+   float4 ret;
+   if(c.Valid(r)) {
+      rayd bounce;
+      bounce.SetAndOffset( c.world, UniformSampleHemisphere( c.normal ) );
+
+      contact ao = Intersect( bounce );
+
+      if(!ao.Valid( bounce ) || ao.t >= 1.5f) {
+         ret = float4(rgba( Sample( c.uv, { c.dd.xy().Len(), c.dd.zw().Len() } ) )) * c.color * 2.4f;
+      } else {
+         ret = float4( 0.f, 0.f, 0.f, 1.f );
+      }
+   }
+   else {
+      ret = float4( 1.f );
+   }
+
+   return rgba(ret);
 }
 

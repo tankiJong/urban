@@ -5,13 +5,16 @@ struct rgba {
 public:
    float r = 0.f, g = 0.f, b = 0.f, a = 1.f;
 
+   rgba() = default;
    rgba(float r, float g, float b, float a): r(r), g(g), b(b), a(a) {}
-   explicit rgba(const float4& v)
-   : r(v.x), g(v.y), b(v.z), a(v.w){}
+   explicit rgba(const float4& v): r(v.x), g(v.y), b(v.z), a(v.w){}
    explicit rgba( const urgba& from );
    operator float4() const { return { r, g, b, a }; }
+
+   static const rgba Black;
 };
 
+inline const rgba rgba::Black = { 0.f, 0.f, 0.f, 1.f };
 
 struct urgba
 {

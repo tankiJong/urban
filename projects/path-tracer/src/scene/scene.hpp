@@ -30,8 +30,9 @@ class Scene
 public:
 	Scene();
 	void Init();
-   contact Intersect( const rayd &r, const float3& screenX, const float3& screenY ) const;
+   contact Intersect( const rayd &r ) const;
    urgba Sample( const float2 &uv, const float2 &dd ) const;
+   rgba Trace( const rayd& r ) const;
 protected:
 	Model mModel;
 	std::vector<vertex_t> mVertices;

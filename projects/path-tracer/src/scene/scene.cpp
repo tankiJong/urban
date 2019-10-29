@@ -9,12 +9,6 @@
 #include <execution>
 #include <easy/profiler.h>
 
-template<typename T>
-T Barycentric(const T& a, const T& b, const T& c, float2 weight)
-{
-	return a * (1 - weight.x - weight.y) + b * weight.x + c * weight.y;
-}
-
 // return Barycentric differential (du/dx, dv/dx, du/dy, dv/dy)
 float4 Differential( const rayd& ray, float t, const float3& a, const float3& b, const float3& c )
 {
@@ -66,107 +60,150 @@ Scene::Scene()
 
 void Scene::Init()
 {
-	PrimBuilder ms;
+   // add material
+   {
+      // for box
+      mMats.push_back( Mat{ 0 } );
+      // for light
+      mMats.push_back( Mat{ 5.f } );
+   }
+   {
+      PrimBuilder ms;
 
-	//ModelImporter importer;
-	//mModel = importer.Import("engine/resource/DamagedHelmet.gltf");
-	ms.Begin(eTopology::Triangle, false);
-        ms.Color(rgba{ 0.725, 0.71, 0.68, 1.f });
+	   ms.Begin(eTopology::Triangle, false);
+           ms.Color(rgba{ 0.725, 0.71, 0.68, 1.f });
 
-    ms.Cube(
-      SCENE_SCALE * (float3{ 82.f, 0.f, 114.f } + float3{ 160.f, 0, 0 }),
-      SCENE_SCALE * float3{ 150.f, 145.f, 150.f },
-      (float3(240, 0, 65) - float3(82, 0, 114)).Norm(),
-      float3::Y,
-      (float3(130, 0, 272) - float3(82, 0, 114)).Norm()); // short Cube
+       ms.Cube(
+         SCENE_SCALE * (float3{ 82.f, 0.f, 114.f } + float3{ 160.f, 0, 0 }),
+         SCENE_SCALE * float3{ 150.f, 145.f, 150.f },
+         (float3(240, 0, 65) - float3(82, 0, 114)).Norm(),
+         float3::Y,
+         (float3(130, 0, 272) - float3(82, 0, 114)).Norm()); // short Cube
 
-    ms.Cube(
-      SCENE_SCALE * (float3{ 265.f, 0, 406.f } + float3{ -190.f, 0, -30.f }),
-      SCENE_SCALE * float3{ 160.f, 300.f, 150.f },
-      (float3(314, 0, 247) - float3(265.f, 0, 406.f)).Norm(),
-      float3::Y,
-      (float3(423, 0, 456) - float3(265.f, 0, 406.f)).Norm()); // tall Cube
+       ms.Cube(
+         SCENE_SCALE * (float3{ 265.f, 0, 406.f } + float3{ -190.f, 0, -30.f }),
+         SCENE_SCALE * float3{ 160.f, 300.f, 150.f },
+         (float3(314, 0, 247) - float3(265.f, 0, 406.f)).Norm(),
+         float3::Y,
+         (float3(423, 0, 456) - float3(265.f, 0, 406.f)).Norm()); // tall Cube
 
-    ms.Color(rgba{ 0.725, 0.71, 0.68, 1.f });
-    ms.Quad(SCENE_SCALE * float3{ 0.0f, 0.0f, 0.0f },
-            SCENE_SCALE * float3{ 500.f, 0.0f, 0.0f },
-            SCENE_SCALE * float3{ 500.f, 0.0f, 500.f },
-            SCENE_SCALE * float3{ 0.0f, 0.0f, 500.f });  // floor
+       ms.Color(rgba{ 0.725, 0.71, 0.68, 1.f });
+       ms.Quad(SCENE_SCALE * float3{ 0.0f, 0.0f, 0.0f },
+               SCENE_SCALE * float3{ 500.f, 0.0f, 0.0f },
+               SCENE_SCALE * float3{ 500.f, 0.0f, 500.f },
+               SCENE_SCALE * float3{ 0.0f, 0.0f, 500.f });  // floor
 
-    ms.Quad(SCENE_SCALE * float3{ 500.f,   0.0f, 500.f },
-            SCENE_SCALE * float3{ 500.f, 500.f, 500.f },
-            SCENE_SCALE * float3{ 0.0f, 500.f, 500.f },
-            SCENE_SCALE * float3{ 0.0f,   0.0f, 500.f });  // back wall
+       ms.Quad(SCENE_SCALE * float3{ 500.f,   0.0f, 500.f },
+               SCENE_SCALE * float3{ 500.f, 500.f, 500.f },
+               SCENE_SCALE * float3{ 0.0f, 500.f, 500.f },
+               SCENE_SCALE * float3{ 0.0f,   0.0f, 500.f });  // back wall
 
-    ms.Quad(
-      SCENE_SCALE * float3{ 0.0f, 500.f, 500.f },
-      SCENE_SCALE * float3{ 500.f, 500.f, 500.f },
-      SCENE_SCALE * float3{ 500.f, 500.f, 0.0f },
-      SCENE_SCALE * float3{ 0.0f, 500.f,   0.0f });  // ceiling
-    ms.Color(rgba{ 0.14, 0.45, 0.091, 1.f }); // G
-    ms.Quad(SCENE_SCALE * float3{ 500.f,   0.0f,  0.0f },
-            SCENE_SCALE * float3{ 500.f,  500.f,  0.0f },
-            SCENE_SCALE * float3{ 500.f,  500.f, 500.f },
-            SCENE_SCALE * float3{ 500.f,   0.0f, 500.f });  // right wall
+       ms.Quad(
+         SCENE_SCALE * float3{ 0.0f, 500.f, 500.f },
+         SCENE_SCALE * float3{ 500.f, 500.f, 500.f },
+         SCENE_SCALE * float3{ 500.f, 500.f, 0.0f },
+         SCENE_SCALE * float3{ 0.0f, 500.f,   0.0f });  // ceiling
+       ms.Color(rgba{ 0.14, 0.45, 0.091, 1.f }); // G
+       ms.Quad(SCENE_SCALE * float3{ 500.f,   0.0f,  0.0f },
+               SCENE_SCALE * float3{ 500.f,  500.f,  0.0f },
+               SCENE_SCALE * float3{ 500.f,  500.f, 500.f },
+               SCENE_SCALE * float3{ 500.f,   0.0f, 500.f });  // right wall
 
 
-    ms.Color(rgba{ 0.63, 0.065, 0.05, 1.f }); // R
-    ms.Quad(SCENE_SCALE * float3{ 0.0f,   0.0f,  500.f },
-            SCENE_SCALE * float3{ 0.0f,  500.f,  500.f },
-            SCENE_SCALE * float3{ 0.0f,  500.f,   0.0f },
-            SCENE_SCALE * float3{ 0.0f,   0.0f,   0.0f });  // left wall
-	// builder.Cube(-.5f, 1.f);
-	ms.End();
-	//auto buf = mModel.Meshes()[0].GetVertexBuffer()->GetCache();
-	//span<const vertex_t> vertices = { (const vertex_t*)buf.data(), clamp(int32_t(buf.size() / sizeof(vertex_t)), 0, 200*3) };
-	auto vertices = ms.CurrentVertices();
-	mVertices.insert(mVertices.begin(), vertices.begin(), vertices.end());
+       ms.Color(rgba{ 0.63, 0.065, 0.05, 1.f }); // R
+       ms.Quad(SCENE_SCALE * float3{ 0.0f,   0.0f,  500.f },
+               SCENE_SCALE * float3{ 0.0f,  500.f,  500.f },
+               SCENE_SCALE * float3{ 0.0f,  500.f,   0.0f },
+               SCENE_SCALE * float3{ 0.0f,   0.0f,   0.0f });  // left wall
+	   // builder.Cube(-.5f, 1.f);
+	   ms.End();
+	   //auto buf = mModel.Meshes()[0].GetVertexBuffer()->GetCache();
+	   //span<const vertex_t> vertices = { (const vertex_t*)buf.data(), clamp(int32_t(buf.size() / sizeof(vertex_t)), 0, 200*3) };
+	   auto vertices = ms.CurrentVertices();
+
+      auto& box = mObjects.emplace_back();
+      auto& section = box.sections.emplace_back();
+	   section.vertices.insert(section.vertices.begin(), vertices.begin(), vertices.end());
+      section.matId = 0;
+   }
+   // light
+   {
+      float hs = 100.f;
+      PrimBuilder ms;
+
+      ms.Begin(eTopology::Triangle, false);
+
+      ms.Color(rgba{ 0.725, 0.71, 0.68, 1.f });
+      ms.Quad(
+      SCENE_SCALE * float3{ 250.f - hs, 499.f, 250.f + hs },
+      SCENE_SCALE * float3{ 250.f + hs, 499.f, 250.f + hs },
+      SCENE_SCALE * float3{ 250.f + hs, 499.f, 250.f - hs },
+      SCENE_SCALE * float3{ 250.f - hs, 499.f, 250.f - hs });  // light
+      ms.End();
+
+      auto& light = mLights.emplace_back( 
+         Light::CreateQuadLight( 3.f, SCENE_SCALE * hs * 2, SCENE_SCALE * hs * 2, 
+         mat44::Translation( SCENE_SCALE * float3{ 250, 497, 250 } ) * mat44::Rotation( { 180.f, 0, 0 } ) ) );
+
+      auto vertices = ms.CurrentVertices();
+      auto& lightMesh = mObjects.emplace_back();
+      auto& section = lightMesh.sections.emplace_back();
+      section.light = &light;
+      section.vertices.insert(section.vertices.begin(), vertices.begin(), vertices.end());
+      section.matId = 1;
+   }
+	
 	Asset<Image>::LoadAndRegister("engine/resource/uvgrid.jpg", true);
 	auto tex = Asset<Image>::Get("engine/resource/uvgrid.jpg");
 
    mTestTexture = MipMap(tex->Dimension().x, tex->Dimension().y);
    mTestTexture.GenerateMip( tex->Data(), tex->Size() );
 
-   mPositions.resize( mVertices.size() );
-   for(int i = 0; i < mVertices.size(); ++i) {
-      mPositions[i] = float4(mVertices[i].position, 1.f);
-   }
 }
 
-contact Scene::Intersect( const rayd& r ) const
+SurfaceContact Scene::Intersect( const rayd& r ) const
 {
+   static vertex_t dummy[3];
 
    struct Hit
    {
-	   uint i = 0;
+      const vertex_t* vert = dummy;
+      MatId matId = 0;
 	   float t = INFINITY;
    };
    Hit hit;
    float3 tuvhit = { INFINITY, 0, 0 };
 
-	for(uint i = 0; i + 2 < mPositions.size(); i+= 3)
-	{
-		float3 tuv = 
-			r.Intersect(
-				*(float3*)&mPositions[i], 
-				*(float3*)&mPositions[i+1], 
-				*(float3*)&mPositions[i+2]);
+   for(auto& object: mObjects) {
+      for(auto& section: object.sections) {
+         for(uint i = 0; i + 2 < section.vertices.size(); i+= 3)
+	      {
+            const vertex_t* start = section.vertices.data() + i;
+		      float3 tuv = 
+			      r.Intersect(
+				      start[0].position,
+				      start[1].position, 
+				      start[2].position);
 
-		bool valid = (tuv.x < hit.t) & (tuv.x > 0);
-		//tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };
-		hit = valid ? Hit{ i, tuv.x } : hit;
-		tuvhit = valid ? tuv : tuvhit;
-	}
+		      bool valid = (tuv.x < hit.t) & (tuv.x > 0);
+		      //tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };
+		      hit = valid ? Hit{ start, section.matId, tuv.x } : hit;
+		      tuvhit = valid ? tuv : tuvhit;
+	      }
+      }
+   }
+	
 
-	contact c;
+	SurfaceContact c;
 	c.t = hit.t;
 	c.barycentric = tuvhit.yz();
-	c.uv = Barycentric(mVertices[hit.i].uv, mVertices[hit.i+1].uv, mVertices[hit.i+2].uv, c.barycentric);
-   c.color = Barycentric( mVertices[hit.i].color, mVertices[hit.i + 1].color, mVertices[hit.i + 2].color, c.barycentric );
-   c.dd = Differential( r, hit.t, mVertices[hit.i].position, mVertices[hit.i + 1].position, mVertices[hit.i + 2].position );
-   c.dd = UvDifferential( c.dd, mVertices[hit.i].uv, mVertices[hit.i + 1].uv, mVertices[hit.i + 2].uv );
+	c.uv = Barycentric(hit.vert[0].uv, hit.vert[1].uv, hit.vert[2].uv, c.barycentric);
+   c.color = Barycentric( hit.vert[0].color, hit.vert[1].color, hit.vert[2].color, c.barycentric );
+   c.dd = Differential( r, hit.t, hit.vert[0].position, hit.vert[1].position, hit.vert[2].position );
+   c.dd = UvDifferential( c.dd, hit.vert[0].uv, hit.vert[1].uv, hit.vert[2].uv );
    c.world = r.origin + r.dir * hit.t;
-   c.normal = Barycentric( mVertices[hit.i].normal, mVertices[hit.i + 1].normal, mVertices[hit.i + 2].normal, c.barycentric );
+   c.normal = Barycentric( hit.vert[0].normal, hit.vert[1].normal, hit.vert[2].normal, c.barycentric );
+   c.matId = hit.matId;
 	return c;
 }
 
@@ -178,25 +215,42 @@ urgba Scene::Sample( const float2& uv, const float2& dd ) const
 
 rgba Scene::Trace( const rayd& r ) const
 {
-   contact c = Intersect( r );
+   SurfaceContact c = Intersect( r );
 
    float4 ret;
+   // if(c.Valid(r)) {
+   //    rayd bounce;
+   //    bounce.SetAndOffset( c.world, UniformSampleHemisphere( c.normal ) );
+   //
+   //    SurfaceContact ao = Intersect( bounce );
+   //
+   //    if(!ao.Valid( bounce ) || ao.t >= 1.5f) {
+   //       ret = float4((float3(1.f) + mMats[c.matId].emission) * c.color.xyz(), 1.f) ;
+   //       ret = float4((mMats[c.matId].emission) * c.color.xyz(), 1.f) ;
+   //    } else {
+   //       ret = float4(((4 * M_PI / M_PI ) * mMats[ao.matId].emission + mMats[c.matId].emission) * c.color.xyz(), 1.f) ;
+   //    }
+   // }
+   // else {
+   //    ret = float4( 1.f );
+   // }
    if(c.Valid(r)) {
-      rayd bounce;
-      bounce.SetAndOffset( c.world, UniformSampleHemisphere( c.normal ) );
+      ret = float4( mMats[c.matId].emission * c.color.xyz(), 1.f );
+      for(auto& light: mLights) {
+         float3 outgoingDirection;
+         float pdf;
+         VisibilityTester tester;
+         float3 li = light.Li( c, &outgoingDirection, &pdf, &tester );
 
-      contact ao = Intersect( bounce );
-
-      if(!ao.Valid( bounce ) || ao.t >= 1.5f) {
-         ret = float4(rgba( Sample( c.uv, { c.dd.xy().Len(), c.dd.zw().Len() } ) )) * c.color * 2.4f;
-      } else {
-         ret = float4( 0.f, 0.f, 0.f, 1.f );
+         if(tester.Unoccluded( *this )) {
+            ret += float4( li / pdf * c.color.xyz(), 1.f);
+         }
+         ret.w = 1.f;
       }
    }
    else {
       ret = float4( 1.f );
    }
-
    return rgba(ret);
 }
 

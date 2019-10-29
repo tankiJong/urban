@@ -221,7 +221,7 @@ euler mat44::Euler() const
    if(kk.y == 1.f || kk.y == -1.f) {
       e.y = 0;
       e.z = atan2f( jj.x, ii.x );
-
+      e = e * euler(R2D);
       return e;
    }
 

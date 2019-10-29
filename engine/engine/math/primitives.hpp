@@ -54,7 +54,7 @@ struct vec<3, T> {
    T Dot( const vec3<T>& rhs ) const { return x * rhs.x + y * rhs.y + z * rhs.z; }
    T Len2() const { return Dot( *this ); }
    T Len()  const { return T( sqrt( double( Len2() ) ) ); }
-   vec3<T> Norm() { return *this / vec3<T>{ Len() }; }
+   vec3<T> Norm() const { return *this / vec3<T>{ Len() }; }
 
    // left hand, x.cross(y) == z
    vec3<T> Cross( const vec3<T>& rhs ) const;;
@@ -89,6 +89,7 @@ struct vec<4, T> {
    constexpr vec( T v ) : x( v ) , y( v ) , z( v ), w( v ) {}
    constexpr vec( T x, T y, T z, T w ) : x( x ) , y( y ) , z( z ) , w( w ) {}
    constexpr vec( const vec<3, T>& xyz, T w ): x( xyz.x ), y( xyz.y ), z( xyz.z ), w( w ) {}
+   constexpr vec( const vec<2, T>& xy, T z, T w ): x( xy.x ), y( xy.y ), z( z ), w( w ) {}
 
    template< typename U, typename = std::enable_if_t<!std::is_same_v<T, U>> >
    explicit operator vec4<U>() const { return vec4<U>{ U( x ), U( y ), U( z ), U( w ) }; }

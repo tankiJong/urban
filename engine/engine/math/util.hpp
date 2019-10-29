@@ -18,8 +18,8 @@
 #define M_LN10	      2.30258509299404568402f
 
 
-#define D2R          (M_PI / 360.f)
-#define R2D          (360.f / M_PI)
+#define D2R          (M_PI / 180.f)
+#define R2D          (180.f / M_PI)
 
 template<class T> 
 constexpr const T& min(const T& a, const T& b)

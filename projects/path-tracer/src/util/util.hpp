@@ -29,6 +29,12 @@ inline float3 TangentToWorld( float3 vec, float3 normal )
    };
 }
 
+template<typename T>
+T Barycentric(const T& a, const T& b, const T& c, float2 weight)
+{
+	return a * (1 - weight.x - weight.y) + b * weight.x + c * weight.y;
+}
+
 inline float3 UniformSampleHemisphere(float3 normal)
 {
    float u1 = random::Between01();
@@ -43,3 +49,11 @@ inline float3 UniformSampleHemisphere(float3 normal)
 
    return TangentToWorld( sample, normal );
 }
+
+// return a random point on a unit sphere
+float3 UniformSampleUnitSphere();
+
+// return uv in a quad
+float2 UniformSampleUV();
+// return barycentric coordinate
+float2 UniformSampleTriangle();

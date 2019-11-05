@@ -13,14 +13,21 @@ struct rayd: public ray {
    float3 ddiry() const { return rayy.dir - dir; }
 };
 
-inline float3 TangentToWorld( float3 vec, float3 normal )
+// [ Duff et al. 2017, "Building an Orthonormal Basis, Revisited" ]
+inline void GenerateTangentSpace(const float3& normal, float3* tangent, float3* bitangent)
 {
    const float sign = copysignf( 1.0f, normal.z );
 	const float a = -1.f / (sign + normal.z);
 	const float b = normal.x * normal.y * a;
 	
-	float3 x = { 1 + sign * a * normal.x * normal.x, sign * b, -sign * normal.x };
-	float3 y = { b,  sign + a * normal.y * normal.y , -normal.y };
+	*tangent = { 1 + sign * a * normal.x * normal.x, sign * b, -sign * normal.x };
+	*bitangent = { b,  sign + a * normal.y * normal.y , -normal.y };
+}
+
+inline float3 TangentToWorld( float3 vec, float3 normal )
+{
+   float3 x, y;
+   GenerateTangentSpace( normal, &x, &y );
 
    return {
       vec.Dot( float3{x.x, y.x, normal.x} ),
@@ -51,7 +58,17 @@ inline float3 UniformSampleHemisphere(float3 normal)
 }
 
 // return a random point on a unit sphere
-float3 UniformSampleUnitSphere();
+inline float3 UniformSampleUnitSphere()
+{
+   float z = 1 - 2 * random::Between01();
+   float r = std::sqrt( std::max( 0.f, 1.f - z * z ) );
+   float phi = 2.f * M_PI * random::Between01();
+   return float3{
+      r * cosf(phi),
+      r * sinf(phi),
+      z
+   };
+}
 
 // return uv in a quad
 float2 UniformSampleUV();

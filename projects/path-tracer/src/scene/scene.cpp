@@ -65,7 +65,8 @@ void Scene::Init()
       // for box
       mMats.push_back( Mat{ 0 } );
       // for light
-      mMats.push_back( Mat{ 5.f } );
+      mMats.push_back( Mat{ 1.f } );
+      mMats.push_back( Mat{ 1.f } );
    }
    {
       PrimBuilder ms;
@@ -79,7 +80,7 @@ void Scene::Init()
          (float3(240, 0, 65) - float3(82, 0, 114)).Norm(),
          float3::Y,
          (float3(130, 0, 272) - float3(82, 0, 114)).Norm()); // short Cube
-
+       
        ms.Cube(
          SCENE_SCALE * (float3{ 265.f, 0, 406.f } + float3{ -190.f, 0, -30.f }),
          SCENE_SCALE * float3{ 160.f, 300.f, 150.f },
@@ -122,35 +123,52 @@ void Scene::Init()
 	   auto vertices = ms.CurrentVertices();
 
       auto& box = mObjects.emplace_back();
-      auto& section = box.sections.emplace_back();
-	   section.vertices.insert(section.vertices.begin(), vertices.begin(), vertices.end());
-      section.matId = 0;
+      box.AddMesh( vertices, 0 );
    }
-   // light
+   // quad light
    {
       float hs = 100.f;
       PrimBuilder ms;
-
+      
       ms.Begin(eTopology::Triangle, false);
-
-      ms.Color(rgba{ 0.725, 0.71, 0.68, 1.f });
+      
+      ms.Color(rgba{ 1.f });
       ms.Quad(
       SCENE_SCALE * float3{ 250.f - hs, 499.f, 250.f + hs },
       SCENE_SCALE * float3{ 250.f + hs, 499.f, 250.f + hs },
       SCENE_SCALE * float3{ 250.f + hs, 499.f, 250.f - hs },
       SCENE_SCALE * float3{ 250.f - hs, 499.f, 250.f - hs });  // light
       ms.End();
-
+      
       auto& light = mLights.emplace_back( 
-         Light::CreateQuadLight( 3.f, SCENE_SCALE * hs * 2, SCENE_SCALE * hs * 2, 
+         Light::CreateQuadLight( 10.f, SCENE_SCALE * hs * 2, SCENE_SCALE * hs * 2, 
          mat44::Translation( SCENE_SCALE * float3{ 250, 497, 250 } ) * mat44::Rotation( { 180.f, 0, 0 } ) ) );
-
+      
       auto vertices = ms.CurrentVertices();
       auto& lightMesh = mObjects.emplace_back();
-      auto& section = lightMesh.sections.emplace_back();
-      section.light = &light;
-      section.vertices.insert(section.vertices.begin(), vertices.begin(), vertices.end());
-      section.matId = 1;
+      auto& section = lightMesh.AddMesh( vertices, 1 );
+      section.AttachLight( light );
+   }
+
+   // sphere light
+   {
+      float3 center = SCENE_SCALE * float3{ 250, 230, 150 };
+      float radius = SCENE_SCALE * 40.f;
+      auto& light = mLights.emplace_back( 
+         Light::CreateSphereLight( 10.f, radius * 1.1f, center ) );
+      //
+      auto& lightMesh = mObjects.emplace_back();
+      auto& section = lightMesh.AddSphere(center, radius, 2);
+      section.AttachLight( light );
+   }
+
+   // sphere
+   {
+      float3 center = SCENE_SCALE * float3{ 100, 100, 150 };
+      float radius = SCENE_SCALE * 40.f;
+      //
+      auto& lightMesh = mObjects.emplace_back();
+      auto& section = lightMesh.AddSphere(center, radius, 0);
    }
 	
 	Asset<Image>::LoadAndRegister("engine/resource/uvgrid.jpg", true);
@@ -168,43 +186,80 @@ SurfaceContact Scene::Intersect( const rayd& r ) const
    struct Hit
    {
       const vertex_t* vert = dummy;
-      MatId matId = 0;
+      const Object::Section* section = nullptr;
 	   float t = INFINITY;
    };
    Hit hit;
    float3 tuvhit = { INFINITY, 0, 0 };
 
+   auto TriangleMeshTest = [&r, &hit, &tuvhit]( const Object::Section& section )
+   {
+      for( uint i = 0; i + 2 < section.mesh.size(); i += 3 )
+      {
+         const vertex_t* start = section.mesh.data() + i;
+         float3 tuv =
+            r.Intersect(
+               start[0].position,
+               start[1].position,
+               start[2].position );
+
+         bool valid = (tuv.x < hit.t) & (tuv.x > 0);
+         //tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };
+         hit = valid ? Hit{ start, &section, tuv.x } : hit;
+         tuvhit = valid ? tuv : tuvhit;
+      }
+   };
+
+   auto SphereTest = [&r, &hit]( const Object::Section& section )
+   {
+      float2 re = r.Intersect( section.sphere.center, section.sphere.radius );
+      //tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };
+      bool valid = (re.x < hit.t) & (re.x != INFINITY) & (re.x > 0);
+      hit = valid ? Hit{ nullptr, &section, re.x } : hit;
+   };
    for(auto& object: mObjects) {
       for(auto& section: object.sections) {
-         for(uint i = 0; i + 2 < section.vertices.size(); i+= 3)
-	      {
-            const vertex_t* start = section.vertices.data() + i;
-		      float3 tuv = 
-			      r.Intersect(
-				      start[0].position,
-				      start[1].position, 
-				      start[2].position);
-
-		      bool valid = (tuv.x < hit.t) & (tuv.x > 0);
-		      //tuv = { tuv.x, tuv.y, 1 - tuv.z - tuv.y };
-		      hit = valid ? Hit{ start, section.matId, tuv.x } : hit;
-		      tuvhit = valid ? tuv : tuvhit;
-	      }
+         switch(section.shape) {
+         case eShape::Quad:
+         case eShape::Mesh: TriangleMeshTest(section); break;
+         case eShape::Sphere: SphereTest( section ); break;
+         default: ;
+         }
       }
    }
-	
 
-	SurfaceContact c;
-	c.t = hit.t;
-	c.barycentric = tuvhit.yz();
-	c.uv = Barycentric(hit.vert[0].uv, hit.vert[1].uv, hit.vert[2].uv, c.barycentric);
-   c.color = Barycentric( hit.vert[0].color, hit.vert[1].color, hit.vert[2].color, c.barycentric );
-   c.dd = Differential( r, hit.t, hit.vert[0].position, hit.vert[1].position, hit.vert[2].position );
-   c.dd = UvDifferential( c.dd, hit.vert[0].uv, hit.vert[1].uv, hit.vert[2].uv );
-   c.world = r.origin + r.dir * hit.t;
-   c.normal = Barycentric( hit.vert[0].normal, hit.vert[1].normal, hit.vert[2].normal, c.barycentric );
-   c.matId = hit.matId;
-	return c;
+   auto ConstructMeshContact = [&]()
+   {
+      SurfaceContact c;
+      c.t = hit.t;
+      c.barycentric = tuvhit.yz();
+      c.uv = Barycentric( hit.vert[0].uv, hit.vert[1].uv, hit.vert[2].uv, c.barycentric );
+      c.color = Barycentric( hit.vert[0].color, hit.vert[1].color, hit.vert[2].color, c.barycentric );
+      c.dd = Differential( r, hit.t, hit.vert[0].position, hit.vert[1].position, hit.vert[2].position );
+      c.dd = UvDifferential( c.dd, hit.vert[0].uv, hit.vert[1].uv, hit.vert[2].uv );
+      c.world = r.origin + r.dir * hit.t;
+      c.normal = Barycentric( hit.vert[0].normal, hit.vert[1].normal, hit.vert[2].normal, c.barycentric );
+      c.matId = hit.section->matId;
+      c.section = hit.section;
+      return c;
+   };
+
+   auto ConstructSphereContact = [&]()
+   {
+      SurfaceContact c;
+      c.t = hit.t;
+      c.barycentric = tuvhit.yz();
+      c.color = float4(1.f);
+      c.world = r.origin + r.dir * hit.t;
+      c.normal = (c.world - hit.section->sphere.center).Norm();
+      c.matId = hit.section->matId;
+      c.section = hit.section;
+      return c;
+   };
+
+   if( hit.section == nullptr ) return {};
+   if( hit.section->shape == eShape::Sphere ) return ConstructSphereContact();
+   return ConstructMeshContact();
 }
 
 urgba Scene::Sample( const float2& uv, const float2& dd ) const
@@ -217,39 +272,37 @@ rgba Scene::Trace( const rayd& r ) const
 {
    SurfaceContact c = Intersect( r );
 
-   float4 ret;
-   // if(c.Valid(r)) {
-   //    rayd bounce;
-   //    bounce.SetAndOffset( c.world, UniformSampleHemisphere( c.normal ) );
-   //
-   //    SurfaceContact ao = Intersect( bounce );
-   //
-   //    if(!ao.Valid( bounce ) || ao.t >= 1.5f) {
-   //       ret = float4((float3(1.f) + mMats[c.matId].emission) * c.color.xyz(), 1.f) ;
-   //       ret = float4((mMats[c.matId].emission) * c.color.xyz(), 1.f) ;
-   //    } else {
-   //       ret = float4(((4 * M_PI / M_PI ) * mMats[ao.matId].emission + mMats[c.matId].emission) * c.color.xyz(), 1.f) ;
-   //    }
-   // }
-   // else {
-   //    ret = float4( 1.f );
-   // }
+   float4 ret{0};
+
    if(c.Valid(r)) {
-      ret = float4( mMats[c.matId].emission * c.color.xyz(), 1.f );
+      ret = float4( mMats[c.matId].emission, 1.f );
       for(auto& light: mLights) {
-         float3 outgoingDirection;
+         if( c.section->light == &light ) continue;
+         float3 lightIncomingDirection;
          float pdf;
          VisibilityTester tester;
-         float3 li = light.Li( c, &outgoingDirection, &pdf, &tester );
-
-         if(tester.Unoccluded( *this )) {
-            ret += float4( li / pdf * c.color.xyz(), 1.f);
+         float3 li = light.Li( c, &lightIncomingDirection, &pdf, &tester );
+      
+         rayd rr;
+      
+         auto direction = (tester.to.world - tester.from.world);
+         rr.origin = tester.from.world;
+         rr.maxt = direction.Len();
+         rr.dir = direction / rr.maxt;
+         rr.SetAndOffset( rr.origin, rr.dir );
+      
+         auto contact = Intersect( rr );
+      
+         if(!contact.Valid( rr ) || contact.section->light == &light) {
+            ret += float4( li * clamp01(Dot(lightIncomingDirection, c.normal)) / pdf / M_PI, 1.f);
+         } else {
+            // ret = { 1.f, 0.f, 0.f, 1.f };
          }
-         ret.w = 1.f;
       }
+      ret = float4( c.color.xyz() * ret.xyz(), 1.f );
    }
    else {
-      ret = float4( 1.f );
+      ret = float4( 0.f );
    }
    return rgba(ret);
 }

@@ -42,19 +42,38 @@ constexpr const T& clamp(const T& v, self_t<const T&> vmin, self_t<const T&> vma
 }
 
 template<class T>
+constexpr const T& clamp01(const T& v)
+{
+   return clamp( v, 0, 1 );
+}
+template<class T>
 T lerp(const T& from, const T& to, float percent)
 {
 	return from * ( 1.f - percent) + to * percent;
 }
 
-inline float3 Spherical(float r, float thetaDeg, float phiDeg) {
-  float phi = phiDeg * D2R, theta = thetaDeg * D2R;
+// theta - around y, 0 ~ 2PI
+// phi   - -PI ~ PI
+inline float3 Spherical( float r, float thetaDeg, float phiDeg )
+{
+   float phi = phiDeg * D2R, theta = thetaDeg * D2R;
 
-  return {
-    r*cosf(phi)*cosf(theta),
-    r*sinf(phi),
-    r*cosf(phi)*sinf(theta),
-  };
+   return {
+      r * cosf( phi ) * cosf( theta ),
+      r * sinf( phi ),
+      r * cosf( phi ) * sinf( theta ),
+   };
+}
+
+// theta - around y, 0 ~ 2PI
+// phi   - -PI ~ PI
+inline float3 SphericalDirection( float cosTheta, float sinTheta, float cosPhi, float sinPhi )
+{
+   return {
+      cosPhi * cosTheta,
+      sinPhi,
+      cosPhi * sinTheta,
+   };
 }
 
 inline float3 NdcToWorld( const float3& ndc, const mat44& invVp )

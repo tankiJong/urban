@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<AgentDefinitions>
+	<AgentDefinition type="Scout"
+		costToBirth 		= "500"
+		exhaustAfterBirth   = "1"
+		upkeepPerTurn 		= "1"
+		visibilityRange     = "8"
+		combatStrength 		= "1"
+		combatPriority		= "20"
+		sacrificePriority  	= "40"     
+		canCarryFood 		= "false"
+		canCarryTiles 		= "false"
+		canBirth			= "false">
+		<MoveExhaustPenalties>
+			<ExhaustPenalty tile="dirt" 	exhaustion="0" />
+		</MoveExhaustPenalties>
+		<DigExhaustPenalties />
+	</AgentDefinition>
+
+	<AgentDefinition type="Worker"
+		costToBirth 		= "500"
+		exhaustAfterBirth   = "1"
+		upkeepPerTurn 		= "2"
+		visibilityRange     = "4"
+		combatStrength 		= "1"
+		combatPriority		= "10"
+		sacrificePriority  	= "30"
+		canCarryFood 		= "true"
+		canCarryTiles 		= "true"
+		canBirth			= "false">
+		<MoveExhaustPenalties>
+			<ExhaustPenalty tile="dirt" 	exhaustion="1" />
+		</MoveExhaustPenalties>
+		<DigExhaustPenalties>
+			<ExhaustPenalty tile="dirt" 	exhaustion="1" />
+		</DigExhaustPenalties>
+	</AgentDefinition>
+
+	<AgentDefinition type="Soldier"
+		costToBirth 		= "500"
+		exhaustAfterBirth   = "1"
+		upkeepPerTurn 		= "3"
+		visibilityRange     = "4"
+		combatStrength 		= "2"
+		combatPriority		= "40"
+		sacrificePriority  	= "20"
+		canCarryFood 		= "false"
+		canCarryTiles 		= "false"
+		canBirth			= "false">
+		<MoveExhaustPenalties />
+		<DigExhaustPenalties />
+	</AgentDefinition>
+
+	<!-- -1 cost means can not birth -->
+	<AgentDefinition type="Queen"
+		costToBirth 		= "10000"
+		exhaustAfterBirth   = "3"
+		upkeepPerTurn 		= "10"
+		visibilityRange     = "6"
+		combatStrength 		= "0"
+		combatPriority		= "0"
+		sacrificePriority  	= "0"
+		canCarryFood 		= "false"
+		canCarryTiles 		= "false"
+		canBirth			= "true">
+		<MoveExhaustPenalties>
+			<ExhaustPenalty tile="air" exhaustion="1" />
+			<ExhaustPenalty tile="water" exhaustion="1" />
+			<ExhaustPenalty tile="bridge" exhaustion="1" />
+		</MoveExhaustPenalties>
+		<DigExhaustPenalties />
+	</AgentDefinition>
+
+</AgentDefinitions>

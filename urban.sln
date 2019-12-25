@@ -21,28 +21,54 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "path-tracer", "projects\pat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "es-console", "projects\es-console\es-console.vcxproj", "{F08B45CD-343D-4981-8CBE-CB365C175490}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "arena-ai", "projects\arena-ai\arena-ai.vcxproj", "{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "co-job", "projects\co-job\co-job.vcxproj", "{09519BFA-169C-4635-876E-A98E168E4A38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Debug|x64.ActiveCfg = Debug|x64
 		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Debug|x64.Build.0 = Debug|x64
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Debug|x86.ActiveCfg = Debug|x64
 		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Release|x64.ActiveCfg = Release|x64
 		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Release|x64.Build.0 = Release|x64
+		{922BF2A2-0D2A-428B-B451-FB20F895E84D}.Release|x86.ActiveCfg = Release|x64
 		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Debug|x64.ActiveCfg = Debug|x64
 		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Debug|x64.Build.0 = Debug|x64
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Debug|x86.ActiveCfg = Debug|x64
 		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Release|x64.ActiveCfg = Release|x64
 		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Release|x64.Build.0 = Release|x64
+		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE}.Release|x86.ActiveCfg = Release|x64
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Debug|x64.ActiveCfg = Debug|x64
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Debug|x64.Build.0 = Debug|x64
+		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Debug|x86.ActiveCfg = Debug|x64
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Release|x64.ActiveCfg = Release|x64
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Release|x64.Build.0 = Release|x64
+		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02}.Release|x86.ActiveCfg = Release|x64
 		{F08B45CD-343D-4981-8CBE-CB365C175490}.Debug|x64.ActiveCfg = Debug|x64
 		{F08B45CD-343D-4981-8CBE-CB365C175490}.Debug|x64.Build.0 = Debug|x64
+		{F08B45CD-343D-4981-8CBE-CB365C175490}.Debug|x86.ActiveCfg = Debug|x64
 		{F08B45CD-343D-4981-8CBE-CB365C175490}.Release|x64.ActiveCfg = Release|x64
 		{F08B45CD-343D-4981-8CBE-CB365C175490}.Release|x64.Build.0 = Release|x64
+		{F08B45CD-343D-4981-8CBE-CB365C175490}.Release|x86.ActiveCfg = Release|x64
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}.Debug|x64.ActiveCfg = Debug|x64
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}.Debug|x64.Build.0 = Debug|x64
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}.Debug|x86.ActiveCfg = Debug|x64
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}.Release|x64.ActiveCfg = Release|x64
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}.Release|x64.Build.0 = Release|x64
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1}.Release|x86.ActiveCfg = Release|x64
+		{09519BFA-169C-4635-876E-A98E168E4A38}.Debug|x64.ActiveCfg = Debug|x64
+		{09519BFA-169C-4635-876E-A98E168E4A38}.Debug|x64.Build.0 = Debug|x64
+		{09519BFA-169C-4635-876E-A98E168E4A38}.Debug|x86.ActiveCfg = Debug|x64
+		{09519BFA-169C-4635-876E-A98E168E4A38}.Release|x64.ActiveCfg = Release|x64
+		{09519BFA-169C-4635-876E-A98E168E4A38}.Release|x64.Build.0 = Release|x64
+		{09519BFA-169C-4635-876E-A98E168E4A38}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +77,8 @@ Global
 		{CF2A6B2D-F83A-4ECE-A9FC-7954B9EC90EE} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
 		{0C5BB75E-DBC8-468A-80A1-8756A51C7F02} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
 		{F08B45CD-343D-4981-8CBE-CB365C175490} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
+		{4B2BDC86-0A97-46F3-9C08-9E1D549D87A1} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
+		{09519BFA-169C-4635-876E-A98E168E4A38} = {6AAD1D63-EC11-407F-9D9E-EB0618B48814}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1766A87C-42F1-4988-BF0B-85FB4CB3E022}

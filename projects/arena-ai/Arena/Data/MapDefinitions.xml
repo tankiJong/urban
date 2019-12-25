@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<MapDefinitions>
+	<MapDefinition name="Default" 
+		defaultSize="64" 
+		fillTile="air" 
+		edgeTile="stone"
+		tunnelTile="air"
+		foodStrandsPer100Tiles="30" 
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.01">
+			
+		<TileInfo type="dirt"   strandsPer100Tiles="1.0" strandLength="15" />
+		<TileInfo type="stone"  strandsPer100Tiles="2.0" strandLength="5" />
+		<TileInfo type="water"  strandsPer100Tiles="0.5" strandLength="5" />
+	</MapDefinition>
+
+	<MapDefinition name="Fertile Fields"
+		defaultSize="96"
+		fillTile="air"
+		edgeTile="stone"
+		tunnelTile="air"
+		foodStrandsPer100Tiles="40~60"
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.05">
+
+		<TileInfo type="dirt"   strandsPer100Tiles="0.25~1.5" strandLength="10~20" />
+		<TileInfo type="stone"  strandsPer100Tiles="0.10~0.25" strandLength="2~5" />
+		<TileInfo type="water"  strandsPer100Tiles="0.25~0.75" strandLength="4~16" />
+	</MapDefinition>
+
+	<MapDefinition name="Big Blue"
+		defaultSize="80"
+		fillTile="water"
+		edgeTile="stone"
+		tunnelTile="water"
+		foodStrandsPer100Tiles="30~40"
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.1"> <!-- Fishing is good! -->
+
+		<TileInfo type="air"  strandsPer100Tiles="2~6" strandLength="12~16" />
+		<TileInfo type="dirt"   strandsPer100Tiles="2.0~3.5" strandLength="10~20" />
+		<TileInfo type="stone"  strandsPer100Tiles="0.15~0.75" strandLength="2~8" />
+	</MapDefinition>
+
+	<MapDefinition name="Mordor"
+		defaultSize="64"
+		fillTile="dirt"
+		edgeTile="stone"
+		tunnelTile="dirt"
+		foodStrandsPer100Tiles="10~20"
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.005">
+
+		<TileInfo type="air"  strandsPer100Tiles="1~2" strandLength="1~4" />
+		<TileInfo type="water"   strandsPer100Tiles="0.5~1.5" strandLength="2~4" />
+		<TileInfo type="stone"  strandsPer100Tiles="1~4" strandLength="2~8" />
+	</MapDefinition>
+
+	<MapDefinition name="Siberia"
+		defaultSize="100"
+		fillTile="air"
+		edgeTile="stone"
+		tunnelTile="dirt"
+		foodStrandsPer100Tiles="5"
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.0005">
+
+		<TileInfo type="dirt"   strandsPer100Tiles="0.5~1.5" strandLength="2~4" />
+		<TileInfo type="water"  strandsPer100Tiles="0" strandLength="0" />
+		<TileInfo type="stone"  strandsPer100Tiles="1~4" strandLength="2~4" />
+	</MapDefinition>
+
+	<MapDefinition name="Benchy Bane"
+		defaultSize="100"
+		fillTile="stone"
+		edgeTile="stone"
+		tunnelTile="water"
+		foodStrandsPer100Tiles="20~30"
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.005">
+
+		<TileInfo type="dirt"   strandsPer100Tiles="4~8" strandLength="4~16" />
+		<TileInfo type="water"  strandsPer100Tiles="2~4" strandLength="1~16" />
+		<TileInfo type="air"  strandsPer100Tiles="0" strandLength="0" />
+	</MapDefinition>
+
+	<MapDefinition name="Aggression Alley"
+		defaultSize="32"
+		fillTile="air"
+		edgeTile="stone"
+		tunnelTile="air"
+		foodStrandsPer100Tiles="50"
+		foodStrandLength="1"
+		foodSpawnedPerTurnPer100Tiles="0.05">
+
+		<TileInfo type="dirt"   strandsPer100Tiles="0" strandLength="0" />
+		<TileInfo type="water"  strandsPer100Tiles="0" strandLength="0" />
+		<TileInfo type="stone"  strandsPer100Tiles="0" strandLength="0" />
+	</MapDefinition>
+</MapDefinitions>

@@ -1,15 +1,18 @@
 ﻿#pragma once
 #include <queue>
-#include <mutex>
+#include <shared_mutex>
 
 template< typename T >
 class LockQueue
 {
 public:
-   void Enqueue( const T& ele )
+   using size_type = typename std::queue<T>::size_type;
+   size_type Enqueue( const T& ele )
    {
       std::scoped_lock lock( mAccessLock );
-      mItems.push( ele );
+      size_t index = mItems.size();
+      mItems.push_back( ele );
+      return index;
    }
 
    bool Dequeue( T& outEle )
@@ -18,19 +21,28 @@ public:
       if( mItems.empty() ) return false;
 
       outEle = std::move( mItems.front() );
-      mItems.pop();
+      mItems.pop_front();
       return true;
    }
 
-   size_t Count() const
+   size_type Count() const
+   {
+      mAccessLock.lock_shared();
+      size_type size = mItems.size();
+      mAccessLock.unlock_shared();
+      return size;
+   }
+
+   void FlushAndClear(std::vector<T>& container)
    {
       std::scoped_lock lock( mAccessLock );
-      return mItems.size();
+      container.insert( container.end(), mItems.begin(), mItems.end() );
+      mItems.clear();
    }
 
 protected:
-   std::queue<T> mItems;
-   std::mutex    mAccessLock;
+   std::deque<T> mItems;
+   mutable std::shared_mutex mAccessLock;
 };
 
 template< typename T >

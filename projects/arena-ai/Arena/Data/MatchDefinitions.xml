@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<MatchDefinitions>
+	<!-- Also show defaults if not set -->
+   <MatchDefinition
+		name="Debug"
+		minTurnTime="0.00"
+		mapSizeOverride="0"
+		maxPopulation="100"
+		
+		startingNutrientsPerPlayer="2000"
+		nurtientsEarnedPerFoodEatenByQueen="1000"
+		nutrientLossPerAttackerStrength="10"
+		nutrientLossPerQueenSuffocation="10000"
+		
+		startingScouts="2"
+		startingWorkers="2"
+		startingSoldiers="1"
+		startingQueens="1"
+		
+		turnsUntilSuddenDeath="1000"
+		suddenDeathTurnsPerUpkeepIncrease="2"
+		nutrientPenaltyPerFault="0"
+		agentsKilledPerFault="0"
+		
+		foodCarryExhaustPenalty="1"
+		tileCarryExhaustPenalty="1"
+	/>
+
+	<MatchDefinition
+		name="Final"
+		minTurnTime="0.030"
+		maxPopulation="200"
+		
+		turnsUntilSuddenDeath="1500"
+		suddenDeathTurnsPerUpkeepIncrease="1"
+		nutrientPenaltyPerFault="1000"
+		agentsKilledPerFault="1"
+	/>
+</MatchDefinitions>

@@ -8,9 +8,12 @@
 #include <easy/profiler.h>
 #include <experimental/coroutine>
 #include "schedule/scheduler.hpp"
-#include "cppcoro/when_all.hpp"
-#include "cppcoro/sync_wait.hpp"
-
+#include <cppcoro/task.hpp>
+#include <cppcoro/when_all.hpp>
+#include <cppcoro/sync_wait.hpp>
+#include <chrono>
+#include "engine/core/random.hpp"
+#include <cppcoro/schedule_on.hpp>
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
    // Re-initialize the C runtime "FILE" handles with clean handles bound to "nul". We do this because it has been
@@ -102,25 +105,26 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 
 //-----------------------------------------------------------------------------------------------
 
-cppcoro::task<> foo()
+co::token printTask(uint i)
 {
-   std::vector<cppcoro::task<uint>> tasks;
+   auto& scheduler = co::Scheduler::Get();
+   using namespace std::chrono;
 
-   auto func = [](
-      co::eWorkerThread id ) -> uint
-   {
-      using namespace std::chrono_literals;
-      std::this_thread::sleep_for( 2s );
-      printf( "Thread id %u, done", id );
-      return uint( id );
-   };
-   for(uint i = 0; i < 10; i++) {
-      auto task = co::CreateAndDispatchValueJob( {}, func );
+   // here is still on main thread...
+   co_await scheduler.schedule();
 
-      tasks.emplace_back( std::move( task ) );
+   // now it's on worker thread!
+   std::this_thread::sleep_for( 1s );
+   printf( "task [%u] -- I am running on thread %u\n", i, scheduler.GetThreadIndex() );
+}
 
+void prints()
+{
+   auto& scheduler = co::Scheduler::Get();
+
+   for( int i = 0; i < 100; ++i ) {
+      printTask(i);
    }
-   std::vector<uint> val = co_await cppcoro::when_all( std::move(tasks) );
 }
 
 class GameApplication final: public Application {
@@ -134,12 +138,12 @@ protected:
 
 void GameApplication::OnInit()
 {
-   co::Scheduler::Init();
+   auto& scheduler = co::Scheduler::Get();
+   prints();
 }
 
 void GameApplication::OnUpdate()
 {
-   cppcoro::sync_wait( foo() );
 }
 
 void GameApplication::OnRender() const

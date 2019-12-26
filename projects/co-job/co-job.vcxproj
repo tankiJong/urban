@@ -134,8 +134,7 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\schedule\scheduler.cpp" />
-    <ClCompile Include="lib\**\*.cpp"/>
-
+    <ClCompile Include="lib\**\*.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\engine.vcxproj">
@@ -150,5 +149,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
   <Import Project="$(SolutionDir)engine\engine.targets" />
-
 </Project>

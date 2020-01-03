@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\schedule\scheduler.hpp" />
+    <ClInclude Include="src\schedule\token.hpp" />
     <ClInclude Include="src\util\util.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

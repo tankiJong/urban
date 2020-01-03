@@ -6,14 +6,11 @@
 #include <iostream>
 #include "engine/application/Application.hpp"
 #include <easy/profiler.h>
-#include <experimental/coroutine>
 #include "schedule/scheduler.hpp"
-#include <cppcoro/task.hpp>
 #include <cppcoro/when_all.hpp>
-#include <cppcoro/sync_wait.hpp>
 #include <chrono>
-#include "engine/core/random.hpp"
-#include <cppcoro/schedule_on.hpp>
+#include "schedule/token.hpp"
+#include "cppcoro/sync_wait.hpp"
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
    // Re-initialize the C runtime "FILE" handles with clean handles bound to "nul". We do this because it has been
@@ -99,34 +96,69 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
-#include <iostream>
-#include <chrono>
-#include <thread>
-
 //-----------------------------------------------------------------------------------------------
 
-co::token printTask(uint i)
+co::token<int> printTask(uint i)
 {
    auto& scheduler = co::Scheduler::Get();
    using namespace std::chrono;
-
-   // here is still on main thread...
-   co_await scheduler.schedule();
-
-   // now it's on worker thread!
    std::this_thread::sleep_for( 1s );
    printf( "task [%u] -- I am running on thread %u\n", i, scheduler.GetThreadIndex() );
+   co_return i;
 }
+
 
 void prints()
 {
+   
    auto& scheduler = co::Scheduler::Get();
+   printf( "prints runs on thread %u\n", scheduler.GetThreadIndex() );
 
+   std::vector<co::token<int>> tokens;
    for( int i = 0; i < 100; ++i ) {
-      printTask(i);
+      tokens.push_back( printTask(i) );
+   }
+   for(auto& token: tokens) {
+      int xx = cppcoro::sync_wait( token );
+      printf( "task %i, thread %u\n", xx, scheduler.GetThreadIndex() );
    }
 }
 
+co::token<int> Sum(int* data, uint start, uint end)
+{
+   auto& scheduler = co::Scheduler::Get();
+   printf( "Sum [%u - %u] runs on thread %u\n", start, end, scheduler.GetThreadIndex() );
+   if (end - start <= 10) {
+      int total = 0;
+      for(uint i = start; i < end; i++) {
+         total += data[i];
+      }
+      co_return total;
+   }
+
+   uint mid = (start + end) >> 1;
+   int left = co_await Sum( data, start, mid );
+   int right = co_await Sum( data, mid, end );
+
+   printf( "Sum [%u - %u] finished on thread %u\n", start, end, scheduler.GetThreadIndex() );
+   co_return left + right;
+}
+
+void ParallelFor()
+{
+   auto func = []( uint i ) -> co::token<>
+   {
+      using namespace std::chrono;
+      std::this_thread::sleep_for( 5s );
+      auto& scheduler = co::Scheduler::Get();
+      printf( "task %i, thread %u\n", i, scheduler.GetThreadIndex() );
+      co_return;
+   };
+
+   for(uint i = 0; i < 100; i++) {
+      func( i );
+   }
+}
 class GameApplication final: public Application {
 public:
    void OnInit() override;
@@ -138,8 +170,14 @@ protected:
 
 void GameApplication::OnInit()
 {
-   auto& scheduler = co::Scheduler::Get();
-   prints();
+   ParallelFor();
+   // int data[10000];
+   // for(int i = 0; i < 10000; i++) {
+   //    data[i] = i;
+   // }
+   //
+   // int sum = cppcoro::sync_wait( Sum( data, 0, 10000 ) );
+   // printf( "sum is %d", sum );
 }
 
 void GameApplication::OnUpdate()

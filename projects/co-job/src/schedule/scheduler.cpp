@@ -34,12 +34,6 @@ Scheduler::~Scheduler()
    }
 }
 
-void Scheduler::Operation::await_suspend( std::experimental::coroutine_handle<> awaitingCoroutine ) noexcept
-{
-   mAwaitingCoroutine = awaitingCoroutine;
-   mOwner->EnqueueJob( this );
-}
-
 uint Scheduler::GetThreadIndex() const
 {
    return gWorkerContext->mThreadIndex;
@@ -50,6 +44,7 @@ Scheduler::Scheduler( uint workerCount )
 {
    ASSERT_DIE( workerCount > 0 );
 
+   gWorkerContext = new Worker{ 0xff };
    mWorkerThreads.reserve( workerCount );
    mWorkerContexts = std::make_unique<Worker[]>( workerCount );
    mIsRunning = true;
@@ -73,7 +68,7 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
       if(op == nullptr) {
          std::this_thread::yield();
       } else {
-         op->mAwaitingCoroutine.resume();
+         op->resume();
       }
 
       if( !IsRunning() ) break;

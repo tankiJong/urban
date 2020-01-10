@@ -64,25 +64,32 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
    gScheduler = this;
 
    while(true) {
-      Operation* op = FetchNextJob();
+      S<Operation> op = FetchNextJob();
       if(op == nullptr) {
          std::this_thread::yield();
       } else {
+         static std::atomic_int jobID;
+         op->mState.store( eOpState::Processing );
+         int currentid;
+         currentid = jobID.fetch_add( 1 );
+         printf( "run job %i on Thread %u\n", currentid, threadIndex );
          op->resume();
+         op->mState.store( eOpState::Done );
       }
 
       if( !IsRunning() ) break;
    }
 }
 
-Scheduler::Operation* Scheduler::FetchNextJob()
+S<Scheduler::Operation> Scheduler::FetchNextJob()
 {
-   Operation* op = nullptr;
+   S<Operation> op;
    mJobs.Dequeue( op );
    return op;
 }
 
-void Scheduler::EnqueueJob( Operation* op )
+void Scheduler::EnqueueJob( const S<Operation>& op )
 {
+   op->mState.store( eOpState::Scheduled );
    mJobs.Enqueue( op );
 }

@@ -144,7 +144,7 @@ co::token<int> Sum(int* data, uint start, uint end)
    co_return left + right;
 }
 
-void ParallelFor()
+co::token<> ParallelFor()
 {
    auto func = []( uint i ) -> co::token<>
    {
@@ -155,22 +155,31 @@ void ParallelFor()
       co_return;
    };
 
-   for(uint i = 0; i < 100; i++) {
-      func( i );
+   std::vector<co::token<>> tokens;
+   for(uint i = 0; i < 10; i++) {
+      tokens.emplace_back( func( i ) );
    }
+
+   auto& scheduler = co::Scheduler::Get();
+   printf( "ParallelFor - after loop, thread %u\n", scheduler.GetThreadIndex() );
+
+   co_await cppcoro::when_all_ready( std::move(tokens) );
+   printf( "ParallelFor - after wait, thread %u\n", scheduler.GetThreadIndex() );
 }
+
+
 class GameApplication final: public Application {
 public:
    void OnInit() override;
    void OnUpdate() override;
    void OnRender() const override;
 protected:
-
+   co::token<> mFinishToken;
 };
 
 void GameApplication::OnInit()
 {
-   ParallelFor();
+   mFinishToken = std::move(ParallelFor());
    // int data[10000];
    // for(int i = 0; i < 10000; i++) {
    //    data[i] = i;
@@ -178,10 +187,16 @@ void GameApplication::OnInit()
    //
    // int sum = cppcoro::sync_wait( Sum( data, 0, 10000 ) );
    // printf( "sum is %d", sum );
+   printf( "end init\n" );
 }
 
 void GameApplication::OnUpdate()
 {
+   static bool complete = false;
+   if(mFinishToken.is_ready() && !complete) {
+      printf( "Parallel task complete" );
+      complete = true;
+   }
 }
 
 void GameApplication::OnRender() const

@@ -2,6 +2,7 @@
 #include "scheduler.hpp"
 #include <fmt/color.h>
 #include "engine/platform/platform.hpp"
+#include <easy/profiler.h>
 
 using namespace co;
 
@@ -58,6 +59,9 @@ Scheduler::Scheduler( uint workerCount )
 void Scheduler::WorkerThreadEntry( uint threadIndex )
 {
    SetThreadName( mWorkerThreads[threadIndex], fmt::format( L"co worker thread {}", threadIndex ).c_str() );
+
+   profiler::registerThread( fmt::format( "co Job Thread {}", threadIndex ).c_str() );
+
    auto& context = mWorkerContexts[threadIndex];
    context.mThreadIndex = threadIndex;
    gWorkerContext = &context;
@@ -68,13 +72,19 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
       if(op == nullptr) {
          std::this_thread::yield();
       } else {
-         static std::atomic_int jobID;
-         op->mState.store( eOpState::Processing );
-         int currentid;
-         currentid = jobID.fetch_add( 1 );
-         printf( "run job %i on Thread %u\n", currentid, threadIndex );
-         op->resume();
-         op->mState.store( eOpState::Done );
+         if( op->mState.load() != eOpState::Canceled ) {
+            op->mState.store( eOpState::Processing );
+            int currentid;
+            currentid = op->mJobId;
+            // printf( "run job %i on Thread %u\n", currentid, threadIndex );
+            EASY_BLOCK( "co task" );
+            op->resume();
+            if(op->done()) {
+               op->mState.store( eOpState::Done );
+            } else {
+               EnqueueJob( op );
+            }
+         }
       }
 
       if( !IsRunning() ) break;

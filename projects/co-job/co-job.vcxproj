@@ -133,6 +133,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\pt\MvCamera.cpp" />
+    <ClCompile Include="src\pt\tracer.cpp" />
+    <ClCompile Include="src\schedule\event.cpp" />
     <ClCompile Include="src\schedule\scheduler.cpp" />
     <ClCompile Include="lib\**\*.cpp" />
   </ItemGroup>
@@ -142,6 +145,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\pt\MvCamera.hpp" />
+    <ClInclude Include="src\pt\tracer.hpp" />
+    <ClInclude Include="src\pt\utils.hpp" />
+    <ClInclude Include="src\schedule\algorithms.hpp" />
+    <ClInclude Include="src\schedule\event.hpp" />
     <ClInclude Include="src\schedule\scheduler.hpp" />
     <ClInclude Include="src\schedule\token.hpp" />
     <ClInclude Include="src\util\util.hpp" />

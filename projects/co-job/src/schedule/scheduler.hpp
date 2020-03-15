@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
-#include "engine/async/types.hpp"
 #include <experimental/coroutine>
+#include "engine/async/types.hpp"
 
 namespace co {
    struct Worker
@@ -18,17 +18,25 @@ namespace co {
          Scheduled,
          Processing,
          Done,
+         Canceled,
       };
       struct Operation
       {
-			Operation(Scheduler& s) noexcept : mOwner(&s), mState( eOpState::Created ) {}
+			Operation(Scheduler& s) noexcept : mOwner(&s), mState( eOpState::Created ), mJobId( jobID.fetch_add(1) ) {}
          virtual void resume() = 0;
+         virtual bool done() = 0;
          bool Ready() const { return mState.load( std::memory_order_relaxed ) == eOpState::Done; }
-         virtual ~Operation() {}
+         bool Cancel() { mState.store( eOpState::Canceled );  return true; }
+         virtual ~Operation()
+         {
+            ASSERT_DIE( mState == eOpState::Done || mState == eOpState::Canceled );
+         }
 		private:
 			friend class Scheduler;
 			Scheduler* mOwner;
          std::atomic<eOpState> mState;
+         int mJobId;
+         inline static std::atomic_int jobID;
 		};
 
       template<typename T>
@@ -39,8 +47,10 @@ namespace co {
             , mCoroutine( coro ) {}
 
          virtual void resume() override { mCoroutine.resume(); }
-         std::experimental::coroutine_handle<T> mCoroutine;
+         virtual bool done() override { return mCoroutine.done(); }
          ~OperationT() { mCoroutine.destroy(); }
+
+         std::experimental::coroutine_handle<T> mCoroutine;
       };
 
       static Scheduler& Get();

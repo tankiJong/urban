@@ -63,7 +63,8 @@ void Application::_init()
    EASY_THREAD( "MainThread" );
    Scheduler::Init();
 
-   Window::Get().Init( { uint(1000.f * 1.77f), 1000 }, "hello" );
+   uint height = 1000, width = height * 1.77f;
+   Window::Get().Init( { width, height }, "hello" );
 
    Window::Get().Subscribe( [this]( uint msg, size_t wparam, size_t lparam )
    {

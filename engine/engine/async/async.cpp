@@ -65,7 +65,6 @@ public:
    {
       ThreadId = mId;
       profiler::registerThread( fmt::format( "Job Thread {}", mId ).c_str() );
-      print( fg( fmt::color::blue ), "worker {} init\n", mId );
       return true;
    }
    bool Run()

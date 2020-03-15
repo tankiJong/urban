@@ -11,6 +11,9 @@
 #include <chrono>
 #include "schedule/token.hpp"
 #include "cppcoro/sync_wait.hpp"
+#include <fmt/color.h>
+#include "pt/tracer.hpp"
+
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
    // Re-initialize the C runtime "FILE" handles with clean handles bound to "nul". We do this because it has been
@@ -126,6 +129,7 @@ void prints()
 
 co::token<int> Sum(int* data, uint start, uint end)
 {
+   EASY_BLOCK( fmt::format( "sum {}-{}", start, end ).c_str() );
    auto& scheduler = co::Scheduler::Get();
    printf( "Sum [%u - %u] runs on thread %u\n", start, end, scheduler.GetThreadIndex() );
    if (end - start <= 10) {
@@ -133,6 +137,8 @@ co::token<int> Sum(int* data, uint start, uint end)
       for(uint i = start; i < end; i++) {
          total += data[i];
       }
+      using namespace std::chrono;
+      std::this_thread::sleep_for( 1s );
       co_return total;
    }
 
@@ -174,34 +180,39 @@ public:
    void OnUpdate() override;
    void OnRender() const override;
 protected:
-   co::token<> mFinishToken;
+   // co::token<> mFinishToken;
+   Tracer mTracer;
 };
 
 void GameApplication::OnInit()
 {
-   mFinishToken = std::move(ParallelFor());
-   // int data[10000];
-   // for(int i = 0; i < 10000; i++) {
+   mTracer.OnInit();
+   // mFinishToken = std::move(ParallelFor());
+   // int data[100];
+   // for(int i = 0; i < 100; i++) {
    //    data[i] = i;
    // }
    //
-   // int sum = cppcoro::sync_wait( Sum( data, 0, 10000 ) );
-   // printf( "sum is %d", sum );
-   printf( "end init\n" );
+   // Sum( data, 0, 100 );
+   // Sum( data, 0, 100 );
+   // Sum( data, 0, 100 );
+   // // printf( "sum is %d", sum );
+   // printf( "end init\n" );
 }
 
 void GameApplication::OnUpdate()
 {
-   static bool complete = false;
-   if(mFinishToken.is_ready() && !complete) {
-      printf( "Parallel task complete" );
-      complete = true;
-   }
+   // static bool complete = false;
+   // if(mFinishToken.is_ready() && !complete) {
+   //    printf( "Parallel task complete" );
+   //    complete = true;
+   // }
+   mTracer.OnUpdate();
 }
 
 void GameApplication::OnRender() const
 {
-   
+   mTracer.OnRender();
 }
 
 

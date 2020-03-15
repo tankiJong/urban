@@ -1,10 +1,13 @@
 #pragma once
 #include <atomic>
 #include <experimental/coroutine>
+#include "cppcoro/config.hpp"
+#include "scheduler.hpp"
+#include "event.hpp"
 
 namespace co
 {
-template< typename T > struct token;
+template< typename T > class token;
 
 namespace detail
 {
@@ -140,7 +143,7 @@ public:
    {
       if(m_resultType == result_type::exception) { std::rethrow_exception( m_exception ); }
 
-      assert( m_resultType == result_type::value );
+      ASSERT_DIE( m_resultType == result_type::value );
 
       return m_value;
    }
@@ -160,7 +163,7 @@ public:
    {
       if(m_resultType == result_type::exception) { std::rethrow_exception( m_exception ); }
 
-      assert( m_resultType == result_type::value );
+      ASSERT_DIE( m_resultType == result_type::value );
 
       return std::move( m_value );
    }
@@ -241,9 +244,6 @@ public:
 private:
 
 public:
-
-   token() noexcept
-      : mOp( nullptr ) {}
 
    explicit token( std::experimental::coroutine_handle<promise_type> coroutine )
    {
@@ -345,11 +345,31 @@ public:
       };
 
       return awaitable{ mOp->mCoroutine };
+    }
+
+   auto when_ready(counter_event& c) const noexcept
+   {
+      struct awaitable: awaitable_base
+      {
+         awaitable( std::experimental::coroutine_handle<promise_type> coroutine, counter_event& e ) noexcept: awaitable_base( coroutine ), counter( e ) {}
+         void await_resume()
+         {
+            counter.decrement();
+         }
+         counter_event& counter;
+      };
+
+      return awaitable{ mOp->mCoroutine, c };
    }
 
    bool is_ready() const noexcept
    {
       return mOp && mOp->mCoroutine.done();
+   }
+
+   void cancel() const noexcept
+   {
+      mOp->Cancel();
    }
 
 private:

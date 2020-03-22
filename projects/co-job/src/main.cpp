@@ -12,7 +12,7 @@
 #include "schedule/token.hpp"
 #include "cppcoro/sync_wait.hpp"
 #include <fmt/color.h>
-#include "pt/tracer.hpp"
+// #include "pt/tracer.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
 {
@@ -100,79 +100,14 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 }
 
 //-----------------------------------------------------------------------------------------------
-
-co::token<int> printTask(uint i)
+co::token<> basic_coroutine_task()
 {
-   auto& scheduler = co::Scheduler::Get();
-   using namespace std::chrono;
-   std::this_thread::sleep_for( 1s );
-   printf( "task [%u] -- I am running on thread %u\n", i, scheduler.GetThreadIndex() );
-   co_return i;
-}
-
-
-void prints()
-{
-   
-   auto& scheduler = co::Scheduler::Get();
-   printf( "prints runs on thread %u\n", scheduler.GetThreadIndex() );
-
-   std::vector<co::token<int>> tokens;
-   for( int i = 0; i < 100; ++i ) {
-      tokens.push_back( printTask(i) );
+   auto re = 0;
+   for(int i = 0; i < 100; ++i) {
+      re += i;
    }
-   for(auto& token: tokens) {
-      int xx = cppcoro::sync_wait( token );
-      printf( "task %i, thread %u\n", xx, scheduler.GetThreadIndex() );
-   }
+   co_return;
 }
-
-co::token<int> Sum(int* data, uint start, uint end)
-{
-   EASY_BLOCK( fmt::format( "sum {}-{}", start, end ).c_str() );
-   auto& scheduler = co::Scheduler::Get();
-   printf( "Sum [%u - %u] runs on thread %u\n", start, end, scheduler.GetThreadIndex() );
-   if (end - start <= 10) {
-      int total = 0;
-      for(uint i = start; i < end; i++) {
-         total += data[i];
-      }
-      using namespace std::chrono;
-      std::this_thread::sleep_for( 1s );
-      co_return total;
-   }
-
-   uint mid = (start + end) >> 1;
-   int left = co_await Sum( data, start, mid );
-   int right = co_await Sum( data, mid, end );
-
-   printf( "Sum [%u - %u] finished on thread %u\n", start, end, scheduler.GetThreadIndex() );
-   co_return left + right;
-}
-
-co::token<> ParallelFor()
-{
-   auto func = []( uint i ) -> co::token<>
-   {
-      using namespace std::chrono;
-      std::this_thread::sleep_for( 5s );
-      auto& scheduler = co::Scheduler::Get();
-      printf( "task %i, thread %u\n", i, scheduler.GetThreadIndex() );
-      co_return;
-   };
-
-   std::vector<co::token<>> tokens;
-   for(uint i = 0; i < 10; i++) {
-      tokens.emplace_back( func( i ) );
-   }
-
-   auto& scheduler = co::Scheduler::Get();
-   printf( "ParallelFor - after loop, thread %u\n", scheduler.GetThreadIndex() );
-
-   co_await cppcoro::when_all_ready( std::move(tokens) );
-   printf( "ParallelFor - after wait, thread %u\n", scheduler.GetThreadIndex() );
-}
-
 
 class GameApplication final: public Application {
 public:
@@ -181,38 +116,25 @@ public:
    void OnRender() const override;
 protected:
    // co::token<> mFinishToken;
-   Tracer mTracer;
+   // Tracer mTracer;
 };
 
 void GameApplication::OnInit()
 {
-   mTracer.OnInit();
-   // mFinishToken = std::move(ParallelFor());
-   // int data[100];
-   // for(int i = 0; i < 100; i++) {
-   //    data[i] = i;
-   // }
-   //
-   // Sum( data, 0, 100 );
-   // Sum( data, 0, 100 );
-   // Sum( data, 0, 100 );
-   // // printf( "sum is %d", sum );
-   // printf( "end init\n" );
+   auto token = basic_coroutine_task();
+
+   token.wait();
+   // mTracer.OnInit();
 }
 
 void GameApplication::OnUpdate()
 {
-   // static bool complete = false;
-   // if(mFinishToken.is_ready() && !complete) {
-   //    printf( "Parallel task complete" );
-   //    complete = true;
-   // }
-   mTracer.OnUpdate();
+   // mTracer.OnUpdate();
 }
 
 void GameApplication::OnRender() const
 {
-   mTracer.OnRender();
+   // mTracer.OnRender();
 }
 
 

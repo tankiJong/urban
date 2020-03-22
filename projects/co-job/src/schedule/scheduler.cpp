@@ -68,38 +68,26 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
    gScheduler = this;
 
    while(true) {
-      S<Operation> op = FetchNextJob();
+      Operation* op = FetchNextJob();
       if(op == nullptr) {
          std::this_thread::yield();
       } else {
-         if( op->mState.load() != eOpState::Canceled ) {
-            op->mState.store( eOpState::Processing );
-            int currentid;
-            currentid = op->mJobId;
-            // printf( "run job %i on Thread %u\n", currentid, threadIndex );
-            EASY_BLOCK( "co task" );
-            op->resume();
-            if(op->done()) {
-               op->mState.store( eOpState::Done );
-            } else {
-               EnqueueJob( op );
-            }
-         }
+         op->Resume();
+         ReleaseOp( op );
       }
 
       if( !IsRunning() ) break;
    }
 }
 
-S<Scheduler::Operation> Scheduler::FetchNextJob()
+Scheduler::Operation* Scheduler::FetchNextJob()
 {
-   S<Operation> op;
+   Operation* op = nullptr;
    mJobs.Dequeue( op );
    return op;
 }
 
-void Scheduler::EnqueueJob( const S<Operation>& op )
+void Scheduler::EnqueueJob( Operation* op )
 {
-   op->mState.store( eOpState::Scheduled );
    mJobs.Enqueue( op );
 }

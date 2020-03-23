@@ -77,8 +77,13 @@ void Window::Init( uint2 pixelSize, std::string_view name )
 
    // Calculate maximum client size (as some % of desktop size)
    constexpr float maxClientFractionOfDesktop = 0.90f;
-   float           clientWidth                = desktopWidth * maxClientFractionOfDesktop;
-   float           clientHeight               = desktopHeight * maxClientFractionOfDesktop;
+   float           clientWidth                = float(pixelSize.x);
+   float           clientHeight               = float(pixelSize.y);
+   
+   if(clientWidth >= desktopWidth || clientHeight >= desktopHeight) {
+      clientWidth                = desktopWidth * maxClientFractionOfDesktop;
+      clientHeight               = desktopHeight * maxClientFractionOfDesktop;
+   }
    if(clientAspect > desktopAspect) {
       // Client window has a wider aspect than desktop; shrink client height to match its width
       clientHeight = clientWidth / clientAspect;

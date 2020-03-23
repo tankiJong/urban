@@ -72,8 +72,17 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
       if(op == nullptr) {
          std::this_thread::yield();
       } else {
-         op->Resume();
-         ReleaseOp( op );
+         {
+            op->Resume();
+         }
+         if(op->Done()) {
+            EXPECTS( op->Promise()->mState == eOpState::Done );
+            ReleaseOp( op );
+         } else {
+            // this got suspended, it will be resumed in the await_suspended
+            // EXPECTS( op->Promise()->mState == eOpState::Suspended );
+            // op->RescheduleOp( *this );
+         }
       }
 
       if( !IsRunning() ) break;

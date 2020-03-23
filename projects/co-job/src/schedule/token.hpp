@@ -66,28 +66,39 @@ public:
       Scheduler::Get().Schedule( mHandle );
    }
 
-   bool wait()
-   {
-      SysEvent e;
-      auto& promise = mHandle.promise();
-
-      return true;
-   }
-
    struct awaitable_base
    {
-      std::experimental::coroutine_handle<promise_type> coroutine;
+      coro_handle_t coroutine;
 
-      awaitable_base( std::experimental::coroutine_handle<promise_type> coroutine ) noexcept
+      awaitable_base( coro_handle_t coroutine ) noexcept
          : coroutine( coroutine ) {}
 
       bool await_ready() const noexcept { return !coroutine || coroutine.done(); }
 
       bool await_suspend( std::experimental::coroutine_handle<> awaitingCoroutine ) noexcept
       {
-         coroutine.promise().setContinuation( awaitingCoroutine );
-         return true;
+         return coroutine.promise().SetContinuation( awaitingCoroutine );
       }
+   };
+
+   auto operator co_await() const & noexcept
+   {
+      struct awaitable: awaitable_base
+      {
+         using awaitable_base::awaitable_base;
+
+         decltype(auto) await_resume()
+         {
+            return coroutine.promise().result();
+         }
+      };
+
+      return awaitable{ mHandle };
+   }
+
+   bool Wait()
+   {
+      return true;
    };
 
 protected:

@@ -12,6 +12,9 @@
 #include "schedule/token.hpp"
 #include "cppcoro/sync_wait.hpp"
 #include <fmt/color.h>
+
+#include "engine/async/async.hpp"
+#include "pt/tracer.hpp"
 // #include "pt/tracer.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
@@ -99,14 +102,44 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
    }
 }
 
-//-----------------------------------------------------------------------------------------------
-co::token<> basic_coroutine_task()
+co::token<> dependent_task(int majorid, int minorid)
 {
-   auto re = 0;
-   for(int i = 0; i < 100; ++i) {
-      re += i;
-   }
+   EASY_FUNCTION();
+   using namespace std::chrono_literals;
+   std::this_thread::sleep_for( 1000ms );
+   printf( "run [dependent_task %d, %d] on co job thread: %u \n", majorid, minorid, co::Scheduler::Get().GetThreadIndex() );
+
    co_return;
+}
+//-----------------------------------------------------------------------------------------------
+co::token<> basic_coroutine_task(int id)
+{
+   EASY_FUNCTION();
+
+   {
+      printf( "run [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
+      auto re = 0;
+      for(int i = 0; i < 100; ++i) {
+         re += i;
+      }
+      auto token1 = dependent_task(id, 1);
+      auto token2 = dependent_task(id, 2);
+      auto token3 = dependent_task(id, 3);
+      auto token4 = dependent_task(id, 4);
+      auto token5 = dependent_task(id, 5);
+      auto token6 = dependent_task(id, 6);
+
+      co_await token1;
+      co_await token2;
+      co_await token3;
+      co_await token4;
+      co_await token5;
+      co_await token6;
+
+      using namespace std::chrono_literals;
+      std::this_thread::sleep_for( 1000ms );
+   }
+   printf( "finish [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
 }
 
 class GameApplication final: public Application {
@@ -116,25 +149,42 @@ public:
    void OnRender() const override;
 protected:
    // co::token<> mFinishToken;
-   // Tracer mTracer;
+   Tracer mTracer;
 };
 
 void GameApplication::OnInit()
 {
-   auto token = basic_coroutine_task();
+   auto bigtask = []() -> co::token<>
+   {
+      auto token1 = basic_coroutine_task(1);
+      auto token2 = basic_coroutine_task(2);
+      auto token3 = basic_coroutine_task(3);
+      auto token4 = basic_coroutine_task(4);
+      auto token5 = basic_coroutine_task(5);
+      auto token6 = basic_coroutine_task(6);
+      auto token7 = basic_coroutine_task(7);
 
-   token.wait();
-   // mTracer.OnInit();
+      co_await token1;
+      co_await token2;
+      co_await token3;
+      co_await token4;
+      co_await token5;
+      co_await token6;
+      co_await token7;
+   };
+
+   // bigtask();
+   mTracer.OnInit();
 }
 
 void GameApplication::OnUpdate()
 {
-   // mTracer.OnUpdate();
+   mTracer.OnUpdate();
 }
 
 void GameApplication::OnRender() const
 {
-   // mTracer.OnRender();
+   mTracer.OnRender();
 }
 
 

@@ -215,7 +215,7 @@ __declspec( noreturn ) void FatalError( const char* filePath, const char* functi
 		ShowCursor( TRUE );
 		if( isAnswerYes )
 		{
-			__debugbreak();
+			DEBUGBREAK;
 		}
 	}
 	else
@@ -283,7 +283,7 @@ void RecoverableWarning( const char* filePath, const char* functionName, int lin
 		}
 		else if( answerCode == -1 ) // "CANCEL"
 		{
-			__debugbreak();
+			DEBUGBREAK;
 		}
 	}
 	else

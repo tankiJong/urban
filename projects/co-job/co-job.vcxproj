@@ -150,7 +150,9 @@
     <ClInclude Include="src\pt\utils.hpp" />
     <ClInclude Include="src\schedule\algorithms.hpp" />
     <ClInclude Include="src\schedule\event.hpp" />
+    <ClInclude Include="src\schedule\future.hpp" />
     <ClInclude Include="src\schedule\scheduler.hpp" />
+    <ClInclude Include="src\schedule\task.hpp" />
     <ClInclude Include="src\schedule\token.hpp" />
     <ClInclude Include="src\util\util.hpp" />
   </ItemGroup>

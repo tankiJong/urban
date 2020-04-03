@@ -7,10 +7,12 @@
 #include "engine/async/types.hpp"
 
 namespace co {
-   struct Worker
-   {
-      uint mThreadIndex;
-   };
+struct Worker
+{
+   uint mThreadIndex;
+};
+
+using job_id_t = int64_t;
 
 enum class eOpState: uint
 {
@@ -79,10 +81,10 @@ struct promise_base
 private:
    Scheduler*            mOwner;
    std::atomic<eOpState> mState;
-   int mJobId{};
+   job_id_t mJobId{};
    std::experimental::coroutine_handle<> mParent;
    std::atomic<bool> mHasParent;
-   inline static std::atomic_int sJobID;
+   inline static std::atomic<job_id_t> sJobID;
 };
 
    class Scheduler
@@ -90,8 +92,6 @@ private:
    public:
       struct Operation
       {
-			Operation(Scheduler& s) noexcept {}
-
          virtual promise_base* Promise() = 0;
          virtual void Resume() = 0;
          virtual bool Done() = 0;
@@ -134,8 +134,7 @@ private:
       struct OperationT: public Operation
       {
          OperationT(Scheduler& s, std::experimental::coroutine_handle<P> coro)
-            : Operation(s)
-            , mCoroutine( coro ) {}
+            : mCoroutine( coro ) {}
 
          promise_base* Promise() override { return &mCoroutine.promise(); };
          void Resume() override

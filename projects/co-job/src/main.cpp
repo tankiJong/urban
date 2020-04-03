@@ -15,6 +15,7 @@
 
 #include "engine/async/async.hpp"
 #include "pt/tracer.hpp"
+#include "schedule/task.hpp"
 // #include "pt/tracer.hpp"
 
 void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdErr )
@@ -104,9 +105,8 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 
 co::token<> dependent_task(int majorid, int minorid)
 {
-   EASY_FUNCTION();
    using namespace std::chrono_literals;
-   std::this_thread::sleep_for( 1000ms );
+   std::this_thread::sleep_for( 100ms );
    printf( "run [dependent_task %d, %d] on co job thread: %u \n", majorid, minorid, co::Scheduler::Get().GetThreadIndex() );
 
    co_return;
@@ -114,8 +114,6 @@ co::token<> dependent_task(int majorid, int minorid)
 //-----------------------------------------------------------------------------------------------
 co::token<> basic_coroutine_task(int id)
 {
-   EASY_FUNCTION();
-
    {
       printf( "run [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
       auto re = 0;
@@ -137,7 +135,7 @@ co::token<> basic_coroutine_task(int id)
       co_await token6;
 
       using namespace std::chrono_literals;
-      std::this_thread::sleep_for( 1000ms );
+      std::this_thread::sleep_for( 100ms );
    }
    printf( "finish [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
 }
@@ -154,7 +152,7 @@ protected:
 
 void GameApplication::OnInit()
 {
-   auto bigtask = []() -> co::token<>
+   auto bigtask = []() -> co::task<int>
    {
       auto token1 = basic_coroutine_task(1);
       auto token2 = basic_coroutine_task(2);
@@ -171,9 +169,11 @@ void GameApplication::OnInit()
       co_await token5;
       co_await token6;
       co_await token7;
+
+      co_return 124;
    };
 
-   // bigtask();
+   printf( "final result from task: %d", bigtask().Result() );
    mTracer.OnInit();
 }
 

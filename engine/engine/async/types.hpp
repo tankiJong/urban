@@ -40,6 +40,16 @@ public:
       mItems.clear();
    }
 
+   void Lock()
+   {
+      mAccessLock.lock();
+   }
+
+   void Unlock()
+   {
+      mAccessLock.unlock();
+   }
+
 protected:
    std::deque<T> mItems;
    mutable std::shared_mutex mAccessLock;

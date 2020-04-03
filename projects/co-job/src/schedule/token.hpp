@@ -3,25 +3,23 @@
 #include <experimental/coroutine>
 #include "scheduler.hpp"
 #include "event.hpp"
-
+#include "future.hpp"
 namespace co
 {
 
-template<typename T>
-class token;
+template<template<typename> typename R, typename T = void>
+class base_token;
 
-template<typename T>
+template<template<typename> typename R, typename T = void>
 struct token_promise: promise_base
 {
-      T result;
-      // unique_ptr<SomeMysteriousValueWrapper> promise;
+      future<T>* result = nullptr;
 
-      void return_value( T& v )
+      void return_value( T&& v )
       {
-         result = v;
-         // if(promise) {
-         //    promise.set_value( v );
-         // }
+         if(result) {
+            result->Set( std::forward<T>(v) );
+         }
       }
 
       final_awaitable final_suspend()
@@ -29,11 +27,11 @@ struct token_promise: promise_base
          return {};
       }
 
-      token<T> get_return_object() noexcept;
+      R<T> get_return_object() noexcept;
 };
 
-template<>
-struct token_promise<void>: promise_base
+template<template<typename> typename R>
+struct token_promise<R, void>: promise_base
 {
 public:
 
@@ -43,7 +41,7 @@ public:
    final_awaitable final_suspend() { return {}; }
 
 
-   token<void> get_return_object() noexcept;
+   R<void> get_return_object() noexcept;
 
    void return_void() noexcept {}
 
@@ -52,18 +50,19 @@ public:
    void result() {}
 };
 
-template<typename T = void>
-class token
+template<template<typename> typename R, typename T = void>
+class base_token
 {
 public:
    
-   using promise_type = token_promise<T>;
+   using promise_type = token_promise<R, T>;
    using coro_handle_t = std::experimental::coroutine_handle<promise_type>;
 
-
-   token(coro_handle_t handle) noexcept: mHandle( handle )
+   base_token(coro_handle_t handle, bool dispatchImmediately = true) noexcept: mHandle( handle )
    {
-      Scheduler::Get().Schedule( mHandle );
+      if(dispatchImmediately) {
+         Dispatch();
+      }
    }
 
    struct awaitable_base
@@ -96,25 +95,35 @@ public:
       return awaitable{ mHandle };
    }
 
-   bool Wait()
-   {
-      return true;
-   };
-
 protected:
 
    coro_handle_t mHandle;
+
+   void Dispatch()
+   {
+      Scheduler::Get().Schedule( mHandle );
+   }
 };
 
-template< typename T >
-token<T> token_promise<T>::get_return_object() noexcept
+template<typename T = void>
+class token: public base_token<token, T>
 {
-   return token<T>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
+   using base_t = base_token<token, T>;
+public:
+   using base_t::base_t;
+};
+
+
+template<template<typename> typename R, typename T>
+R<T> token_promise<R, T>::get_return_object() noexcept
+{
+   return R<T>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
 }
 
-inline token<void> token_promise<void>::get_return_object() noexcept
+template<template<typename> typename R>
+R<void> token_promise<R, void>::get_return_object() noexcept
 {
-   return token<void>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
+   return R<void>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
 }
 
 }

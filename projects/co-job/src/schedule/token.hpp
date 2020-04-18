@@ -7,41 +7,47 @@
 namespace co
 {
 
-template<template<typename> typename R, typename T = void>
+template<bool Instant, template<bool, typename> typename R, typename T>
 class base_token;
 
-template<template<typename> typename R, typename T = void>
+template<bool Instant, template<bool, typename> typename R, typename T>
 struct token_promise: promise_base
 {
-      future<T>* result = nullptr;
+   future<T>* futuerPtr = nullptr;
+   T value;
 
-      void return_value( T&& v )
-      {
-         if(result) {
-            result->Set( std::forward<T>(v) );
-         }
+   template<
+		typename VALUE,
+		typename = std::enable_if_t<std::is_convertible_v<VALUE&&, T>>>
+   void return_value( VALUE&& v )
+   {
+      value = v;
+      if(futuerPtr) {
+         futuerPtr->Set( std::forward<T>(v) );
       }
+   }
 
-      final_awaitable final_suspend()
-      {
-         return {};
-      }
+   final_awaitable final_suspend()
+   {
+      return {};
+   }
 
-      R<T> get_return_object() noexcept;
+   R<Instant, T> get_return_object() noexcept;
+
+   const T& result() { return value; }
 };
 
-template<template<typename> typename R>
-struct token_promise<R, void>: promise_base
+template<bool Instant, template<bool, typename> typename R>
+struct token_promise<Instant, R, void>: promise_base
 {
 public:
-
-   token_promise() noexcept = default;
+   future<void>* futuerPtr = nullptr;
 
    auto initial_suspend() noexcept { return std::experimental::suspend_always{}; }
    final_awaitable final_suspend() { return {}; }
 
 
-   R<void> get_return_object() noexcept;
+   R<Instant, void> get_return_object() noexcept;
 
    void return_void() noexcept {}
 
@@ -50,19 +56,26 @@ public:
    void result() {}
 };
 
-template<template<typename> typename R, typename T = void>
+template<bool Instant, template<bool, typename> typename R, typename T>
 class base_token
 {
 public:
-   
-   using promise_type = token_promise<R, T>;
+   static constexpr bool IsInstant = Instant;
+   using promise_type = token_promise<Instant, R, T>;
    using coro_handle_t = std::experimental::coroutine_handle<promise_type>;
 
-   base_token(coro_handle_t handle, bool dispatchImmediately = true) noexcept: mHandle( handle )
+   base_token(coro_handle_t handle, future<T>* future = nullptr) noexcept: mHandle( handle )
    {
-      if(dispatchImmediately) {
+      handle.promise().futuerPtr = future;
+      if constexpr(Instant) {
          Dispatch();
       }
+   }
+
+   template<typename = std::enable_if_t<!Instant>>
+   void Schedule()
+   {
+      Dispatch();
    }
 
    struct awaitable_base
@@ -105,25 +118,16 @@ protected:
    }
 };
 
-template<typename T = void>
-class token: public base_token<token, T>
+template<bool Instant, template<bool, typename> typename R, typename T>
+R<Instant, T> token_promise<Instant, R, T>::get_return_object() noexcept
 {
-   using base_t = base_token<token, T>;
-public:
-   using base_t::base_t;
-};
-
-
-template<template<typename> typename R, typename T>
-R<T> token_promise<R, T>::get_return_object() noexcept
-{
-   return R<T>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
+   return R<Instant, T>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
 }
 
-template<template<typename> typename R>
-R<void> token_promise<R, void>::get_return_object() noexcept
+template<bool Instant, template<bool, typename> typename R>
+R<Instant, void> token_promise<Instant, R, void>::get_return_object() noexcept
 {
-   return R<void>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
+   return R<Instant, void>{ std::experimental::coroutine_handle<token_promise>::from_promise( *this ) };
 }
 
 }

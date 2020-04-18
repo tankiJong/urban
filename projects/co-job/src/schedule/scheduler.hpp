@@ -40,7 +40,7 @@ struct promise_base
    };
 
    promise_base() noexcept
-      : mOwner( nullptr )
+    : mOwner( nullptr )
     , mState( eOpState::Created )
     , mJobId( sJobID.fetch_add( 1 ) )
     , mHasParent( false ) {}
@@ -49,7 +49,8 @@ struct promise_base
       ASSERT_DIE( mState == eOpState::Done || mState == eOpState::Canceled );
    }
    void unhandled_exception() { FATAL( "unhandled exception in promise_base" ); }
-   std::experimental::suspend_always initial_suspend() { return {}; }
+
+   auto initial_suspend() { return std::experimental::suspend_always{}; }
 
 
    /////////////////////////////////////////////////////
@@ -133,7 +134,7 @@ private:
       template<typename P>
       struct OperationT: public Operation
       {
-         OperationT(Scheduler& s, std::experimental::coroutine_handle<P> coro)
+         OperationT(std::experimental::coroutine_handle<P> coro)
             : mCoroutine( coro ) {}
 
          promise_base* Promise() override { return &mCoroutine.promise(); };
@@ -182,7 +183,7 @@ private:
       template<typename Promise>
       Operation* AllocateOp(std::experimental::coroutine_handle<Promise>& handle)
       {
-         return new OperationT<Promise>( *this, handle );
+         return new OperationT<Promise>( handle );
       }
 
       void ReleaseOp(Operation* op)

@@ -14,6 +14,7 @@
 #include <fmt/color.h>
 
 #include "engine/async/async.hpp"
+#include "engine/core/random.hpp"
 #include "pt/tracer.hpp"
 #include "schedule/task.hpp"
 // #include "pt/tracer.hpp"
@@ -106,13 +107,14 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 co::token<> dependent_task(int majorid, int minorid)
 {
    using namespace std::chrono_literals;
-   std::this_thread::sleep_for( 100ms );
+   DWORD time = random::Between( 1, 100 );
+   Sleep( time );
    printf( "run [dependent_task %d, %d] on co job thread: %u \n", majorid, minorid, co::Scheduler::Get().GetThreadIndex() );
 
    co_return;
 }
 //-----------------------------------------------------------------------------------------------
-co::token<> basic_coroutine_task(int id)
+co::deferred_token<> basic_coroutine_task(size_t& result, int id)
 {
    {
       printf( "run [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
@@ -135,9 +137,11 @@ co::token<> basic_coroutine_task(int id)
       co_await token6;
 
       using namespace std::chrono_literals;
+
       std::this_thread::sleep_for( 100ms );
    }
    printf( "finish [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
+   result++;
 }
 
 class GameApplication final: public Application {
@@ -152,28 +156,24 @@ protected:
 
 void GameApplication::OnInit()
 {
-   auto bigtask = []() -> co::task<int>
+   auto bigtask = []() -> co::task<size_t>
    {
-      auto token1 = basic_coroutine_task(1);
-      auto token2 = basic_coroutine_task(2);
-      auto token3 = basic_coroutine_task(3);
-      auto token4 = basic_coroutine_task(4);
-      auto token5 = basic_coroutine_task(5);
-      auto token6 = basic_coroutine_task(6);
-      auto token7 = basic_coroutine_task(7);
 
-      co_await token1;
-      co_await token2;
-      co_await token3;
-      co_await token4;
-      co_await token5;
-      co_await token6;
-      co_await token7;
+      size_t result = 0;
+      std::vector<co::deferred_token<>> tokens;
+      tokens.push_back( basic_coroutine_task(result, 1) );
+      tokens.push_back( basic_coroutine_task(result, 2) );
+      tokens.push_back( basic_coroutine_task(result, 3) );
+      tokens.push_back( basic_coroutine_task(result, 4) );
+      tokens.push_back( basic_coroutine_task(result, 5) );
+      tokens.push_back( basic_coroutine_task(result, 6) );
+      tokens.push_back( basic_coroutine_task(result, 7) );
 
-      co_return 124;
+      co_await co::sequencial_for( tokens );
+      co_return result;
    };
 
-   printf( "final result from task: %d", bigtask().Result() );
+   printf( "final result from task: %u", bigtask().Result() );
    mTracer.OnInit();
 }
 

@@ -30,4 +30,9 @@ protected:
    T value = {};
    mutable SysEvent mSetEvent;
 };
+
+template<>
+class future<void>
+{
+};
 }

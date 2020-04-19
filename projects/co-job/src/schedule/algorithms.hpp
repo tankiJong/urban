@@ -30,25 +30,19 @@ co::token<> parallel_for(std::vector<Deferred> deferred)
 template<typename Deferred>
 co::token<> sequencial_for( std::vector<Deferred> deferred )
 {
-   cppcoro::async_manual_reset_event* triggers = new cppcoro::async_manual_reset_event[deferred.size() + 1];
-   triggers[0].set();
-
-   auto makeTask = []( Deferred& job, cppcoro::async_manual_reset_event& pending,  cppcoro::async_manual_reset_event& next) -> co::token<>
+   auto makeTask = []( co::token<> before, Deferred job ) -> co::token<>
    {
-      co_await pending;
+      co_await before;
       job.Schedule();
       co_await job;
-      next.set();
    };
 
-   size_t idx = 0;
-   for(auto&& d: deferred) {
-      makeTask( d, triggers[idx], triggers[idx + 1] );
-      idx++;
+   co::token<> dependent;
+   for(size_t i = 0; i < deferred.size(); ++i) {
+      dependent = makeTask( dependent, std::move(deferred[i]) );
    }
 
-   co_await triggers[deferred.size()];
-
-   delete[] triggers;
+   co_await dependent;
+   // delete[] triggers;
 }
 }

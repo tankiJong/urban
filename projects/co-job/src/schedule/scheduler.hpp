@@ -9,7 +9,8 @@
 namespace co {
 struct Worker
 {
-   uint mThreadIndex;
+   static constexpr uint kMainThread = 0xff;
+   uint threadId;
 };
 
 using job_id_t = int64_t;
@@ -29,6 +30,14 @@ struct promise_base
    friend class Scheduler;
    friend struct final_awaitable;
 
+   promise_base() noexcept
+      : mOwner( nullptr )
+    , mState( eOpState::Created )
+    , mJobId( sJobID.fetch_add( 1 ) )
+    , mHasParent( false )
+   {
+   }
+
    struct final_awaitable
    {
       bool await_ready() { return false; }
@@ -39,19 +48,11 @@ struct promise_base
       void await_resume() {}
    };
 
-   promise_base() noexcept
-    : mOwner( nullptr )
-    , mState( eOpState::Created )
-    , mJobId( sJobID.fetch_add( 1 ) )
-    , mHasParent( false ) {}
    ~promise_base()
    {
       ASSERT_DIE( mState == eOpState::Done || mState == eOpState::Canceled );
    }
    void unhandled_exception() { FATAL( "unhandled exception in promise_base" ); }
-
-   auto initial_suspend() { return std::experimental::suspend_always{}; }
-
 
    /////////////////////////////////////////////////////
    /////// scheduler related api start from here ///////
@@ -79,8 +80,9 @@ struct promise_base
       return !mHasParent.exchange(true);
    }
 
-private:
-   Scheduler*            mOwner;
+   
+protected:
+   Scheduler*            mOwner = nullptr;
    std::atomic<eOpState> mState;
    job_id_t mJobId{};
    std::experimental::coroutine_handle<> mParent;
@@ -177,8 +179,11 @@ private:
       bool IsRunning() const;
 
       uint GetThreadIndex() const;
+      uint GetMainThreadIndex() const;
 
       void EnqueueJob(Operation* op);
+
+      uint EstimateFreeWorkerCount() const { return mFreeWorkerCount.load(std::memory_order_relaxed); }
 
       template<typename Promise>
       Operation* AllocateOp(std::experimental::coroutine_handle<Promise>& handle)
@@ -217,6 +222,7 @@ private:
       std::unique_ptr<Worker[]> mWorkerContexts;
       std::atomic<bool> mIsRunning;
       LockQueue<Operation*> mJobs;
+      std::atomic_size_t mFreeWorkerCount;
    };
 
    template< typename Promise > void promise_base::final_awaitable::await_suspend(

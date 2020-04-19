@@ -37,7 +37,13 @@ Scheduler::~Scheduler()
 
 uint Scheduler::GetThreadIndex() const
 {
-   return gWorkerContext->mThreadIndex;
+
+   return gWorkerContext ? gWorkerContext->threadId : Worker::kMainThread;
+}
+
+uint Scheduler::GetMainThreadIndex() const
+{
+   return Worker::kMainThread;
 }
 
 Scheduler::Scheduler( uint workerCount )
@@ -45,11 +51,12 @@ Scheduler::Scheduler( uint workerCount )
 {
    ASSERT_DIE( workerCount > 0 );
 
-   gWorkerContext = new Worker{ 0xff };
+   gWorkerContext = new Worker{  Worker::kMainThread };
    mWorkerThreads.reserve( workerCount );
    mWorkerContexts = std::make_unique<Worker[]>( workerCount );
    mIsRunning = true;
 
+   mFreeWorkerCount = workerCount;
    for(uint i = 0; i < workerCount; ++i) {
       mWorkerThreads.emplace_back( [this, i] { WorkerThreadEntry( i ); } );
    }
@@ -63,7 +70,7 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
    profiler::registerThread( fmt::format( "co Job Thread {}", threadIndex ).c_str() );
 
    auto& context = mWorkerContexts[threadIndex];
-   context.mThreadIndex = threadIndex;
+   context.threadId = threadIndex;
    gWorkerContext = &context;
    gScheduler = this;
 
@@ -72,6 +79,8 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
       if(op == nullptr) {
          std::this_thread::yield();
       } else {
+         mFreeWorkerCount--;
+
          {
             op->Resume();
          }
@@ -83,6 +92,8 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
             // EXPECTS( op->Promise()->mState == eOpState::Suspended );
             // op->RescheduleOp( *this );
          }
+
+         mFreeWorkerCount++;
       }
 
       if( !IsRunning() ) break;

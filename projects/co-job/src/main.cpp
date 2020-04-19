@@ -128,7 +128,7 @@ co::deferred_token<> basic_coroutine_task(size_t& result, int id)
       auto token4 = dependent_task(id, 4);
       auto token5 = dependent_task(id, 5);
       auto token6 = dependent_task(id, 6);
-
+      
       co_await token1;
       co_await token2;
       co_await token3;
@@ -142,6 +142,7 @@ co::deferred_token<> basic_coroutine_task(size_t& result, int id)
    }
    printf( "finish [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
    result++;
+   co_return;
 }
 
 class GameApplication final: public Application {

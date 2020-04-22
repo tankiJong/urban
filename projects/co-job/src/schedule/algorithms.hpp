@@ -39,7 +39,7 @@ co::token<> sequencial_for( std::vector<Deferred> deferred )
 
    co::token<> dependent;
    for(size_t i = 0; i < deferred.size(); ++i) {
-      dependent = makeTask( dependent, std::move(deferred[i]) );
+      dependent = makeTask( dependent, deferred[i] );
    }
 
    co_await dependent;

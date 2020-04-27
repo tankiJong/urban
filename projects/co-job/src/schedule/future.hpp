@@ -9,15 +9,15 @@ template<typename T>
 class future
 {
 public:
-   future() { mSetEvent.Reset(); }
+   future(): mSetEvent( 1 ) { }
    void Set( T&& v )
    {
       EXPECTS( !IsReady() );
       value = v;
-      mSetEvent.Trigger();
+      mSetEvent.decrement();
    }
 
-   bool IsReady() { return mSetEvent.IsTriggered(); }
+   bool IsReady() { return mSetEvent.IsReady(); }
 
    const T& Get() const
    {
@@ -28,7 +28,7 @@ public:
 
 protected:
    T value = {};
-   mutable SysEvent mSetEvent;
+   mutable single_consumer_counter_event mSetEvent;
 };
 
 template<>

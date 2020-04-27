@@ -107,14 +107,14 @@ void BindCrtHandlesToStdHandles( bool bindStdIn, bool bindStdOut, bool bindStdEr
 co::token<> dependent_task(int majorid, int minorid)
 {
    using namespace std::chrono_literals;
-   DWORD time = random::Between( 1, 100 );
+   DWORD time = random::Between( 1, 100 )*5;
    Sleep( time );
    printf( "run [dependent_task %d, %d] on co job thread: %u \n", majorid, minorid, co::Scheduler::Get().GetThreadIndex() );
 
    co_return;
 }
 //-----------------------------------------------------------------------------------------------
-co::deferred_token<> basic_coroutine_task(size_t& result, int id)
+co::deferred_token<> basic_coroutine_task(std::atomic<size_t>& result, int id)
 {
    {
       printf( "run [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
@@ -138,7 +138,7 @@ co::deferred_token<> basic_coroutine_task(size_t& result, int id)
 
       using namespace std::chrono_literals;
 
-      std::this_thread::sleep_for( 100ms );
+      std::this_thread::sleep_for( 300ms );
    }
    printf( "finish [basic_coroutine_task %d] on co job thread: %u \n", id, co::Scheduler::Get().GetThreadIndex() );
    result++;
@@ -160,7 +160,7 @@ void GameApplication::OnInit()
    auto bigtask = []() -> co::task<size_t>
    {
 
-      size_t result = 0;
+      std::atomic<size_t> result = 0;
       std::vector<co::deferred_token<>> tokens;
       tokens.push_back( basic_coroutine_task(result, 1) );
       tokens.push_back( basic_coroutine_task(result, 2) );
@@ -170,7 +170,9 @@ void GameApplication::OnInit()
       tokens.push_back( basic_coroutine_task(result, 6) );
       tokens.push_back( basic_coroutine_task(result, 7) );
 
-      co_await co::sequencial_for( tokens );
+      co_await co::parallel_for( tokens );
+
+      printf( "finish [task] on co job thread: %u \n", co::Scheduler::Get().GetThreadIndex() );
       co_return result;
    };
 

@@ -2,8 +2,8 @@
 #include "token.hpp"
 #include <vector>
 
-#include "task.hpp"
 #include "event.hpp"
+#include "task.hpp"
 namespace co
 {
 template<typename Deferred>
@@ -11,11 +11,10 @@ co::token<> parallel_for(std::vector<Deferred> deferred)
 {
    static_assert(!Deferred::IsInstant, "deferred jobs only");
 
-   counter_event counter(deferred.size());
+   single_consumer_counter_event counter(deferred.size());
 
    auto makeTask = [&counter]( Deferred& job ) -> co::token<>
    {
-      job.Schedule();
       co_await job;
       counter.decrement( 1 );
    };
@@ -33,7 +32,6 @@ co::token<> sequencial_for( std::vector<Deferred> deferred )
    auto makeTask = []( co::token<> before, Deferred job ) -> co::token<>
    {
       co_await before;
-      job.Schedule();
       co_await job;
    };
 

@@ -186,7 +186,7 @@ protected:
       uint EstimateFreeWorkerCount() const { return mFreeWorkerCount.load(std::memory_order_relaxed); }
 
       template<typename Promise>
-      Operation* AllocateOp(std::experimental::coroutine_handle<Promise>& handle)
+      Operation* AllocateOp(const std::experimental::coroutine_handle<Promise>& handle)
       {
          return new OperationT<Promise>( handle );
       }
@@ -197,7 +197,7 @@ protected:
       }
 
       template<typename Promise>
-      void Schedule( std::experimental::coroutine_handle<Promise>& handle )
+      void Schedule( const std::experimental::coroutine_handle<Promise>& handle )
       {
 
          bool assigned = handle.promise().SetExecutor( *this );
@@ -205,14 +205,16 @@ protected:
             Operation* op = AllocateOp( handle );
             op->ScheduleOp( *this );
          }
-      };
+      }
+
+      void RegisterAsTempWorker( const SysEvent& exitSignal ) { WorkerThreadyEntry( exitSignal ); }
 
    protected:
 
       explicit Scheduler(uint workerCount);
 
       void WorkerThreadEntry(uint threadIndex);
-
+      void WorkerThreadyEntry( const SysEvent& exitSignal );
       Operation* FetchNextJob();
 
       ////////// data ///////////

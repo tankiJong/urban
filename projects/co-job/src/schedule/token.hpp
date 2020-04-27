@@ -25,19 +25,22 @@ struct token_dispatcher
       return !shouldSuspend;
    }
 
-   void await_suspend(std::experimental::coroutine_handle<> handle) noexcept
+   bool await_suspend(std::experimental::coroutine_handle<> handle) noexcept
    {
-      if constexpr (Instant) {
+      // for egar task, consider to suspend it accordingly.
+      // for lazy task, dispatch is handled on `co_await`, so here, we always consider it is scheduled
+      if constexpr( Instant ) {
          using namespace std::experimental;
 
          auto& scheduler = Scheduler::Get();
-         if(shouldSuspend) {
-            coroutine_handle<promise_t> realHandle = *((coroutine_handle<promise_t>*)&handle);
+         if( shouldSuspend ) {
+            coroutine_handle<promise_t> realHandle = *((coroutine_handle<promise_t>*) & handle);
             Scheduler::Get().Schedule( realHandle );
             // printf( "\n schedule on the job system\n" );   
          }
+         return shouldSuspend;
       } else {
-         
+         return true;
       }
    }
 
@@ -127,12 +130,6 @@ public:
 
    base_token() noexcept = default;
 
-   template<typename = std::enable_if_t<!Instant>>
-   void Schedule()
-   {
-      Dispatch();
-   }
-
    struct awaitable_base
    {
       coro_handle_t coroutine;
@@ -166,6 +163,10 @@ public:
          }
       };
 
+      if constexpr (!Instant) {
+         Dispatch();
+      }
+
       return awaitable{ mHandle };
    }
 
@@ -173,7 +174,7 @@ protected:
 
    coro_handle_t mHandle;
 
-   void Dispatch()
+   void Dispatch() const
    {
       if( mHandle.done() ) return;
       Scheduler::Get().Schedule( mHandle );

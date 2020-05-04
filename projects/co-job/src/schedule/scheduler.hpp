@@ -92,9 +92,10 @@ struct promise_base
    bool SetContinuation(const std::experimental::coroutine_handle<Promise>& parent)
    {
       promise_base& parentPromise = parent.promise();
-      
-      bool updated = parentPromise.SetState( eOpState::Processing, eOpState::Suspended );
-      ENSURES( updated );
+
+      auto expectedState = eOpState::Processing;
+      bool updated = parentPromise.SetState( expectedState, eOpState::Suspended );
+      ENSURES( updated || expectedState == eOpState::Suspended);
 
       mParent = parent;
       mScheduleParent = &ScheduleParentTyped<Promise>;

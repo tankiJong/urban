@@ -32,6 +32,13 @@ public:
       // it's possible that the mFuture is not fully initialized yet, so if the job is finished *really* quick... it will blow up
    }
 
+   meta_task(meta_task&& from) noexcept: base_t(from)
+   {
+      DEBUGBREAK;
+      auto& promise = base_t::mHandle.promise();
+      promise.futuerPtr = &mFuture;
+   }
+
    const T& Result()
    {
       return mFuture.Get();

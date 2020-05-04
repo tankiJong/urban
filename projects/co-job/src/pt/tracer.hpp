@@ -26,7 +26,7 @@ public:
       mCamera.SetProjection( mat44::Perspective( 70, 1.77f, .1f, 200.f ) );
 
       UpdateCameraInfo();
-      mTraceToken = new co::token<>(std::move(TraceImage()));
+      TraceImage();
    }
 
    void OnUpdate()
@@ -51,19 +51,17 @@ public:
 
    co::token<> TraceImage()
    {
-      std::vector<co::token<>> tokens;
+      std::vector<co::deferred_token<>> tokens;
       for(uint j = 0; j < mFrameColor.Dimension().y; j++) {
          for(uint i = 0; i < mFrameColor.Dimension().x; i++) {
             tokens.push_back( TracePixel( i, j ) );
          }
       }
 
-      for(auto& token: tokens) {
-         co_await token;
-      }
+      co_await co::parallel_for( std::move(tokens) );
    }
 
-   co::token<> TracePixel(uint i, uint j)
+   co::deferred_token<> TracePixel(uint i, uint j)
    { 
       float2 uv = float2( i, j ) / float2( mFrameColor.Dimension() );
       uint sampleCount = 0;
@@ -100,5 +98,5 @@ protected:
    MvCamera mCamera;
    std::atomic<mat44> mInvVp;
    std::atomic<float3> mCameraInWorld;
-   co::token<>* mTraceToken;
+   co::token<> mTraceToken;
 };

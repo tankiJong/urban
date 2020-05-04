@@ -17,6 +17,7 @@ using job_id_t = int64_t;
 
 enum class eOpState: uint
 {
+   UnKnown,
    Created,
    Scheduled,
    Processing,
@@ -30,12 +31,15 @@ struct promise_base
    friend class Scheduler;
    friend struct final_awaitable;
 
+   inline static std::atomic<int> sAllocated = 0;
+
    promise_base() noexcept
       : mOwner( nullptr )
     , mState( eOpState::Created )
     , mJobId( sJobID.fetch_add( 1 ) )
     , mHasParent( false )
    {
+      // sAllocated++;
    }
 
    struct final_awaitable
@@ -50,13 +54,18 @@ struct promise_base
 
    ~promise_base()
    {
-      ASSERT_DIE( mState == eOpState::Done || mState == eOpState::Canceled );
+      // in case it is resumed in final_suspend as continuation, it's remain suspended
+      // if it's never scheduled, it's in created state
+      // sAllocated--;
    }
    void unhandled_exception() { FATAL( "unhandled exception in promise_base" ); }
 
    /////////////////////////////////////////////////////
    /////// scheduler related api start from here ///////
    /////////////////////////////////////////////////////
+
+   
+   
    bool Ready() const { return mState.load( std::memory_order_relaxed ) == eOpState::Done; }
 
    bool Cancel()
@@ -71,24 +80,59 @@ struct promise_base
          mOwner = &scheduler;
          return true;
       }
-      return false;
+      return mOwner == &scheduler;
    }
 
-   bool SetContinuation(std::experimental::coroutine_handle<> parent)
+   bool IsScheduled() const { return mOwner != nullptr;  }
+   void MarkWaited() { mAwaiter.fetch_add(1, std::memory_order_release); }
+   void UnMarkWaited() { mAwaiter.fetch_sub(1, std::memory_order_release); }
+   bool AnyWaited() const { return mAwaiter.load(std::memory_order_acquire) > 0;  }
+   int  WaiterCount() const { return mAwaiter.load( std::memory_order_acquire ); }
+   template<typename Promise>
+   bool SetContinuation(const std::experimental::coroutine_handle<Promise>& parent)
    {
+      promise_base& parentPromise = parent.promise();
+      
+      bool updated = parentPromise.SetState( eOpState::Processing, eOpState::Suspended );
+      ENSURES( updated );
+
       mParent = parent;
+      mScheduleParent = &ScheduleParentTyped<Promise>;
       return !mHasParent.exchange(true);
    }
 
-   
+   bool SetState(eOpState&& expectState, eOpState newState)
+   {
+      return mState.compare_exchange_strong( expectState, newState, std::memory_order_release);
+   }
+
+   bool SetState(eOpState& expectState, eOpState newState)
+   {
+      return mState.compare_exchange_strong( expectState, newState, std::memory_order_release);
+   }
+
+   eOpState State() const { return mState.load( std::memory_order_acquire ); }
+   void ScheduleParent()
+   {
+      if(mHasParent.exchange( true, std::memory_order_acq_rel )) {
+         mScheduleParent( *this );
+      }
+   }
+
 protected:
    Scheduler*            mOwner = nullptr;
+   std::atomic<int> mAwaiter = 0;
    std::atomic<eOpState> mState;
    job_id_t mJobId{};
    std::experimental::coroutine_handle<> mParent;
    std::atomic<bool> mHasParent;
+   void(*mScheduleParent)(promise_base&);
    inline static std::atomic<job_id_t> sJobID;
+
+   template<typename Promise>
+   static void ScheduleParentTyped( promise_base& self );
 };
+
 
    class Scheduler
    {
@@ -96,80 +140,89 @@ protected:
       struct Operation
       {
          virtual promise_base* Promise() = 0;
-         virtual void Resume() = 0;
-         virtual bool Done() = 0;
-         virtual ~Operation() {}
 
-         bool RescheduleOp(Scheduler& newScheduler)
+         virtual ~Operation()
          {
-            promise_base* promise = Promise();
-            EXPECTS( promise->mState == eOpState::Suspended );
+            if(mShouldRelease) {
+               mCoroutine.destroy();
+            }
 
-            promise->SetExecutor( newScheduler );
-
-            eOpState expectedState = eOpState::Suspended;
-            bool updated = promise->mState.compare_exchange_strong( expectedState, eOpState::Scheduled );
-
-            // TODO: this might be a time bomb
-            // this can be potentially troublesome because after setting the state, it's possible we fail to enqueue the job.
-            // but let's assume it will successful for now
-            newScheduler.EnqueueJob( this );
          }
+         Operation(const std::experimental::coroutine_handle<>& handle): mCoroutine( handle ) {}
+         // bool RescheduleOp(Scheduler& newScheduler)
+         // {
+         //    promise_base* promise = Promise();
+         //    EXPECTS( promise->mState == eOpState::Suspended );
+         //
+         //    eOpState expectedState = eOpState::Suspended;
+         //    bool updated = promise->mState.compare_exchange_strong( expectedState, eOpState::Scheduled );
+         //
+         //    // TODO: this might be a time bomb
+         //    // this can be potentially troublesome because after setting the state, it's possible we fail to enqueue the job.
+         //    // but let's assume it will successful for now
+         //    newScheduler.EnqueueJob( this );
+         // }
 
          bool ScheduleOp(Scheduler& newScheduler)
          {
-            promise_base* promise = Promise();
-            EXPECTS( promise->mState == eOpState::Created );
-
-            promise->SetExecutor( newScheduler );
-
-            eOpState expectedState = eOpState::Created;
-            bool updated = promise->mState.compare_exchange_strong( expectedState, eOpState::Scheduled );
-
             // TODO: this might be a time bomb
             // this can be potentially troublesome because after setting the state, it's possible we fail to enqueue the job.
             // but let's assume it will successful for now
             newScheduler.EnqueueJob( this );
+            return true;
          }
+
+         void Resume()
+         {
+            promise_base& promise = *Promise();
+
+            if( promise.mState == eOpState::Canceled ) return;
+            //
+            // {
+            //    eOpState expectedState = eOpState::Scheduled;
+            //
+            //    bool updated = promise.SetState( expectedState, eOpState::Processing );
+            //
+            //    // failed to acquire access to progress the job, but someone else should be processing it
+            //    if(!updated) {
+            //       ASSERT_DIE( expectedState == eOpState::Processing );
+            //       return;
+            //    }
+            // }
+            // process the job
+            // notice, since the resume may implicitly suspend the job and dispatch it on another thread, which might be complete immediately
+            // the state we are changing here is mostly a guess. It's possible the state is "suspended" on this thread but is actually "done"
+            mCoroutine.resume();
+         }
+
+         bool Done() { return mCoroutine.done(); }
+
+         std::experimental::coroutine_handle<> mCoroutine;
+         bool mShouldRelease = false;
 		};
 
       template<typename P>
       struct OperationT: public Operation
       {
-         OperationT(std::experimental::coroutine_handle<P> coro)
-            : mCoroutine( coro ) {}
-
-         promise_base* Promise() override { return &mCoroutine.promise(); };
-         void Resume() override
+         OperationT(const std::experimental::coroutine_handle<P>& coro)
+            : Operation( coro )
          {
-            promise_base& promise = *Promise();
+            coro.promise().MarkWaited();
+         }
 
-            if( promise.mState == eOpState::Canceled ) return;
-            if( promise.mState == eOpState::Done ) return;
+         promise_base* Promise() override
+         {
+            return &std::experimental::coroutine_handle<P>::from_address( mCoroutine.address() ).promise();
+         };
 
-            {
-               eOpState expectedState = eOpState::Scheduled;
-               bool updated = promise.mState.compare_exchange_strong( expectedState, eOpState::Processing );
-
-               // failed to acquire access to progress the job, but someone else should be processing it
-               if(!updated) {
-                  ASSERT_DIE( expectedState == eOpState::Processing );
-                  return;
-               }
-            }
-
-            // process the job
-            mCoroutine.resume();
-            {
-               eOpState expectedState = eOpState::Processing;
-               bool updated = promise.mState.compare_exchange_strong( expectedState, mCoroutine.done() ? eOpState::Done : eOpState::Suspended);
-               ENSURES( updated );
+         ~OperationT()
+         {
+            bool shouldRelease = Promise()->WaiterCount() == 1 && mCoroutine.done();
+            mShouldRelease = shouldRelease;
+            if(!shouldRelease) {
+               Promise()->UnMarkWaited();
             }
          }
-         bool Done() override { return mCoroutine.done(); }
-         ~OperationT() { mCoroutine.destroy(); }
-
-         std::experimental::coroutine_handle<P> mCoroutine;
       };
 
       static Scheduler& Get();
@@ -199,7 +252,6 @@ protected:
       template<typename Promise>
       void Schedule( const std::experimental::coroutine_handle<Promise>& handle )
       {
-
          bool assigned = handle.promise().SetExecutor( *this );
          if(assigned) {
             Operation* op = AllocateOp( handle );
@@ -227,16 +279,19 @@ protected:
       std::atomic_size_t mFreeWorkerCount;
    };
 
+   template< typename Promise > void promise_base::ScheduleParentTyped( promise_base& self )
+   {
+      auto parent = std::experimental::coroutine_handle<Promise>::from_address( self.mParent.address() );
+      self.mOwner->Schedule( parent );
+   }
+
    template< typename Promise > void promise_base::final_awaitable::await_suspend(
       std::experimental::coroutine_handle<Promise> handle )
    {
       // we expect that should be derived from promise_base
       static_assert(std::is_base_of<promise_base, Promise>::value, "Promise should be derived from promise_base");
       promise_base& promise = handle.promise();
-
-      if(promise.mHasParent.exchange( true, std::memory_order_acq_rel )) {
-         EASY_FUNCTION();
-         promise.mParent.resume();
-      }
+      promise.ScheduleParent();
+      promise.SetState( eOpState::Processing, eOpState::Done );
    }
 }

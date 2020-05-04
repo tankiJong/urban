@@ -81,18 +81,10 @@ void Scheduler::WorkerThreadEntry( uint threadIndex )
       } else {
          mFreeWorkerCount--;
 
-         {
-            op->Resume();
-         }
-         if(op->Done()) {
-            EXPECTS( op->Promise()->mState == eOpState::Done );
-            ReleaseOp( op );
-         } else {
-            // this got suspended, it will be resumed in the await_suspended
-            EXPECTS( op->Promise()->mState == eOpState::Suspended );
-            // BAD_CODE_PATH();
-            // op->RescheduleOp( *this );
-         }
+         op->Resume();
+
+         // whatever the state the op is, release the op, the ownership of the coroutine is either finished, or transfered to somewhere else.
+         ReleaseOp( op );
 
          mFreeWorkerCount++;
       }
@@ -118,16 +110,9 @@ void Scheduler::WorkerThreadyEntry( const SysEvent& exitSignal )
 
          {
             op->Resume();
-         }
-         if( op->Done() ) {
-            EXPECTS( op->Promise()->mState == eOpState::Done );
+
+            // op could be either suspended or done, if it's done, we will also release the coroutine frame
             ReleaseOp( op );
-         }
-         else {
-            // this got suspended, it will be resumed in the await_suspended
-            EXPECTS( op->Promise()->mState == eOpState::Suspended );
-            // BAD_CODE_PATH();
-            // op->RescheduleOp( *this );
          }
 
          mFreeWorkerCount++;

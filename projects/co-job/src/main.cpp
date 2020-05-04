@@ -11,6 +11,7 @@
 #include <chrono>
 #include "schedule/token.hpp"
 #include "cppcoro/sync_wait.hpp"
+#include "cppcoro/task.hpp"
 #include <fmt/color.h>
 
 #include "engine/async/async.hpp"
@@ -170,7 +171,7 @@ void GameApplication::OnInit()
       tokens.push_back( basic_coroutine_task(result, 6) );
       tokens.push_back( basic_coroutine_task(result, 7) );
 
-      co_await co::parallel_for( tokens );
+      co_await  co::parallel_for( std::move(tokens) );
 
       printf( "finish [task] on co job thread: %u \n", co::Scheduler::Get().GetThreadIndex() );
       co_return result;
@@ -212,7 +213,9 @@ int __stdcall WinMain( HINSTANCE, HINSTANCE, LPSTR /*commandLineString*/, int )
    while(app.runFrame());
 
    FreeConsole();
-
+   
    profiler::dumpBlocksToFile( "test_profile.prof" );
+
+   ENSURES( co::promise_base::sAllocated == 0 );
    return 0;
 }

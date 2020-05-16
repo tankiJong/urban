@@ -52,24 +52,26 @@ public:
    co::token<> TraceImage()
    {
       std::vector<co::deferred_token<>> tokens;
-      for(uint j = 0; j < mFrameColor.Dimension().y; j++) {
-         for(uint i = 0; i < mFrameColor.Dimension().x; i++) {
-            tokens.push_back( TracePixel( i, j ) );
+         for(uint j = 0; j < mFrameColor.Dimension().y; j++) {
+            tokens.push_back( TracePixel( j ) );
          }
-      }
+      float startTimeMs = Time::Current().millisecond;
 
       co_await co::parallel_for( std::move(tokens) );
+
+      printf( "total time spent: %f", Time::Current().millisecond - startTimeMs );
    }
 
-   co::deferred_token<> TracePixel(uint i, uint j)
-   { 
-      float2 uv = float2( i, j ) / float2( mFrameColor.Dimension() );
-      uint sampleCount = 0;
-      float4 result;
-      rgba* pixel = (rgba*)mFrameColor.At( i, j );
-      do {
-         mat44 invVp = mInvVp.load();
-         float3 cameraInWorld = mCameraInWorld.load();
+   co::deferred_token<> TracePixel(uint j)
+   {
+      EASY_FUNCTION();
+      mat44 invVp = mInvVp.load();
+      float3 cameraInWorld = mCameraInWorld.load();
+      for( uint i = 0; i < mFrameColor.Dimension().x; i++) {
+         float2 uv = float2( i, j ) / float2( mFrameColor.Dimension() );
+         uint sampleCount = 0;
+         float4 result;
+         rgba* pixel = (rgba*)mFrameColor.At( i, j );
 
          ray primaryRay;
          float3 pixelWorld = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
@@ -82,7 +84,7 @@ public:
          *pixel = rgba(result);
          using namespace std::chrono;
          // std::this_thread::sleep_for( 10ms );
-      } while( false );
+      };
       co_return;
    }
 

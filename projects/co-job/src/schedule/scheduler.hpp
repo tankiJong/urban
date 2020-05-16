@@ -99,7 +99,7 @@ struct promise_base
 
       mParent = parent;
       mScheduleParent = &ScheduleParentTyped<Promise>;
-      return !mHasParent.exchange(true);
+      return !mHasParent.exchange(true, std::memory_order_release);
    }
 
    bool SetState(eOpState&& expectState, eOpState newState)
@@ -115,7 +115,7 @@ struct promise_base
    eOpState State() const { return mState.load( std::memory_order_acquire ); }
    void ScheduleParent()
    {
-      if(mHasParent.exchange( true, std::memory_order_acq_rel )) {
+      if(mHasParent.load( std::memory_order_consume )) {
          mScheduleParent( *this );
       }
    }

@@ -34,7 +34,6 @@ public:
 
    meta_task(meta_task&& from) noexcept: base_t(from)
    {
-      DEBUGBREAK;
       auto& promise = base_t::mHandle.promise();
       promise.futuerPtr = &mFuture;
    }
@@ -47,9 +46,9 @@ protected:
    future<T> mFuture;
 };
 
-template<typename T>
+template<typename T = void>
 using task = meta_task<true, T>;
-template<typename T>
+template<typename T = void>
 using deferred_task = meta_task<false, T>;
 
 }

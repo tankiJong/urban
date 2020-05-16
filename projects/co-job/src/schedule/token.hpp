@@ -2,7 +2,6 @@
 #include <atomic>
 #include <experimental/coroutine>
 #include "scheduler.hpp"
-#include "event.hpp"
 #include "future.hpp"
 namespace co
 {
@@ -21,6 +20,7 @@ struct token_dispatcher
    token_dispatcher(bool shouldSuspend):shouldSuspend( shouldSuspend ) {}
    bool shouldSuspend;
    bool await_ready() noexcept {
+      // it will always suspend and make the decision on whether to suspend in `await_suspend`
       return false;
    }
 

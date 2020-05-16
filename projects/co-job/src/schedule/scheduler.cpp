@@ -22,7 +22,7 @@ bool Scheduler::IsRunning() const
 Scheduler& Scheduler::Get()
 {
    if(theScheduler == nullptr) {
-      theScheduler = new Scheduler(8);
+      theScheduler = new Scheduler(QuerySystemCoreCount());
    }
 
    return *theScheduler;

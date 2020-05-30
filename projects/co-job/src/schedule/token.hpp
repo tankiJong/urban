@@ -144,7 +144,8 @@ public:
 };
 
 /**
- * \brief This mega templated base_token class is designed so that I can quickly experiment different type of task strategy
+ * \brief This mega template `base_token` class is designed so that I can quickly experiment different type of task strategy
+ *        It is a CRTP class, see how it is used in `task.hpp`
  * \tparam Instant 
  * \tparam R 
  * \tparam T 

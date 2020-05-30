@@ -72,7 +72,7 @@ protected:
 template<bool Instant, template<bool, typename> typename R, typename T>
 struct token_promise: promise_base
 {
-   friend class token_dispatcher<Instant, R, T>;
+   friend struct token_dispatcher<Instant, R, T>;
    future<T>* futuerPtr = nullptr;
    T value;
 
@@ -111,7 +111,7 @@ template<bool Instant, template<bool, typename> typename R>
 struct token_promise<Instant, R, void>: promise_base
 {
 public:
-   friend class token_dispatcher<Instant, R, void>;
+   friend struct token_dispatcher<Instant, R, void>;
    future<void>* futuerPtr = nullptr;
 
    auto initial_suspend() noexcept
@@ -220,11 +220,11 @@ public:
 
          decltype(auto) await_resume()
          {
-            using ret_t = decltype(coroutine.promise().result());
+            using ret_t = decltype(this->coroutine.promise().result());
             if constexpr (std::is_void_v<ret_t>) {
                return;
             } else {
-               return coroutine ? T{} : coroutine.promise().result();
+               return this->coroutine ? T{} : this->coroutine.promise().result();
             }
 
          }
@@ -248,11 +248,12 @@ public:
 
          decltype(auto) await_resume()
          {
-            using ret_t = decltype(coroutine.promise().result());
+            auto& coro = this->coroutine;
+            using ret_t = decltype(coro.promise().result());
             if constexpr (std::is_void_v<ret_t>) {
                return;
             } else {
-               return coroutine ? T{} : std::move(coroutine.promise()).result();
+               return coro ? T{} : std::move(coro.promise()).result();
             }
 
          }

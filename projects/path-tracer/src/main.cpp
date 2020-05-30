@@ -159,52 +159,50 @@ void GameApplication::OnRender() const
 
    auto dim = mFrameColor.Dimension();
    JobHandleArray pixelJobs;
-   pixelJobs.reserve(dim.y+1);
+   // pixelJobs.reserve(dim.y+1);
    auto& rays = mRays;
 
-   for( uint j = 0; j <=dim.y; j++ ) {
-      EASY_BLOCK( "Setup Ray Gen Job" );
-      auto handle = CreateAndDispatchFunctionJob( {}, 
-         [j, &invVp, &cameraWorld, &rays, &dim, this]( eWorkerThread )
-         {
-            EASY_FUNCTION( profiler::colors::Red );
-            for(uint i = 0; i <= dim.x; i++) {
-               ray r;
-               float3 origin = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
-               r.SetAndOffset( origin, (origin - cameraWorld).Norm() );
-               rays[i + (dim.x + 1) * j] = r;
-            }
-         } );
-
-      pixelJobs.push_back( handle );
-   }
+   // for( uint j = 0; j <=dim.y; j++ ) {
+   //    EASY_BLOCK( "Setup Ray Gen Job" );
+   //    auto handle = CreateAndDispatchFunctionJob( {}, 
+   //       [j, &invVp, &cameraWorld, &rays, &dim, this]( eWorkerThread )
+   //       {
+   //          EASY_FUNCTION( profiler::colors::Red );
+   //          for(uint i = 0; i <= dim.x; i++) {
+   //             ray r;
+   //             float3 origin = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
+   //             r.SetAndOffset( origin, (origin - cameraWorld).Norm() );
+   //             rays[i + (dim.x + 1) * j] = r;
+   //          }
+   //       } );
+   //
+   //    pixelJobs.push_back( handle );
+   // }
 
    JobHandleArray frameJobs;
-   pixelJobs.reserve(dim.y);
+   // pixelJobs.reserve(dim.y);
 
    for( uint j = 0; j < dim.y; j++ ) {
       EASY_BLOCK( "Setup Ray Trace Job" );
-      auto handle = CreateAndDispatchFunctionJob( {pixelJobs.data() + j, 2},
+      auto handle = CreateAndDispatchFunctionJob( {},
          [j, &invVp, &cameraWorld, &rays, &dim, this]( eWorkerThread )
          {
             EASY_FUNCTION( profiler::colors::Blue );
-            for(uint i = 0; i < dim.x; i++) {
+            for( uint i = 0; i < dim.x; i++ ) {
+               float2 uv = float2( i, j ) / float2( mFrameColor.Dimension() );
+               uint sampleCount = 0;
+               float4 result;
                rgba* pixel = (rgba*)mFrameColor.At( i, j );
-               rayd r;
 
-               ray& ray = r;
-               ray = rays[i + (dim.x + 1) * j];
-               {
-                  r.rayx = rays[i + 1 + (dim.x + 1) * j];
-                  r.rayy = rays[i + 1 + (dim.x + 1) * (j + 1)];
-               }
+               ray primaryRay;
+               float3 pixelWorld = PixelToWorld( { i, j }, mFrameColor.Dimension(), invVp );
+               primaryRay.SetAndOffset( pixelWorld, (pixelWorld - cameraWorld).Norm() );
 
-               float4 sampleColor = mScene.Trace( r );
-               float4 color = *pixel;
-               color *= float4( Clock::Main().frameCount );
-               color += sampleColor;
-               color /= float4( float( Clock::Main().frameCount + 1 ) );
-               *pixel = (rgba)color;
+               rgba color = { 1 - uv.x, 1 - uv.y, 0.f, 1.f };
+               result = result * float( sampleCount ) + float4( color );
+               result = result / float( sampleCount + 1 );
+               sampleCount++;
+               *pixel = rgba( result );
             }
          } );
 

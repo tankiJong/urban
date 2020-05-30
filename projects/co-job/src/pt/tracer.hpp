@@ -9,7 +9,6 @@
 #include "../schedule/scheduler.hpp"
 #include "../schedule/token.hpp"
 #include "../../../path-tracer/src/scene/MvCamera.hpp"
-#include "cppcoro/when_all_ready.hpp"
 #include "engine/core/Time.hpp"
 #include "engine/application/Input.hpp"
 #include <thread>

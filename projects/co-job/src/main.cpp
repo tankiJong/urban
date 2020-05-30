@@ -7,11 +7,8 @@
 #include "engine/application/Application.hpp"
 #include <easy/profiler.h>
 #include "schedule/scheduler.hpp"
-#include <cppcoro/when_all.hpp>
 #include <chrono>
 #include "schedule/token.hpp"
-#include "cppcoro/sync_wait.hpp"
-#include "cppcoro/task.hpp"
 #include <fmt/color.h>
 
 #include "engine/async/async.hpp"
@@ -177,7 +174,7 @@ void GameApplication::OnInit()
       co_return result;
    };
 
-   printf( "final result from task: %u", bigtask().Result() );
+   printf( "final result from task: %llu", bigtask().Result() );
    mTracer.OnInit();
 }
 

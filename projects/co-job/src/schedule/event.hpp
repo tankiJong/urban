@@ -31,9 +31,8 @@ public:
 
    };
 
-   friend class awaitable;
+   friend struct awaitable;
 
-   // extra one is decremented in `Wait` or awaitable
    single_consumer_counter_event(int targetVal): mCounter( targetVal ) {}
 
    bool IsReady() const noexcept { return mCounter.load(std::memory_order_acquire) == 0; }

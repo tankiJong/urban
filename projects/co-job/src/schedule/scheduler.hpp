@@ -178,21 +178,6 @@ protected:
             promise_base& promise = *Promise();
 
             if( promise.mState == eOpState::Canceled ) return;
-            //
-            // {
-            //    eOpState expectedState = eOpState::Scheduled;
-            //
-            //    bool updated = promise.SetState( expectedState, eOpState::Processing );
-            //
-            //    // failed to acquire access to progress the job, but someone else should be processing it
-            //    if(!updated) {
-            //       ASSERT_DIE( expectedState == eOpState::Processing );
-            //       return;
-            //    }
-            // }
-            // process the job
-            // notice, since the resume may implicitly suspend the job and dispatch it on another thread, which might be complete immediately
-            // the state we are changing here is mostly a guess. It's possible the state is "suspended" on this thread but is actually "done"
             mCoroutine.resume();
          }
 
@@ -237,7 +222,7 @@ protected:
 
       void EnqueueJob(Operation* op);
 
-      uint EstimateFreeWorkerCount() const { return mFreeWorkerCount.load(std::memory_order_relaxed); }
+      size_t EstimateFreeWorkerCount() const { return mFreeWorkerCount.load(std::memory_order_relaxed); }
 
       template<typename Promise>
       Operation* AllocateOp(const std::experimental::coroutine_handle<Promise>& handle)

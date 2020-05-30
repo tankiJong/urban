@@ -138,7 +138,6 @@
     <ClCompile Include="src\pt\tracer.cpp" />
     <ClCompile Include="src\schedule\event.cpp" />
     <ClCompile Include="src\schedule\scheduler.cpp" />
-    <ClCompile Include="lib\**\*.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\engine.vcxproj">

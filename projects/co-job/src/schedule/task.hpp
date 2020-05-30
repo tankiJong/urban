@@ -42,6 +42,12 @@ public:
    {
       return mFuture.Get();
    }
+
+   ~meta_task()
+   {
+      auto& promise = base_t::mHandle.promise();
+      promise.futuerPtr = nullptr;
+   }
 protected:
    future<T> mFuture;
 };

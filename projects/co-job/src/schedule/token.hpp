@@ -12,6 +12,13 @@ class base_token;
 template<bool Instant, template<bool, typename> typename R, typename T>
 struct token_promise;
 
+
+/**
+ * \brief This is used in `initial_suspend` to conditionally dispatch a job
+ * \tparam Instant bool flag to differentiate whether this is a eager task or lazy task
+ * \tparam R templated token type token<Instant, T>, see how this is used in `token_promise`
+ * \tparam T 
+ */
 template<bool Instant, template<bool, typename> typename R, typename T>
 struct token_dispatcher
 {
@@ -68,6 +75,7 @@ protected:
    promise_base* mSuspendedPromise = nullptr;
    eOpState mExpectResumeFromState = eOpState::UnKnown;
 };
+
 
 template<bool Instant, template<bool, typename> typename R, typename T>
 struct token_promise: promise_base
@@ -135,6 +143,12 @@ public:
    void result() {}
 };
 
+/**
+ * \brief This mega templated base_token class is designed so that I can quickly experiment different type of task strategy
+ * \tparam Instant 
+ * \tparam R 
+ * \tparam T 
+ */
 template<bool Instant, template<bool, typename> typename R, typename T>
 class base_token
 {

@@ -5,6 +5,8 @@
 #include "event.hpp"
 namespace co
 {
+
+// simple future type that is implemented based on OS wait object
 template<typename T>
 class future
 {

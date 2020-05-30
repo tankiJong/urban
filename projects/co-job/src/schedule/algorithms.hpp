@@ -7,7 +7,7 @@
 namespace co
 {
 template<typename Deferred>
-co::token<> parallel_for(std::vector<Deferred> deferred)
+co::token<> parallel_for( std::vector<Deferred> deferred )
 {
    static_assert(!Deferred::IsInstant, "deferred jobs only");
 
@@ -41,6 +41,5 @@ co::token<> sequencial_for( std::vector<Deferred> deferred )
    }
 
    co_await dependent;
-   // delete[] triggers;
 }
 }

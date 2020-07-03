@@ -4,7 +4,10 @@
 
 namespace co
 {
-
+//
+// `token` is designed as tasks that the user does not care about the result.
+// It does not have the overhead to deal with future object
+// 
 template<bool Instant, typename T>
 class meta_token: public base_token<Instant, meta_token, T>
 {
@@ -18,7 +21,10 @@ using token = meta_token<true, T>;
 template<typename T = void>
 using deferred_token = meta_token<false, T>;
 
-
+//
+// For `task<T>`, system expects user to call on task<T>::Result() at some moment to perform a block wait
+// Notice since users need the result so it makes no sense to instantiate for `void`
+//
 template<bool Instant, typename T>
 class meta_task: public base_token<Instant, meta_task, T>
 {
@@ -28,8 +34,6 @@ class meta_task: public base_token<Instant, meta_task, T>
 public:
    meta_task(coro_handle_t handle): base_t(handle, &mFuture)
    {
-      // this is potentially buggy because at the time when the base token was dispatched,
-      // it's possible that the mFuture is not fully initialized yet, so if the job is finished *really* quick... it will blow up
    }
 
    meta_task(meta_task&& from) noexcept: base_t(from)

@@ -15,7 +15,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{09519BFA-169C-4635-876E-A98E168E4A38}</ProjectGuid>
     <RootNamespace>cojob</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

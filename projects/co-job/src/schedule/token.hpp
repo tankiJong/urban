@@ -45,12 +45,10 @@ struct token_dispatcher
          coroutine_handle<promise_t>::from_address( handle.address() );
       mSuspendedPromise = &realHandle.promise();
       ENSURES( mSuspendedPromise != nullptr );
-      eOpState expectResumeFromState = (shouldSuspend || Instant) ? eOpState::Scheduled : eOpState::Suspended;
+      // eOpState expectResumeFromState = (shouldSuspend || Instant) ? eOpState::Scheduled : eOpState::Suspended;
       
       realHandle.promise().SetState( eOpState::Created, mExpectResumeFromState );
       if constexpr( Instant ) {
-         auto& scheduler = Scheduler::Get();
-
          if( shouldSuspend ) {
             Scheduler::Get().Schedule( realHandle );
             // printf( "\n schedule on the job system\n" );   
@@ -239,7 +237,7 @@ public:
             if constexpr (std::is_void_v<ret_t>) {
                return;
             } else {
-               return this->coroutine ? T{} : this->coroutine.promise().result();
+               return this->coroutine ? this->coroutine.promise().result() : T{};
             }
 
          }
@@ -268,7 +266,7 @@ public:
             if constexpr (std::is_void_v<ret_t>) {
                return;
             } else {
-               return coro ? T{} : std::move(coro.promise()).result();
+               return coro ? std::move(coro.promise()).result() : T{};
             }
 
          }

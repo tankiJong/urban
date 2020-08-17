@@ -27,7 +27,7 @@ co::token<> parallel_for( std::vector<Deferred> deferred )
 }
 
 template<typename Deferred>
-co::token<> sequencial_for( std::vector<Deferred> deferred )
+co::token<> sequential_for( std::vector<Deferred> deferred )
 {
    auto makeTask = []( co::token<> before, Deferred job ) -> co::token<>
    {

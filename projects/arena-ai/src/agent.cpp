@@ -177,4 +177,5 @@ bool PathFindingWorker::Execute()
    FinishReadCurrentState();
 
    mQueenMap.ResetTargets( queens );
+   return true;
 }
